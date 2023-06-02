@@ -1,0 +1,7 @@
+= Registered trademarks
+
+We use the link:https://www.npmjs.com/package/@neo4j-antora/mark-terms[`@neo4j-antora/mark-terms`] extension to mark the first usage of the following terms:
+
+* Cypher
+
+The list of terms marked is configured by the `page-terms-to-mark` attribute in playbooks.
