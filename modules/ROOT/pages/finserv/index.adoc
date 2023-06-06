@@ -1,6 +1,10 @@
 = Financial Services
 
-This chapter is divided into the following sections:
+Financial services organisations can benefit significantly from using Neo4j as it is designed to handle various use cases and navigate regulatory complexities. It allows for the analysis of complex relationships within financial data, providing valuable insights for fraud detection, risk management, and customer relationship analysis.
 
-* xref:finserv/identity-fraud.adoc[]
+Furthermore, Neo4j's flexibility and scalability make it an effective tool for managing large amounts of data while remaining compliant with regulations. By enabling interconnected data, Neo4j empowers financial institutions to comprehensively understand their operations, streamline processes, and make informed decisions while adhering to strict regulatory frameworks.
+
+Below are some example use cases to get started with:
+
+* xref:finserv/synthetic-identity-fraud.adoc[]
 * xref:finserv/transaction-ring.adoc[]
