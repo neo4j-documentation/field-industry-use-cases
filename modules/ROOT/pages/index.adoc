@@ -1,3 +1,7 @@
 = Neo4j Industry Use Cases
 
-This documentation has been build to help shed some light on industry specific use cases. These are common projects we see organisations implementing with Neo4j. 
+Explore the potential of Neo4j's graph database with our industry-specific use cases. Uncover hidden connections and gain unparalleled insights into healthcare, finance, e-commerce, logistics, social networks, and more. Our website offers valuable resources for data enthusiasts, developers, and business professionals seeking to enhance decision-making, optimise performance, and foster innovation. Unlock the transformative power of Neo4j for your industry today.
+
+== 1. Industries:
+
+* xref:finserv/index.adoc[]
