@@ -2,7 +2,7 @@
 
 == 1. Introduction
 
-A fraud (transaction) ring refers to a group of people collaborating to engage in fraudulent activities, like transferring funds through multiple accounts. These rings work across different locations and employ diverse strategies to evade detection. It is critical for financial organisations to detect these rings, especially with enhancement to Contingent Reimbursement Model (CRM).
+A transaction fraud ring refers to a group of people collaborating to engage in fraudulent activities, like transferring funds through multiple accounts. These rings work across different locations and employ diverse strategies to evade detection. It is critical for financial organisations to detect these rings, especially with enhancement to Contingent Reimbursement Model (CRM).
 
 == 2. Scenario
 
