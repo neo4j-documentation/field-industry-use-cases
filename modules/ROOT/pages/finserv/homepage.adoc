@@ -4,8 +4,10 @@ Financial services organisations can benefit significantly from using Neo4j as i
 
 Furthermore, Neo4j's flexibility and scalability make it an effective tool for managing large amounts of data while remaining compliant with regulations. By enabling interconnected data, Neo4j empowers financial institutions to comprehensively understand their operations, streamline processes, and make informed decisions while adhering to strict regulatory frameworks.
 
-Below are some example use cases to get started with:
+== Investment Banking
 
-* xref:finserv/regulatory-dependency-mapping.adoc[]
-* xref:finserv/synthetic-identity-fraud.adoc[]
-* xref:finserv/transaction-ring.adoc[]
+== Retail Banking
+
+* xref:finserv/retail-banking/regulatory-dependency-mapping.adoc[]
+* xref:finserv/retail-banking/synthetic-identity-fraud.adoc[]
+* xref:finserv/retail-banking/transaction-ring.adoc[]

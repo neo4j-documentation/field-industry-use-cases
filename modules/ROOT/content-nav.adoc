@@ -1,11 +1,12 @@
 * xref:index.adoc[]
 
 
-* xref:finserv/index.adoc[]
-** xref:finserv/regulatory-dependency-mapping.adoc[]
-** xref:finserv/synthetic-identity-fraud.adoc[]
-** xref:finserv/transaction-ring.adoc[]
+* xref:finserv/homepage.adoc[]
+** xref:finserv/retail-banking/homepage.adoc[]
+*** xref:finserv/retail-banking/regulatory-dependency-mapping.adoc[]
+*** xref:finserv/retail-banking/synthetic-identity-fraud.adoc[]
+*** xref:finserv/retail-banking/transaction-ring.adoc[]
 
 
-* xref:agnostic/index.adoc[]
+* xref:agnostic/homepage.adoc[]
 ** xref:agnostic/data-lineage.adoc[]
