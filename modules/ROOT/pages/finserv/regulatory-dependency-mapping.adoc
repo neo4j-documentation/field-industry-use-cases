@@ -1,0 +1,102 @@
+= Regulatory Dependency Mapping
+
+== 1. Introduction
+
+Regulatory dependency mapping in banking refers to the process of identifying and understanding the intricate relationships and interdependencies between different regulations and the various aspects of a bank's operations. It involves mapping how specific regulations impact the bank's products, services, processes, and systems.
+
+This mapping exercise helps banks gain a comprehensive overview of the regulatory landscape they operate in. It involves analysing and documenting the dependencies between regulations and identifying overlaps, conflicts, and gaps in compliance requirements. 
+
+Regulatory dependency mapping is a crucial tool for banks to navigate the complex and ever-evolving regulatory environment, ensure compliance with applicable laws, and effectively manage the risks associated with regulatory changes.
+
+== 2. Scenario
+
+A good solution for dependency mapping is crucial for banks for several reasons.
+
+1. *Manage complex relationships and interdependencies.* By having a clear picture of these dependencies, banks can effectively identify potential vulnerabilities or points of failure and proactively mitigate them, ensuring the stability and resilience of their operations.
+
+2. *Assess the impact of organisational changes.* It helps identify which components or services may be affected by a particular change, allowing banks to plan and execute changes with minimal disruption to critical functions.
+
+3. *Risk management and compliance.* Banks operate in a highly regulated environment, and accurate knowledge of dependencies is vital for ensuring compliance with regulatory requirements, such as data protection and business continuity planning.
+
+4. *Efficient troubleshooting and incident response.* When issues arise, banks can quickly identify the affected components and their dependencies, enabling faster diagnosis and resolution of problems.
+
+Overall, a robust dependency mapping solution empowers banks to enhance operational efficiency, reduce risks, maintain regulatory compliance, and provide uninterrupted customer services, thereby strengthening their reputation and trust in the market.
+
+== 3. Solution
+
+In a rapidly changing regulatory world, it's essential to have a systemic approach that enables easy modelling and insight into both regulatory changes and their potential impact on your business. Neo4j is an excellent tool for supporting you on this journey.
+
+=== 3.1. How Graph Databases Can Help?
+
+Neo4j is an ideal solution for regulatory dependency mapping in banking, providing several business benefits:
+
+1. *Comprehensive Compliance:* Neo4j gives banks a holistic view of their regulatory landscape. It helps identify and map dependencies, overlaps, and gaps in compliance requirements, ensuring complete adherence to regulations.
+
+2. *Risk Mitigation:* By accurately capturing and analysing regulatory relationships, Neo4j empowers banks to identify potential risks and assess their impact. This allows for proactive risk mitigation measures and reduces the likelihood of compliance breaches.
+
+3. *Operational Efficiency:* With Neo4j, banks can streamline operations by eliminating redundancies and optimising resource allocation. The clear visualisation of regulatory dependencies enables efficient decision-making, saving time and resources.
+
+4. *Agile Adaptation:* Neo4j's flexibility enables banks to adapt swiftly to regulatory changes. By modelling regulatory dependencies in a graph database, banks can easily update and modify their compliance strategies, ensuring agility in response to evolving regulations.
+
+5. *Enhanced Decision-making:* Neo4j's graph-based visualisations provide banks with a clear understanding of the regulatory landscape. This aids in identifying trends, patterns, and potential opportunities for process improvements and strategic decision-making.
+
+Overall, Neo4j's utilisation for regulatory dependency mapping delivers business benefits by ensuring comprehensive compliance, mitigating risks, enhancing operational efficiency, facilitating agile adaptation, and enabling informed decision-making in the ever-changing regulatory environment.
+
+== 4. Modelling
+
+This section will show examples of cypher queries on an example graph. The intention is to illustrate what the queries look like and provide a guide on how to structure your data in a real setting. We will do this on a small graph of several nodes. The example graph will be based on the data model below:
+
+=== 4.1. Data Model
+
+image::fs-regulatory-dependency-mapping-data-model.svg[]
+
+==== 4.1.1 Required Data Fields
+
+Below are the fields required to get started:
+
+`Standard` Node:
+
+* `id`: Contains the highest level standard name e.g. `MMIFIPRU`
+
+`Section` Node:
+
+* `id`: Contains the section id e.g. `MMIFIPRU 1` or `MMIFIPRU 1.1`
+* `title`: Includes the long description of this section e.g. `MIFIDPRU 1.1 Application and purpose`
+* `last_update`: This is the date that the section was last updated. It is essential to include this property if you intend to perform an analysis around regulatory change.
+
+=== 4.2. Demo Data
+
+The following Cypher statement will create the example graph in the Neo4j database:
+
+[source, cypher, role=noheader]
+----
+// Create main standard
+CREATE (standard:Standard {id: 'MIFIDPRU'})
+
+// Create all subsections
+CREATE (m1:Section {id: 'MIFIDPRU 1'})
+CREATE (m11:Section {id: 'MIFIDPRU 1.1', title: 'MIFIDPRU 1.1 Application and purpose', last_updated: date('2019-08-01')})
+CREATE (m12:Section {id: 'MIFIDPRU 1.2',  title: 'MIFIDPRU 1.2 SNI MIFIDPRU investment firms', last_updated: date('2019-11-06')})
+
+// Create DEPENDS_ON relationships
+CREATE (standard)<-[:DEPENDS_ON]-(m1)
+CREATE (m1)<-[:DEPENDS_ON]-(m11)
+CREATE (m1)<-[:DEPENDS_ON]-(m12)
+
+// Create RELATED relationship
+CREATE (m11)<-[:RELATED {subsection: 'MIFIDPRU 1.1R'}]-(m12)
+----
+
+=== 4.3. Neo4j Scheme
+
+If you call:
+
+[source, cypher, role=noheader]
+----
+// Show neo4j scheme
+CALL db.schema.visualization()
+----
+
+You will see the following response:
+
+image::fs-regulatory-dependency-mapping-schema.svg[]

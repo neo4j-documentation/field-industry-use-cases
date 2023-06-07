@@ -6,5 +6,6 @@ Furthermore, Neo4j's flexibility and scalability make it an effective tool for m
 
 Below are some example use cases to get started with:
 
+* xref:finserv/regulatory-dependency-mapping.adoc[]
 * xref:finserv/synthetic-identity-fraud.adoc[]
 * xref:finserv/transaction-ring.adoc[]
