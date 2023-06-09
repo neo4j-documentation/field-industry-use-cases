@@ -36,6 +36,19 @@ The example graph will be based on the data model below:
 
 image::fs-transaction-ring-data-model.svg[]
 
+==== 4.1.1 Required Fields
+Below are the fields required to get started:
+
+`Account` Node:
+
+* `accountNumber`: Contains the account name of an account. This could be changed for any other identifier you use for an `Account`.
+
+`TRANSACTION` Relationship:
+
+* `amount`:  Contains the amount of money transferred between accounts.
+* `currency`:  Contains the currency of the transaction.
+* `date`:  Contains the date the transaction occurred.
+
 === 4.2. Demo Data
 
 The following Cypher statement will create the example graph in the Neo4j database:
