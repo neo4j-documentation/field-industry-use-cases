@@ -153,6 +153,8 @@ RETURN path
 
 The link:https://neo4j.com/docs/graph-data-science/current/algorithms/wcc/[Weakly Connected Components (WCC) algorithm] identifies groups of connected nodes in both directed and undirected graphs. Nodes are considered connected if there is a path between them, and a component is formed by all the nodes that are connected to each other.
 
+The reason to use this algorithm is that it identifies clusters of connected nodes with similar attributes, such as `Email`, `Phone`, or `Passport`. It generates a community ID that can be reused in future investigations, providing valuable insights into the data and its surrounding communities.
+
 ==== 6.1.1 Create Monopartite Graph
 
 The WCC algorithm can only be applied on monopartite graphs with only one node label. In our case, the node label will be `Customer`. We must modify the graph to make the data compatible with the WCC algorithm. To do so, we can use the query below to establish a new relationship called `LINKED`, which will be used by the algorithm.
