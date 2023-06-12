@@ -50,7 +50,7 @@ This section will show examples of cypher queries on an example graph. The inten
 
 === 4.1. Data Model
 
-image::fs-regulatory-dependency-mapping-data-model.svg[]
+image::finserv/fs-regulatory-dependency-mapping-data-model.svg[]
 
 ==== 4.1.1 Required Data Fields
 
@@ -101,14 +101,14 @@ CALL db.schema.visualization()
 
 You will see the following response:
 
-image::fs-regulatory-dependency-mapping-schema.svg[]
+image::finserv/fs-regulatory-dependency-mapping-schema.svg[]
 
 === 5. Cypher Queries
 
 ==== 5.1. Show all `Section` nodes in a handbook
 With this query, you can explore the entire depth of a handbook. While the demo set is relatively small if you were to ingest the entire handbook, it would appear as follows:
 
-image::fs-regulatory-dependency-mapping-large-example.svg[]
+image::finserv/fs-regulatory-dependency-mapping-large-example.svg[]
 
 [source, cypher, role=noheader]
 ----

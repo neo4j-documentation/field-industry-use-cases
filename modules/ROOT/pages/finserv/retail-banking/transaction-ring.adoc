@@ -34,7 +34,7 @@ The example graph will be based on the data model below:
 
 === 4.1. Data Model
 
-image::fs-transaction-ring-data-model.svg[]
+image::finserv/fs-transaction-ring-data-model.svg[]
 
 ==== 4.1.1 Required Fields
 Below are the fields required to get started:
@@ -79,7 +79,7 @@ CALL db.schema.visualization()
 
 It will provide the following response:
 
-image::fs-transaction-ring-schema.svg[]
+image::finserv/fs-transaction-ring-schema.svg[]
 
 After ingesting the data, Neo4j interprets the graph schema. In the schema, we can observe an `Account` node connected to another `Account` node via a `TRANSACTION` relationship. Despite having the same label, the `Account` nodes possess different properties, such as accountNumber. However, the schema only considers the labels on nodes and relationships.
 

@@ -30,7 +30,7 @@ This section will show examples of cypher queries on an example graph. The inten
 
 === 4.1. Data Model
 
-image::fs-synthetic-identity-fraud-data-model.svg[]
+image::finserv/fs-synthetic-identity-fraud-data-model.svg[]
 
 ==== 4.1.1 Required Fields
 
@@ -91,7 +91,7 @@ CALL db.schema.visualization()
 
 You will see the following response:
 
-image::fs-synthetic-identity-fraud-schema.svg[]
+image::finserv/fs-synthetic-identity-fraud-schema.svg[]
 
 == 5. Cypher Queries
 
@@ -169,7 +169,7 @@ CREATE (c1)-[:LINKED]->(c2)
 
 The query above modifies the data model and  updates it to appear as follows:
 
-image::fs-synthetic-identity-fraud-gds-data-model.svg[]
+image::finserv/fs-synthetic-identity-fraud-gds-data-model.svg[]
 
 ==== 6.1.2 Graph Projection
 
