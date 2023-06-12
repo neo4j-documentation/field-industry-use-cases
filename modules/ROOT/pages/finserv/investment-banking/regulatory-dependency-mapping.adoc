@@ -10,6 +10,8 @@ Regulatory dependency mapping is a crucial tool for banks to navigate the comple
 
 == 2. Scenario
 
+In the fast moving word of regulatory compliance it is essential for investment banks to assess and map their regulatory dependencies by considering the applicable regulations in their jurisdiction and the regions where they operate.
+
 A good solution for dependency mapping is crucial for banks for several reasons.
 
 1. *Manage complex relationships and interdependencies.* By having a clear picture of these dependencies, banks can effectively identify potential vulnerabilities or points of failure and proactively mitigate them, ensuring the stability and resilience of their operations.
@@ -228,6 +230,7 @@ LIMIT 10;
 ----
 
 ===== 6.2.4.3. View `Section` with highest dependency and its related sections
+
 [source, cypher, role=noheader]
 ----
 // Get the most central node in communities

@@ -2,8 +2,10 @@
 
 
 * xref:finserv/homepage.adoc[]
+** xref:finserv/investment-banking/homepage.adoc[]
+*** xref:finserv/investment-banking/regulatory-dependency-mapping.adoc[]
+
 ** xref:finserv/retail-banking/homepage.adoc[]
-*** xref:finserv/retail-banking/regulatory-dependency-mapping.adoc[]
 *** xref:finserv/retail-banking/synthetic-identity-fraud.adoc[]
 *** xref:finserv/retail-banking/transaction-ring.adoc[]
 

@@ -6,8 +6,9 @@ Furthermore, Neo4j's flexibility and scalability make it an effective tool for m
 
 == Investment Banking
 
+* xref:finserv/investment-banking/regulatory-dependency-mapping.adoc[]
+
 == Retail Banking
 
-* xref:finserv/retail-banking/regulatory-dependency-mapping.adoc[]
 * xref:finserv/retail-banking/synthetic-identity-fraud.adoc[]
 * xref:finserv/retail-banking/transaction-ring.adoc[]
