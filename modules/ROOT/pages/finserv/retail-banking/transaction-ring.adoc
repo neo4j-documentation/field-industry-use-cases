@@ -63,10 +63,10 @@ CREATE (a4:Account {accountNumber: 4})
 
 
 // Create relationships between accounts
-CREATE (a1)-[:TRANSACTION {amount: 1000, currency: "gbp", date: datetime("2023-01-01T10:10:10.000+0000")}]->(a2)
-CREATE (a2)-[:TRANSACTION {amount: 900, currency: "gbp", date: datetime("2023-02-01T10:10:10.000+0000")}]->(a3)
-CREATE (a3)-[:TRANSACTION {amount: 810, currency: "gbp", date: datetime("2023-03-01T10:10:10.000+0000")}]->(a4)
-CREATE (a4)-[:TRANSACTION {amount: 729, currency: "gbp", date: datetime("2023-04-01T10:10:10.000+0000")}]->(a1)
+CREATE (a1)-[:TRANSACTION {amount: 1000, currency: "gbp", date: datetime()-duration({days: 3})}]->(a2)
+CREATE (a2)-[:TRANSACTION {amount: 900, currency: "gbp", date: datetime()-duration({days: 2})}]->(a3)
+CREATE (a3)-[:TRANSACTION {amount: 810, currency: "gbp", date: datetime()-duration({days: 1})}]->(a4)
+CREATE (a4)-[:TRANSACTION {amount: 729, currency: "gbp", date: datetime()}]->(a1)
 ----
 
 === 4.3. Neo4j Schema

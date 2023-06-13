@@ -77,8 +77,8 @@ CREATE (standard:Standard {id: 'MIFIDPRU'})
 
 // Create all subsections
 CREATE (m1:Section {id: 'MIFIDPRU 1'})
-CREATE (m11:Section {id: 'MIFIDPRU 1.1', title: 'MIFIDPRU 1.1 Application and purpose', last_updated: date('2019-08-01')})
-CREATE (m12:Section {id: 'MIFIDPRU 1.2',  title: 'MIFIDPRU 1.2 SNI MIFIDPRU investment firms', last_updated: date('2019-11-06')})
+CREATE (m11:Section {id: 'MIFIDPRU 1.1', title: 'MIFIDPRU 1.1 Application and purpose', last_updated: datetime()-duration({years: 1})})
+CREATE (m12:Section {id: 'MIFIDPRU 1.2',  title: 'MIFIDPRU 1.2 SNI MIFIDPRU investment firms', last_updated: datetime()-duration({months: 6})})
 
 // Create DEPENDS_ON relationships
 CREATE (standard)<-[:DEPENDS_ON]-(m1)
@@ -238,12 +238,12 @@ MATCH (s:Section)
 WITH s.communityId AS communityId, count(s) AS communitySize
 WHERE communitySize > 1
 CALL {
-WITH communityId
-MATCH (s:Section)
-WHERE s.communityId = communityId
-RETURN s.pagerank AS pagerank, s.id AS sectionId
-ORDER BY pagerank DESC
-LIMIT 1
+    WITH communityId
+    MATCH (s:Section)
+    WHERE s.communityId = communityId
+    RETURN s.pagerank AS pagerank, s.id AS sectionId
+    ORDER BY pagerank DESC
+    LIMIT 1
 }
 RETURN communityId, communitySize, pagerank, sectionId
 ORDER BY communitySize DESC
