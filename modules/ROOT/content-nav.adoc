@@ -9,6 +9,8 @@
 *** xref:finserv/retail-banking/synthetic-identity-fraud.adoc[]
 *** xref:finserv/retail-banking/transaction-ring.adoc[]
 
+* xref:insurance/homepage.adoc[]
+** xref:insurance/quote-fraud.adoc[]
 
 * xref:agnostic/homepage.adoc[]
 ** xref:agnostic/data-lineage.adoc[]
