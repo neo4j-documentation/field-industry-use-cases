@@ -10,7 +10,7 @@ Regulatory dependency mapping is a crucial tool for banks to navigate the comple
 
 == 2. Scenario
 
-In the fast moving word of regulatory compliance it is essential for investment banks to assess and map their regulatory dependencies by considering the applicable regulations in their jurisdiction and the regions where they operate.
+In the fast-moving world of regulatory compliance, investment banks must assess and map their regulatory dependencies by considering the applicable regulations in their jurisdiction and the regions where they operate.
 
 A good solution for dependency mapping is crucial for banks for several reasons.
 
@@ -106,7 +106,7 @@ image::finserv/fs-regulatory-dependency-mapping-schema.svg[]
 === 5. Cypher Queries
 
 ==== 5.1. Show all `Section` nodes in a handbook
-With this query, you can explore the entire depth of a handbook. While the demo set is relatively small if you were to ingest the entire handbook, it would appear as follows:
+With this query, you can explore the entire depth of a handbook. While the demo set is relatively small, if you were to ingest the whole handbook, it would appear as follows:
 
 image::finserv/fs-regulatory-dependency-mapping-large-example.svg[]
 
@@ -123,7 +123,8 @@ RETURN path
 The PageRank algorithm assesses the significance of every node in a graph by considering the number of incoming connections and the importance of the source nodes. In simple terms, it assumes that a regulatory section’s importance is determined by the importance of the sections that link to it.
 
 In this scenario, PageRank can reveal which sections of the regulation are the most important and therefore provide insight into how a potential change in regulations could affect a business. The higher the PageRank score, the most impact it may have on your organisation.
-6.1.1 Create GDS Projection
+
+==== 6.1.1 Create GDS Projection
 
 To start running any Graph Data Science algorithm, you first need to project a part of the graph. This will enable you to analyse the data in the projection effectively.
 
@@ -137,7 +138,7 @@ CALL gds.graph.project(
 )
 ----
 
-==== 6.1.3. GDS Stream
+==== 6.1.2. GDS Stream
 
 When using the `stream` execution mode, the algorithm will provide the component ID for every node. This allows for direct inspection of results or post-processing in Cypher, without any negative impact. By ordering the results, nodes belonging to the same component can be displayed together for easier analysis.
 
