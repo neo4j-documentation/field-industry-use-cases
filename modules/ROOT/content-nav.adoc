@@ -12,5 +12,3 @@
 * xref:insurance/homepage.adoc[]
 ** xref:insurance/quote-fraud.adoc[]
 
-* xref:agnostic/homepage.adoc[]
-** xref:agnostic/data-lineage.adoc[]
