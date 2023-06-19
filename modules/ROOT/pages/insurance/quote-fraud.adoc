@@ -1,0 +1,415 @@
+= Quote Fraud
+
+== 1. Introduction
+Insurance quote fraud refers to the deceptive practice of providing false or misleading information during the process of obtaining an insurance quote. Individuals or organisations engaged in this fraudulent activity deliberately manipulate data such as their personal details, assets, or claims history to secure lower insurance premiums.
+
+[quote,LexisNexis]
+“Research Reveals Half of U.K. Consumers Think It’s Fine to Fib”
+
+
+By misrepresenting their circumstances, they aim to deceive insurers into offering them more favourable rates or coverage than they would typically qualify for. Insurance quote fraud defrauds insurance companies and impacts other policyholders by potentially driving up premiums. Insurance companies employ various measures, such as data verification and cross-checking, to detect and prevent this type of fraud.
+
+== 2. Scenario
+Insurance quote fraud poses a significant business problem for insurance companies worldwide. According to industry reports, fraudulent activities cost the insurance sector billions of dollars annually. A recent study by the Insurance Information Institute revealed that approximately 10-20% of all insurance claims are fraudulent, with quotes being an initial stage where fraud can occur. The ramifications are far-reaching, impacting insurers' profitability, increasing premiums for honest policyholders, and eroding trust in the industry. Detecting and preventing insurance quote fraud has become a top priority for insurance companies, leading to the adoption of advanced technologies and data analysis techniques to mitigate this pervasive problem.
+
+== 3. Solution
+When it comes to combating insurance quote fraud, businesses are turning to advanced technologies for effective solutions. One such technology is Neo4j, a graph database that offers powerful data modelling and analysis capabilities. By leveraging Neo4j, insurance companies can connect and analyse complex relationships within their data, uncovering patterns, detecting fraud networks, and enhancing fraud detection algorithms. Neo4j's graph-based approach allows insurers to efficiently identify fraudulent activities, mitigate risks, and improve overall operational efficiency in combating insurance quote fraud.
+
+=== 3.1. How Graph Databases Can Help?
+1. Real-Time Fraud Detection: Neo4j's real-time data handling helps insurance companies detect and prevent fraud by quickly identifying anomalies and suspicious patterns in quotes, policies, and claims.
+
+2. Graph Data Modeling: Neo4j helps insurance companies detect and prevent fraud more accurately by modelling data as a graph, which allows for identifying hidden relationships and patterns among entities like policyholders, claims, agents, and fraud indicators.
+
+3. Network Analysis: Neo4j's graph algorithms and traversal capabilities can help insurers identify fraudulent networks and patterns involving multiple policies, claimants, or agents.
+
+== 4. Modelling
+This section will show examples of cypher queries on an example graph. The intention is to illustrate what the queries look like and provide a guide on how to structure your data in a real setting. We will do this on a small graph of several nodes. The example graph will be based on the data model below:
+
+=== 4.1. Data Model
+
+image::insurance/insurance-quote-fraud-data-model.svg[]
+
+==== 4.1.1 Required Fields
+
+Below are the fields required to get started:
+
+`Quote` node:
+
+* `firstname`: Contains the firstname of the applicant
+* `surname`: Contains the surname of the applicant
+* `dob`: Contains the date of birth of the applicant
+* `postcode`: Contains the postcode of applicant
+* `passport`: Contains the passport number of the applicant
+* `change_date`: Date time when the quote or application was submitted
+
+During the quote/application process, you have the ability to add properties to this node to monitor anything you wish. In my data model and test data, you may notice a `change_info` property. Please note that this property is only present for demonstration purposes in order to make it easier to understand any changes made since the last quote.
+
+`NEXT_QUOTE` relationship:
+
+* `diff_seconds`: This is the difference in seconds between the last quote and the current quote.
+
+=== 4.2. Demo Data
+
+The following Cypher statement will create the example graph in the Neo4j database:
+
+[source, cypher, role=noheader]
+----
+// Create quote nodes
+CREATE (q1:Quote {firstname: "Micheal", surname: "Down", dob: date("1988-02-02"), postcode: "YO30 7DW", longitude: -1.0927426, latitude: 53.96372145, passport: 584699531, created_date: datetime()-duration({years: 1, months: 1, minutes: 9}), change_info: "first quote"})
+CREATE (q2:Quote {firstname: "Michael", surname: "Down", dob: date("1988-02-02"), postcode: "YO30 7DW", longitude: -1.0927426, latitude: 53.96372145, passport: 584699531, created_date: datetime()-duration({years: 1, months: 1, minutes: 4}), change_info: "name change ea to ae"})
+CREATE (q3:Quote {firstname: "Michael", surname: "Down", dob: date("1988-02-02"), postcode: "YO30 7DW", longitude: -1.0927426, latitude: 53.96372145, passport: 584699531, created_date: datetime()-duration({years: 1, months: 1, minutes: 3}), change_info: "postcode_change"})
+CREATE (q4:Quote {firstname: "Michael", surname: "Down", dob: date("1988-02-02"), postcode: "PA62 6AA", longitude: -5.851487, latitude: 56.359258, passport: 584699530, created_date: datetime()-duration({years: 1, months: 1}), change_info: "passport number"})
+CREATE (q5:Quote {firstname: "Michael", surname: "Down", dob: date("1988-02-02"), postcode: "PA62 6AA", longitude: -5.851487, latitude: 56.359258, passport: 584699530, created_date: datetime()-duration({months: 1}), change_info: "quote 1yr later"})
+CREATE (q6:Quote {firstname: "Michael", surname: "Down", dob: date("1988-02-02"), postcode: "PA62 6AA", longitude: -5.851487, latitude: 56.359258, passport: 584699530, created_date: datetime(), change_info: "quote 1m later"})
+
+
+// Create all relationships
+CREATE (q1)-[:NEXT_QUOTE {diff_seconds: duration.inSeconds(q1.created_date, q2.created_date).seconds}]->(q2)
+CREATE (q2)-[:NEXT_QUOTE {diff_seconds: duration.inSeconds(q2.created_date, q3.created_date).seconds}]->(q3)
+CREATE (q3)-[:NEXT_QUOTE {diff_seconds: duration.inSeconds(q3.created_date, q4.created_date).seconds}]->(q4)
+CREATE (q4)-[:NEXT_QUOTE {diff_seconds: duration.inSeconds(q4.created_date, q5.created_date).seconds}]->(q5)
+CREATE (q5)-[:NEXT_QUOTE {diff_seconds: duration.inSeconds(q5.created_date, q6.created_date).seconds}]->(q6)
+----
+
+=== 4.3. Neo4j Scheme
+
+If you call:
+
+[source, cypher, role=noheader]
+----
+// Show neo4j scheme
+CALL db.schema.visualization()
+----
+
+You will see the following response:
+
+image::insurance/insurance-quote-fraud-data-schema.svg[]
+
+== 5. Cypher Queries
+
+=== 5.1. View all quotes in chain
+
+In this query, we will identify a quote chain with the following requirements:
+
+One quote is connected to another
+
+[source, cypher, role=noheader]
+----
+// View all quotes
+MATCH path=()-[r:NEXT_QUOTE]->()
+RETURN path;
+----
+
+=== 5.2. Splitting the `Quote` chain based on the time difference
+In the world of a quote, the time between quotes is a really important factor. Imagine the following scenario.
+
+Buying Car Insurance:
+Typically, car insurance needs to be purchased annually for a 12-month policy duration. As a result, there may be noticeable differences when comparing last year's quote to the new one.
+
+* No claims bonus - (hopefully) be 1 year greater than the previous year.
+* Car Age - would be 1 year older
+* Mileage - we would expect this to be greater. More so, depending on factors like a person's age, job, address etc...
+
+To identify discrepancies in the quote, we should divide them into small time intervals, like a web session.
+
+In this query, we will identify a quote chain with the following requirements:
+
+* All quotes have happened within 3600 seconds (or 1 hour) of each other
+
+[source, cypher, role=noheader]
+----
+// Split Quote Chain
+MATCH path=()-[rel:NEXT_QUOTE]->()
+WHERE rel.diff_seconds < 3600
+RETURN path;
+----
+
+The issue with this query is that when viewed in a table format, it displays the message, `Started streaming 3 records`. Essentially, Neo4j is returning 3 distinct records that meet the criteria of the path and sending them to the browser for display. While this may look visually appealing, it poses a problem when analysing the entire path. This will be addressed in the next query.
+
+image::insurance/insurance-quote-fraud-data-stream-3-records.png[width=400,height=400]
+
+=== 5.3. Single `Quote` path record
+This is an upgraded version of the previous cypher query. It has advanced pattern matching and guarantees that only one record is returned. It maintains the same characteristics as the previous version.
+
+* Single chain
+* Where all quotes are within 1 hour of each other
+* All quotes happen within the last 1000 days
+* 1 record is returned back for further analysis
+
+[source, cypher, role=noheader]
+----
+MATCH path=(firstQ)-[r:NEXT_QUOTE*..1000]->(lastQ)
+WHERE
+
+    // Path termination condition (first)
+    (not exists{ (firstQ)<-[:NEXT_QUOTE]-() } or exists{ (firstQ)<-[x:NEXT_QUOTE]-() where x.diff_seconds >= 3600 } )
+    AND
+
+    // Path termination condition (last)
+    (not exists{ (lastQ)-[:NEXT_QUOTE]->() } or exists{ (lastQ)-[x:NEXT_QUOTE]->() where x.diff_seconds >= 3600 } )
+    AND
+
+    // No gaps condition (if you remove this condition then gaps are allowed and you get spurious longer chains that verify the end of path but not the max diff condition)
+    all(x in relationships(path) where x.diff_seconds < 3600 )
+    AND
+
+    // Filter based on quote in the last N days
+    firstQ.created_date > datetime() - Duration({days: 1000})
+    AND
+
+    // Where there are more than one quote in the chain otherwise there is nothing to compare against
+    length(path)> 1
+
+RETURN path
+----
+
+You can now see from again to the table view that only a single record has been returned:
+
+image::insurance/insurance-quote-fraud-data-stream-1-record.png[width=400,height=400]
+
+=== 5.4. Create `SIMILARITY` relationship with scores
+
+In order to score the quotes, we must establish a connection that consolidates all quote attributes for both individual and overall evaluation.
+
+In order to score the quotes, we must establish a connection that consolidates all quote attributes for both individual and overall evaluation.
+
+In this query, we will identify a quote chain with the following requirements:
+
+* Get the full `Quote` chain for all `Quote` nodes that falls within the last 1000
+* Get the full `Quote` chain for all `Quote` nodes that have no longer than 1 hour time difference between each individual quote
+* Calculate scoring on properties
+* Write new `SIMILARITY` relationship for `Quote` chain
+
+[source, cypher, role=noheader]
+----
+// Create Similarity Relationship
+MATCH path=(firstQ)-[r:NEXT_QUOTE*..1000]->(lastQ)
+WHERE
+
+    // Path termination condition (first)
+    (NOT EXISTS{ (firstQ)<-[:NEXT_QUOTE]-() } OR EXISTS{ (firstQ)<-[x:NEXT_QUOTE]-() WHERE x.diff_seconds >= 3600 } )
+    AND
+    
+    // Path termination condition (last)
+    (NOT EXISTS{ (lastQ)-[:NEXT_QUOTE]->() } OR EXISTS{ (lastQ)-[x:NEXT_QUOTE]->() WHERE x.diff_seconds >= 3600 } )
+    AND
+    
+    // No gaps condition (if you remove this condition then gaps are allowed and you get spurious longer chains that verify the end of path but not the max diff condition)
+    ALL(x IN relationships(path) WHERE x.diff_seconds < 3600 )
+    AND
+
+    // Filter based on quote in the last N days
+    firstQ.created_date > datetime() - duration({days: 1000})
+    AND
+
+    // Where there are more than one quote in the chain otherwise there is nothing to compare against
+    length(path)> 1
+
+WITH nodes(path) as nodes
+
+// Iterate over the list in chain order we create an array [0,1,2,3... length - 2]
+UNWIND range(0,size(nodes)-2) as index
+
+// For each position (index) in the list take the node at that position (current) and the rest
+WITH nodes[index] as current, nodes[index+1..size(nodes)] as rest
+
+// Iterate over the rest keeping current to get all pairs of nodes without repetitions
+UNWIND rest as subsequent
+
+WITH current, subsequent,
+
+// Build up similarity scores for all properties
+// Strings
+apoc.text.levenshteinSimilarity(current.firstname, subsequent.firstname) AS firstname,
+apoc.text.levenshteinSimilarity(current.surname, subsequent.surname) AS surname,
+apoc.text.levenshteinSimilarity(current.postcode, subsequent.postcode) AS postcode,
+
+// Numbers
+(current.passport - subsequent.passport) AS passport_number,
+apoc.text.levenshteinSimilarity(toString(current.passport), toString(subsequent.passport)) AS passport_similarity,
+
+// Dates
+duration.inDays(current.dob, subsequent.dob).days AS dob,
+
+// Location
+toInteger(point.distance(point({longitude: current.longitude, latitude: current.latitude}), point({longitude: subsequent.longitude, latitude: subsequent.latitude}))) AS location
+
+// Create :SIMILARITY Relationship
+CREATE (current)-[:SIMILARITY {
+    // Add change string for simplicity
+    change: subsequent.change_info,
+
+    // Strings
+    firstname: firstname,
+    surname: surname,
+    postcode: postcode,
+
+    // Numbers
+    passport_number: passport_number,
+    passport_similarity: passport_similarity,
+
+    // Dates
+    dob: dob,
+
+    // Location
+    location: location,
+
+    // Calulcated Similarity Score
+    similarity_score: (firstname + surname + postcode + passport_similarity ) / 4
+}]->(subsequent)
+----
+
+View newly created relationships:
+
+[source, cypher, role=noheader]
+----
+// View all SIMILARITY relationships
+MATCH path=()-[r:SIMILARITY]->()
+RETURN path;
+----
+
+=== 5.5. Static Scoring
+
+In this query, we will identify a quote chain with the following requirements:
+
+* Calculate the score that is then returned to the user based on the `SIMILARITY` relationship in the query in 5.4.
+
+
+[source, cypher, role=noheader]
+----
+// Calculate static Fraud Score
+MATCH path=(a)-[r:SIMILARITY]->(b)
+WHERE a.created_date > datetime() - Duration({days: 1000})
+RETURN sum(r.similarity_score)/COUNT(relationships(path)) AS Similarity,
+CASE
+    WHEN COUNT(relationships(p)) = 0 THEN 'Additional Quote Needs Adding'
+    WHEN toInteger(sum(r.similarity_score)/COUNT(relationships(path)) * 100) > 70 THEN 'LOW'
+    WHEN toInteger(sum(r.similarity_score)/COUNT(relationships(path)) * 100) < 70 AND toInteger(sum(r.similarity_score)/COUNT(relationships(path)) * 100) > 50 THEN 'MEDIUM'
+    WHEN toInteger(sum(r.similarity_score)/COUNT(relationships(path)) * 100) < 50 THEN 'HIGH'
+END AS Fraud_Level
+----
+
+=== 5.5. Real-time fraud scoring
+
+For our last cypher query, we'll add a new quote to Neo4j and run a fraud score calculation to obtain a real-time response showing the similarity score. This code could be used behind an API or directly in Cypher, which would provide an in-flight indication of fraud.
+
+In this query, we will identify a quote chain with the following requirements:
+
+* Get the last quote
+* Create a new `Quote` attached to the end of the chain
+* Get the full `Quote` chain for all `Quote` nodes that falls within the last 1000
+* Get the full `Quote` chain for all `Quote` nodes that have no longer than 1 hour time difference between each individual quote
+* Calculate scoring on properties
+* Write new `SIMILARITY` relationship for `Quote` chain
+* Calculate score that is then return to user
+
+
+[source, cypher, role=noheader]
+----
+// // // Realtime Quote Score // // //
+
+// Get last `Quote` node in quote chain
+MATCH (last:Quote)
+WITH last
+ORDER BY last.created_date DESC
+LIMIT 1
+WITH last
+// Create new quote node
+MERGE (current:Quote {
+    change_info: "changed dob",
+    created_date: datetime(),
+    dob: Date("1978-11-30"),
+    firstname: "Michael",
+    surname: "Down",
+    latitude: 56.359258,
+    longitude: -5.851487,
+    passport: 584699530,
+    postcode: "PA62 6AA"
+})
+WITH last, current, duration.inSeconds(DateTime(last.created_date), DateTime(current.created_date)) AS time
+// Create relationship
+CREATE (last)-[:NEXT_QUOTE {diff_seconds: time.seconds}]->(current)
+
+WITH current
+
+// Minimum comparison
+MATCH path=(firstQ)-[r:NEXT_QUOTE*0..100]->(current)
+WHERE
+
+    // Path termination condition (first)
+    (NOT EXISTS{ (firstQ)<-[:NEXT_QUOTE]-() } OR EXISTS{ (firstQ)<-[x:NEXT_QUOTE]-() WHERE x.diff_seconds >= 3600 } )
+    AND
+    
+    // Path termination condition (last)
+    (NOT EXISTS{ (lastQ)-[:NEXT_QUOTE]->() } OR EXISTS{ (lastQ)-[x:NEXT_QUOTE]->() WHERE x.diff_seconds >= 3600 } )
+    AND
+    
+    // No gaps condition (if you remove this condition then gaps are allowed and you get spurious longer chains that verify the end of path but not the max diff condition)
+    ALL(x IN relationships(path) WHERE x.diff_seconds < 3600 )
+    AND
+
+    // Filter based on quote in the last N days
+    firstQ.created_date > datetime() - duration({days: 1000})
+    AND
+
+    // Where there are more than one quote in the chain otherwise there is nothing to compare against
+    length(path)> 1
+
+//let's keep just the nodes in the chain
+UNWIND nodes(path)[0..-1] as subsequent
+
+WITH current, subsequent,
+
+// Build up similarity scores for all properties
+// Strings
+apoc.text.levenshteinSimilarity(current.firstname, subsequent.firstname) AS firstname,
+apoc.text.levenshteinSimilarity(current.surname, subsequent.surname) AS surname,
+apoc.text.levenshteinSimilarity(current.postcode, subsequent.postcode) AS postcode,
+
+// Numbers
+(current.passport - subsequent.passport) AS passport_number,
+apoc.text.levenshteinSimilarity(toString(current.passport), toString(subsequent.passport)) AS passport_similarity,
+
+// Dates
+duration.inDays(current.dob, subsequent.dob).days AS dob,
+
+// Location
+toInteger(point.distance(point({longitude: current.longitude, latitude: current.latitude}), point({longitude: subsequent.longitude, latitude: subsequent.latitude}))) AS location
+
+// Create :SIMILARITY Relationship
+CREATE (current)-[:SIMILARITY {
+    // Add change string for simplicity
+    change: subsequent.change_info,
+    
+    // Strings
+    firstname: firstname,
+    surname: surname,
+    postcode: postcode,
+
+    // Numbers
+    passport_number: passport_number,
+    passport_similarity: passport_similarity,
+
+    // Dates
+    dob: dob,
+
+    // Location
+    location: location,
+    
+    // Calulcated Similarity Score
+    similarity_score: (firstname + surname + postcode + passport_similarity ) / 4
+}]->(subsequent)
+
+WITH *
+
+// Quote - 3 - Calculate Fraud Score
+MATCH p=(a)-[r:SIMILARITY]->(b)
+WHERE a.created_date > datetime() - Duration({days: 1000})
+RETURN avg(r.similarity_score) AS Similarity,
+CASE
+    WHEN COUNT(relationships(p)) = 0 THEN 'Run Agiain'
+    WHEN toInteger(sum(r.similarity_score)/COUNT(relationships(p)) * 100) > 70 THEN 'LOW'
+    WHEN toInteger(sum(r.similarity_score)/COUNT(relationships(p)) * 100) < 70 AND toInteger(sum(r.similarity_score)/COUNT(relationships(p)) * 100) > 50 THEN 'MEDIUM'
+    WHEN toInteger(sum(r.similarity_score)/COUNT(relationships(p)) * 100) < 50 THEN 'HIGH'
+END AS Fraud_Level;
+----

@@ -1,0 +1,251 @@
+= Regulatory Dependency Mapping
+
+== 1. Introduction
+
+Regulatory dependency mapping in banking refers to the process of identifying and understanding the intricate relationships and interdependencies between different regulations and the various aspects of a bank's operations. It involves mapping how specific regulations impact the bank's products, services, processes, and systems.
+
+This mapping exercise helps banks gain a comprehensive overview of the regulatory landscape they operate in. It involves analysing and documenting the dependencies between regulations and identifying overlaps, conflicts, and gaps in compliance requirements. 
+
+Regulatory dependency mapping is a crucial tool for banks to navigate the complex and ever-evolving regulatory environment, ensure compliance with applicable laws, and effectively manage the risks associated with regulatory changes.
+
+== 2. Scenario
+
+In the fast-moving world of regulatory compliance, investment banks must assess and map their regulatory dependencies by considering the applicable regulations in their jurisdiction and the regions where they operate.
+
+A good solution for dependency mapping is crucial for banks for several reasons.
+
+1. *Manage complex relationships and interdependencies.* By having a clear picture of these dependencies, banks can effectively identify potential vulnerabilities or points of failure and proactively mitigate them, ensuring the stability and resilience of their operations.
+
+2. *Assess the impact of organisational changes.* It helps identify which components or services may be affected by a particular change, allowing banks to plan and execute changes with minimal disruption to critical functions.
+
+3. *Risk management and compliance.* Banks operate in a highly regulated environment, and accurate knowledge of dependencies is vital for ensuring compliance with regulatory requirements, such as data protection and business continuity planning.
+
+4. *Efficient troubleshooting and incident response.* When issues arise, banks can quickly identify the affected components and their dependencies, enabling faster diagnosis and resolution of problems.
+
+Overall, a robust dependency mapping solution empowers banks to enhance operational efficiency, reduce risks, maintain regulatory compliance, and provide uninterrupted customer services, thereby strengthening their reputation and trust in the market.
+
+== 3. Solution
+
+In a rapidly changing regulatory world, it's essential to have a systemic approach that enables easy modelling and insight into both regulatory changes and their potential impact on your business. Neo4j is an excellent tool for supporting you on this journey.
+
+=== 3.1. How Graph Databases Can Help?
+
+Neo4j is an ideal solution for regulatory dependency mapping in banking, providing several business benefits:
+
+1. *Comprehensive Compliance:* Neo4j gives banks a holistic view of their regulatory landscape. It helps identify and map dependencies, overlaps, and gaps in compliance requirements, ensuring complete adherence to regulations.
+
+2. *Risk Mitigation:* By accurately capturing and analysing regulatory relationships, Neo4j empowers banks to identify potential risks and assess their impact. This allows for proactive risk mitigation measures and reduces the likelihood of compliance breaches.
+
+3. *Operational Efficiency:* With Neo4j, banks can streamline operations by eliminating redundancies and optimising resource allocation. The clear visualisation of regulatory dependencies enables efficient decision-making, saving time and resources.
+
+4. *Agile Adaptation:* Neo4j's flexibility enables banks to adapt swiftly to regulatory changes. By modelling regulatory dependencies in a graph database, banks can easily update and modify their compliance strategies, ensuring agility in response to evolving regulations.
+
+5. *Enhanced Decision-making:* Neo4j's graph-based visualisations provide banks with a clear understanding of the regulatory landscape. This aids in identifying trends, patterns, and potential opportunities for process improvements and strategic decision-making.
+
+Overall, Neo4j's utilisation for regulatory dependency mapping delivers business benefits by ensuring comprehensive compliance, mitigating risks, enhancing operational efficiency, facilitating agile adaptation, and enabling informed decision-making in the ever-changing regulatory environment.
+
+== 4. Modelling
+
+This section will show examples of cypher queries on an example graph. The intention is to illustrate what the queries look like and provide a guide on how to structure your data in a real setting. We will do this on a small graph of several nodes. The example graph will be based on the data model below:
+
+=== 4.1. Data Model
+
+image::finserv/fs-regulatory-dependency-mapping-data-model.svg[]
+
+==== 4.1.1 Required Data Fields
+
+Below are the fields required to get started:
+
+`Standard` Node:
+
+* `id`: Contains the highest level standard name e.g. `MMIFIPRU`
+
+`Section` Node:
+
+* `id`: Contains the section id e.g. `MMIFIPRU 1` or `MMIFIPRU 1.1`
+* `title`: Includes the long description of this section e.g. `MIFIDPRU 1.1 Application and purpose`
+* `last_update`: This is the date that the section was last updated. It is essential to include this property if you intend to perform an analysis around regulatory change.
+
+=== 4.2. Demo Data
+
+The following Cypher statement will create the example graph in the Neo4j database:
+
+[source, cypher, role=noheader]
+----
+// Create main standard
+CREATE (standard:Standard {id: 'MIFIDPRU'})
+
+// Create all subsections
+CREATE (m1:Section {id: 'MIFIDPRU 1'})
+CREATE (m11:Section {id: 'MIFIDPRU 1.1', title: 'MIFIDPRU 1.1 Application and purpose', last_updated: datetime()-duration({years: 1})})
+CREATE (m12:Section {id: 'MIFIDPRU 1.2',  title: 'MIFIDPRU 1.2 SNI MIFIDPRU investment firms', last_updated: datetime()-duration({months: 6})})
+
+// Create DEPENDS_ON relationships
+CREATE (standard)<-[:DEPENDS_ON]-(m1)
+CREATE (m1)<-[:DEPENDS_ON]-(m11)
+CREATE (m1)<-[:DEPENDS_ON]-(m12)
+
+// Create RELATED relationship
+CREATE (m11)<-[:RELATED {subsection: 'MIFIDPRU 1.1R'}]-(m12)
+----
+
+=== 4.3. Neo4j Scheme
+
+If you call:
+
+[source, cypher, role=noheader]
+----
+// Show neo4j scheme
+CALL db.schema.visualization()
+----
+
+You will see the following response:
+
+image::finserv/fs-regulatory-dependency-mapping-schema.svg[]
+
+=== 5. Cypher Queries
+
+==== 5.1. Show all `Section` nodes in a handbook
+With this query, you can explore the entire depth of a handbook. While the demo set is relatively small, if you were to ingest the whole handbook, it would appear as follows:
+
+image::finserv/fs-regulatory-dependency-mapping-large-example.svg[]
+
+[source, cypher, role=noheader]
+----
+// Show all sections in a handbook
+MATCH path=(:Standard {id: 'MIFIDPRU'})<-[:DEPENDS_ON*..4]-(:Section)
+RETURN path 
+----
+
+== 6. Graph Data Science (GDS)
+
+=== 6.1. PageRank
+The PageRank algorithm assesses the significance of every node in a graph by considering the number of incoming connections and the importance of the source nodes. In simple terms, it assumes that a regulatory section’s importance is determined by the importance of the sections that link to it.
+
+In this scenario, PageRank can reveal which sections of the regulation are the most important and therefore provide insight into how a potential change in regulations could affect a business. The higher the PageRank score, the most impact it may have on your organisation.
+
+==== 6.1.1 Create GDS Projection
+
+To start running any Graph Data Science algorithm, you first need to project a part of the graph. This will enable you to analyse the data in the projection effectively.
+
+[source, cypher, role=noheader]
+----
+// Create projection
+CALL gds.graph.project(
+   'pageRank',
+   'Section',
+   'RELATED'
+)
+----
+
+==== 6.1.2. GDS Stream
+
+When using the `stream` execution mode, the algorithm will provide the component ID for every node. This allows for direct inspection of results or post-processing in Cypher, without any negative impact. By ordering the results, nodes belonging to the same component can be displayed together for easier analysis.
+
+[source, cypher, role=noheader]
+----
+// Stream results
+CALL gds.pageRank.stream('pageRank')
+YIELD nodeId, score
+RETURN gds.util.asNode(nodeId).id AS name, score
+ORDER BY score DESC, name ASC
+----
+
+==== 6.1.3. GDS Write
+
+By using the "write" execution mode, you can add the component ID of each node as a property in the Neo4j database. You must specify the name of the new property using the `writeProperty` configuration parameter. The output will show a summary row with additional metrics, similar to the `stats` mode. Using the `write` mode allows you to save the results directly to the database.
+
+[source, cypher, role=noheader]
+----
+// Write PageRank score back to graph
+CALL gds.pageRank.write('pageRank', {
+    maxIterations: 20,
+    dampingFactor: 0.85,
+    writeProperty: 'pagerank'
+})
+YIELD nodePropertiesWritten, ranIterations
+----
+
+=== 6.2. Weakly Connected Components
+
+The Weakly Connected Components (WCC) algorithm finds sets of connected nodes in directed and undirected graphs. Two nodes are connected if there exists a path between them. The set of all nodes that are connected with each other form a component. 
+
+==== 6.2.1. Create GDS Projection
+
+[source, cypher, role=noheader]
+----
+// Project graph
+CALL gds.graph.project(
+    'wcc',
+    'Section',
+    'RELATED'
+)
+
+----
+
+==== 6.2.2. GDS Stream
+
+When using the `stream` execution mode, the algorithm will provide the component ID for every node. This allows for direct inspection of results or post-processing in Cypher, without any negative impact. By ordering the results, nodes belonging to the same component can be displayed together for easier analysis.
+
+[source, cypher, role=noheader]
+----
+// Stream communities
+CALL gds.wcc.stream('wcc')
+YIELD nodeId, componentId
+RETURN gds.util.asNode(nodeId).id AS name, componentId
+ORDER BY componentId, name
+----
+
+==== 6.2.3. GDS Write
+
+By using the "write" execution mode, you can add the component ID of each node as a property in the Neo4j database. You must specify the name of the new property using the `writeProperty` configuration parameter. The output will show a summary row with additional metrics, similar to the `stats` mode. Using the `write` mode allows you to save the results directly to the database.
+
+[source, cypher, role=noheader]
+----
+// Write community id
+CALL gds.wcc.write('wcc', { writeProperty: 'communityId' })
+YIELD nodePropertiesWritten, componentCount;
+----
+
+==== 6.2.4. Cypher post WCC
+
+===== 6.2.4.1. List all communities by size
+
+[source, cypher, role=noheader]
+----
+// Return all communities and their size
+MATCH (s:Section)
+RETURN s.communityId AS communityId, count(s) AS communitySize
+ORDER BY communitySize DESC;
+----
+
+===== 6.2.4.2. Top 10 biggest commuinities
+
+[source, cypher, role=noheader]
+----
+// Find top 10 biggest communities
+MATCH (s:Section)
+RETURN s.communityId AS id, COUNT(s) AS size
+ORDER BY size DESC
+LIMIT 10;
+----
+
+===== 6.2.4.3. View `Section` with highest dependency and its related sections
+
+[source, cypher, role=noheader]
+----
+// Get the most central node in communities
+MATCH (s:Section)
+WITH s.communityId AS communityId, count(s) AS communitySize
+WHERE communitySize > 1
+CALL {
+    WITH communityId
+    MATCH (s:Section)
+    WHERE s.communityId = communityId
+    RETURN s.pagerank AS pagerank, s.id AS sectionId
+    ORDER BY pagerank DESC
+    LIMIT 1
+}
+RETURN communityId, communitySize, pagerank, sectionId
+ORDER BY communitySize DESC
+----

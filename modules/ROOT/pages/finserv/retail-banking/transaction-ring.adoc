@@ -1,0 +1,174 @@
+= Transaction Fraud Ring
+
+== 1. Introduction
+
+A transaction fraud ring refers to a group of people collaborating to engage in fraudulent activities, like transferring funds through multiple accounts. These rings work across different locations and employ diverse strategies to evade detection. It is critical for financial organisations to detect these rings, especially with enhancement to Contingent Reimbursement Model (CRM).
+
+== 2. Scenario
+
+The requirement for financial institutes to implement and stop transaction fraud has been around for many years and is core to many regulations. 
+
+One example of this is enhancements that are being made to protect customers from Authorised Push Payment scams. The UK has increased customer protection and placed a more significant responsibility on financial institutions to help mitigate these scams. 
+
+One of the fastest-growing scams is the Authorised Push Payment (APP) fraud. It resulted in a loss of over *£249 million in the first half of 2022*, a 30% increase compared to the same period in 2020. Reference
+
+Understanding fraudulent behaviour inside your network is one of many ways to help mitigate these scams, as you can identify fraudulent accounts inside your banking estate.
+
+== 3. Solution
+
+Neo4j offer an improved method of uncovering transaction fraud rings and other sophisticated scams with a high degree of accuracy and is capable of stopping advanced fraud scenarios in real-time.
+
+=== How Graph Databases Can Help?
+
+Implementing Neo4j can help execute analysis that was not previously possible. Examples of the scenarios are:
+
+* Execute ring-based queries to follow transactions as they are sent to both internal and external beneficiaries.
+* In real-time, perform advanced analytics on the transaction rings to understand patterns.
+* Understand common exit and entry accounts in possible fraudulent activities.
+
+== 4. Modelling
+
+This section will show examples of cypher queries on an example graph. The intention is to illustrate what the queries look like and provide a guide on how to structure your data in a real setting. We will do this on a small transaction network graph of several nodes connected in a ring structure.
+
+The example graph will be based on the data model below:
+
+=== 4.1. Data Model
+
+image::finserv/fs-transaction-ring-data-model.svg[]
+
+==== 4.1.1 Required Fields
+Below are the fields required to get started:
+
+`Account` Node:
+
+* `accountNumber`: Contains the account name of an account. This could be changed for any other identifier you use for an `Account`.
+
+`TRANSACTION` Relationship:
+
+* `amount`:  Contains the amount of money transferred between accounts.
+* `currency`:  Contains the currency of the transaction.
+* `date`:  Contains the date the transaction occurred.
+
+=== 4.2. Demo Data
+
+The following Cypher statement will create the example graph in the Neo4j database:
+
+[source, cypher, role=noheader]
+----
+// Create all accounts
+CREATE (a1:Account {accountNumber: 1})
+CREATE (a2:Account {accountNumber: 2})
+CREATE (a3:Account {accountNumber: 3})
+CREATE (a4:Account {accountNumber: 4})
+
+
+// Create relationships between accounts
+CREATE (a1)-[:TRANSACTION {amount: 1000, currency: "gbp", date: datetime()-duration({days: 3})}]->(a2)
+CREATE (a2)-[:TRANSACTION {amount: 900, currency: "gbp", date: datetime()-duration({days: 2})}]->(a3)
+CREATE (a3)-[:TRANSACTION {amount: 810, currency: "gbp", date: datetime()-duration({days: 1})}]->(a4)
+CREATE (a4)-[:TRANSACTION {amount: 729, currency: "gbp", date: datetime()}]->(a1)
+----
+
+=== 4.3. Neo4j Schema
+
+[source, cypher, role=noheader]
+----
+// Show neo4j scheme
+CALL db.schema.visualization()
+----
+
+It will provide the following response:
+
+image::finserv/fs-transaction-ring-schema.svg[]
+
+After ingesting the data, Neo4j interprets the graph schema. In the schema, we can observe an `Account` node connected to another `Account` node via a `TRANSACTION` relationship. Despite having the same label, the `Account` nodes possess different properties, such as accountNumber. However, the schema only considers the labels on nodes and relationships.
+
+== 5. Cypher Queries
+
+=== 5.1. Simple transaction ring
+
+In this query, we will identify a ring with the following requirements:
+
+* `Account` nodes should be connected via a `TRANSACTION` relationship.
+* Ensure the direction of the transaction is followed (not a bidirectional query).
+* Find a ring greater than three transactions long but less than 7.
+
+[source, cypher, role=noheader]
+----
+// Identify simple transaction ring
+MATCH path=(a:Account)-[:TRANSACTION*3..6]->(a)
+RETURN path
+----
+
+=== 5.2. Transaction ring with no duplicate accounts
+In this query, we will identify a ring with the following requirements:
+
+* `Account` nodes should be connected via a `TRANSACTION` relationship.
+* Ensure the direction of the transaction is followed (not a bidirectional query).
+* Find a ring greater than three transactions long but less than 7.
+* Ensure that the ring is made up of unique accounts.
+
+[source, cypher, role=noheader]
+----
+// Identify transaction ring with no duplicate accounts
+MATCH path=(a:Account)-[:TRANSACTION*2..4]->(a)
+// Here we ensure that one path has unique people involved in the chain
+WHERE ALL(n IN nodes(path) WHERE apoc.coll.occurrences(nodes(path)[..-1], n) = 1)
+// Return all paths
+RETURN path
+----
+
+=== 5.3. Transaction ring with chronological transactions
+
+In this query, we will identify a ring with the following requirements:
+
+* `Account` nodes should be connected via a `TRANSACTION` relationship.
+* Ensure the direction of the transaction is followed (not a bidirectional query).
+* Find a ring greater than three transactions long but less than 7.
+* Ensure that the ring is made up of unique accounts
+* Make sure that the `TRANSACTION` relationships are in chronological order
+
+[source, cypher, role=noheader]
+----
+// Identify transaction ring where dates are in chronological order
+MATCH path=(a:Account)-[rel:TRANSACTION*2..4]->(a)
+// Here we ensure that one path has unique people involved in the chain
+WHERE ALL(n IN nodes(path) WHERE apoc.coll.occurrences(nodes(path)[..-1], n) = 1)
+// Relationship validation
+AND ALL(idx in range(0, size(rel)-2)
+       // Ensures the dates are in chronological order
+       WHERE (rel[idx]).date < (rel[idx+1]).date
+   )
+// Return all paths
+RETURN path
+----
+
+=== 5.4. Transaction ring with 20% amount deduction
+
+When money is passed through a fraud ring, the amount that moves between accounts is often reduced by a fee of up to 20%. To account for this, our query will allow for a reduction of up to 20% at each transaction.
+
+In this query, we will identify a ring with the following requirements:
+
+* `Account` nodes should be connected via a `TRANSACTION` relationship.
+* Ensure the direction of the transaction is followed (not a bidirectional query).
+* Find a ring greater than three transactions long but less than 7.
+* Ensure that the ring is made up of unique accounts
+* Make sure that the `TRANSACTION` relationships are in chronological order
+* Check that the `TRANSACTION` amount is within 20% of the previous TRANSACTION.
+
+[source, cypher, role=noheader]
+----
+// Identify transaction ring where amounts are within 20% of each other
+MATCH path=(a:Account)-[rel:TRANSACTION*2..4]->(a)
+// Here we ensure that one path has unique people involved in the chain
+WHERE ALL(n IN nodes(path) WHERE apoc.coll.occurrences(nodes(path)[..-1], n) = 1)
+// Relationship validation
+AND ALL(idx in range(0, size(rel)-2)
+       // Ensures the dates are in chronological order
+       WHERE (rel[idx]).date < (rel[idx+1]).date
+       // Checks that there is less than a 20% difference from the last `TRANSACTION` amount to the next
+       AND (rel[idx+1].amount / rel[idx].amount) * 100 <= 20
+   )
+// Return all paths
+RETURN path
+----

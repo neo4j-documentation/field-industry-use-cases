@@ -1,0 +1,5 @@
+= Industry Agnostic
+
+== Use Cases
+
+* xref:agnostic/data-lineage.adoc[]

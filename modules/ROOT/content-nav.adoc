@@ -1,4 +1,14 @@
 * xref:index.adoc[]
-* xref:getting-started.adoc[]
-* xref:content-types.adoc[]
-* xref:trademarks.adoc[]
+
+
+* xref:finserv/homepage.adoc[]
+** xref:finserv/investment-banking/homepage.adoc[]
+*** xref:finserv/investment-banking/regulatory-dependency-mapping.adoc[]
+
+** xref:finserv/retail-banking/homepage.adoc[]
+*** xref:finserv/retail-banking/synthetic-identity-fraud.adoc[]
+*** xref:finserv/retail-banking/transaction-ring.adoc[]
+
+* xref:insurance/homepage.adoc[]
+** xref:insurance/quote-fraud.adoc[]
+

@@ -1,17 +1,8 @@
-= Docs template
+= Neo4j Industry Use Cases
 
-This is the main index page for your docs project.
+Explore the potential of Neo4j's graph database with our industry-specific use cases. Uncover hidden connections and gain unparalleled insights into healthcare, finance, e-commerce, logistics, social networks, and more. Our website offers valuable resources for data enthusiasts, developers, and business professionals seeking to enhance decision-making, optimise performance, and foster innovation. Unlock the transformative power of Neo4j for your industry today.
 
-== Start page
+== 1. Industries
 
-When you build your content locally, this page should be specified as the start page in _preview.yml_.
-
-[source, yaml, role=noheader]
-----
-start_page: docs-template:ROOT:index.adoc
-----
-
-[TIP]
-====
-This repo contains example content such as asciidoc pages, re-usable fragments, and examples, to show where different types of files should be stored in an Antora project.
-====
+* xref:finserv/homepage.adoc[]
+* xref:agnostic/homepage.adoc[]
