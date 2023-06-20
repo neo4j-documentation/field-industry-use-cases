@@ -96,7 +96,7 @@ In this query, we will identify a ring with the following requirements:
 [source, cypher, role=noheader]
 ----
 // Identify simple transaction ring
-MATCH path=(a:Account)-[:TRANSACTION*3..6]->(a)
+MATCH path=(a:Account)-[:TRANSACTION*2..6]->(a)
 RETURN path
 ----
 
@@ -111,12 +111,32 @@ In this query, we will identify a ring with the following requirements:
 [source, cypher, role=noheader]
 ----
 // Identify transaction ring with no duplicate accounts
-MATCH path=(a:Account)-[:TRANSACTION*2..4]->(a)
+MATCH path=(a:Account)-[:TRANSACTION*2..6]->(a)
 // Here we ensure that one path has unique people involved in the chain
 WHERE ALL(n IN nodes(path) WHERE apoc.coll.occurrences(nodes(path)[..-1], n) = 1)
 // Return all paths
 RETURN path
 ----
+
+==== 5.2.1. What is the query doing?
+
+`-[:TRANSACTION*2..6]->`
+
+* This part of the query specifies an explicit direction from the left node the right. In addition the `*2..6` signifies that we can traverse a minimum of 2 and a maximum of 4 relationships from the starting Account.
+
+`ALL(n IN nodes(path) WHERE apoc.coll.occurrences(nodes(path)[..-1], n) = 1)`
+
+This is a key step as it evaluates all the nodes in the path to ensure they are unique. So let's go ahead and break this down. 
+
+* `ALL();` this function needs all parts to return true for the query to enter the next phase of the execution plan.
+
+* `ALL(n in nodes(path))` this allows us to iterate over each node in the path.
+
+* `apoc.coll.occurrences()` is a function that returns the count of a given item in a collection. In this case, it will be for an Account node in a list of all Account nodes in the path.
+
+* `apoc.coll.occurrences(nodes(path)[..-1], n)` here you can see that we are passing all the nodes in the path `nodes(path)` but we are removing the last node in the path using `[..-1]` the reason for this is that our query requires we both START and END with the same Account node. Thus if we do not remove the last node, our query will never return true for unique Account nodes. You can also see we pass in `n`, which is each individual node, so they can be checked if they exist in the whole path. If the output of this function is 1 this tells us there is only a single of occurrence of all nodes in the path, and our uniqueness constraint passes. 
+
+
 
 === 5.3. Transaction ring with chronological transactions
 
@@ -131,7 +151,7 @@ In this query, we will identify a ring with the following requirements:
 [source, cypher, role=noheader]
 ----
 // Identify transaction ring where dates are in chronological order
-MATCH path=(a:Account)-[rel:TRANSACTION*2..4]->(a)
+MATCH path=(a:Account)-[rel:TRANSACTION*2..6]->(a)
 // Here we ensure that one path has unique people involved in the chain
 WHERE ALL(n IN nodes(path) WHERE apoc.coll.occurrences(nodes(path)[..-1], n) = 1)
 // Relationship validation
@@ -159,7 +179,7 @@ In this query, we will identify a ring with the following requirements:
 [source, cypher, role=noheader]
 ----
 // Identify transaction ring where amounts are within 20% of each other
-MATCH path=(a:Account)-[rel:TRANSACTION*2..4]->(a)
+MATCH path=(a:Account)-[rel:TRANSACTION*2..6]->(a)
 // Here we ensure that one path has unique people involved in the chain
 WHERE ALL(n IN nodes(path) WHERE apoc.coll.occurrences(nodes(path)[..-1], n) = 1)
 // Relationship validation
