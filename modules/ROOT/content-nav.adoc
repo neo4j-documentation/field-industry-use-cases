@@ -1,5 +1,6 @@
-* xref:index.adoc[]
+* *Neo4j Industry Use Cases*
 
+* xref:index.adoc[Overview]
 
 * xref:finserv/homepage.adoc[]
 ** xref:finserv/investment-banking/homepage.adoc[]
@@ -11,4 +12,3 @@
 
 * xref:insurance/homepage.adoc[]
 ** xref:insurance/quote-fraud.adoc[]
-
