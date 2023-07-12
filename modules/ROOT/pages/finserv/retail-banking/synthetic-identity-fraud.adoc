@@ -1,5 +1,8 @@
 = Synthetic Identity Fraud
 
+.A walkthrough of Synthetic Identity Fraud use case
+video::mM25a8TQ5KI[youtube]
+
 == 1. Introduction
 
 Synthetic identity theft is a type of fraud where a person combines real and fake identity information to open accounts or make purchases. Real information, such as photos or passport numbers, is often stolen and combined with fake information like a fake name, address, or date of birth. The fraudsters then use this synthetic identity to open credit cards or make fraudulent purchases. This method is sometimes referred to as "Frankenstein identity" due to the pieced-together nature of the identity information.
