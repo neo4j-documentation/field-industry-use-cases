@@ -6,6 +6,6 @@ Neo4j's graph database model is particularly well-suited for the insurance indus
 
 Using Neo4j, insurance companies can better analyse risk patterns, detect fraudulent activities, and optimise claims processes. The graph database can facilitate fraud detection by uncovering suspicious links between policyholders, claimants, and other entities. It can also enable personalised customer experiences by capturing and leveraging the connections between customer profiles, policies, and historical claim data.
 
-Below are some example use cases to get started with:
+== Use Cases
 
 * xref:insurance/quote-fraud.adoc[]
