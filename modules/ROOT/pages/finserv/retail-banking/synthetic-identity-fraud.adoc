@@ -1,6 +1,6 @@
 = Synthetic Identity Fraud
 
-.A walkthrough of the product
+.A walkthrough of Synthetic Identity Fraud use case
 video::mM25a8TQ5KI[youtube]
 
 == 1. Introduction
