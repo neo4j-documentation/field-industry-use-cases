@@ -103,9 +103,9 @@ You will see the following response:
 
 image::finserv/fs-regulatory-dependency-mapping-schema.svg[]
 
-=== 5. Cypher Queries
+== 5. Cypher Queries
 
-==== 5.1. Show all `Section` nodes in a handbook
+=== 5.1. Show all `Section` nodes in a handbook
 With this query, you can explore the entire depth of a handbook. While the demo set is relatively small, if you were to ingest the whole handbook, it would appear as follows:
 
 image::finserv/fs-regulatory-dependency-mapping-large-example.svg[]

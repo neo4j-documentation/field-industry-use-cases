@@ -8,3 +8,7 @@ Moreover, Neo4j's query language, Cypher, is specifically designed for graph dat
 
 Furthermore, Neo4j's graph visualisation capabilities enable investment bankers to gain a holistic view of the data. Visual representations of interconnected entities and their relationships can aid in identifying patterns, spotting anomalies, and making informed decisions. These visualisations can be especially valuable in areas such as portfolio management, risk assessment, and regulatory compliance.
 
+== Use Cases
+
+* xref:finserv/investment-banking/mutual-fund-dependency.adoc[]
+* xref:finserv/investment-banking/regulatory-dependency-mapping.adoc[]

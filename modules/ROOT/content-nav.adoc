@@ -4,6 +4,7 @@
 
 * xref:finserv/index.adoc[]
 ** xref:finserv/investment-banking/index.adoc[]
+*** xref:finserv/investment-banking/mutual-fund-dependency.adoc[]
 *** xref:finserv/investment-banking/regulatory-dependency-mapping.adoc[]
 
 ** xref:finserv/retail-banking/index.adoc[]

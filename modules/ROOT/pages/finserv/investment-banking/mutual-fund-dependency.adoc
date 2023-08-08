@@ -1,0 +1,191 @@
+= Mutual Fund Dependency Analytics
+
+== 1. Introduction
+
+In the complex financial services landscape, comprehending investment patterns and potential risks has never been more crucial. The Mutual Fund Dependency Analytics use case addresses a pressing business challenge: a comprehensive solution to analyse and interpret clients' investment behaviours, particularly their exposure to underlying stocks within a fund.
+
+With such insights, financial organisations can identify instances of over-leverage and assess risk effectively.
+
+== 2. Scenario
+
+To grasp the significance of the Mutual Fund Dependency Analytics use case, it's essential to explore real-world scenarios where investment dependency issues can profoundly impact financial services organisations. The following three key areas shed light on these challenges:
+
+1. *Portfolio Diversification Oversight:*
+    - Clients' portfolios may inadvertently need more diversification due to over-concentration in specific stocks.
+    - Inadequate insight into underlying stock dependencies can lead to unexpected vulnerabilities when market conditions change.
+    - With a holistic view, identifying the extent of cross-dependencies between different funds is easier, potentially leading to undetected risks.
+2. *Risk Assessment and Exposure Evaluation:*
+    - The absence of detailed dependency mapping makes it difficult to assess the overall risk exposure of a fund's portfolio.
+    - In cases of over-leverage to specific stocks, a market downturn could trigger cascading losses impacting multiple funds.
+    - Traditional systems need help correlating intricate relationships between assets, hindering the identification of potential systemic risks.
+3. *Regulatory Compliance and Reporting:*
+    - Regulatory bodies increasingly require accurate and transparent reporting on investment dependencies to prevent market manipulation and fraud.
+    - Without a unified solution, generating comprehensive dependency reports becomes a manual and error-prone task.
+    - Organisations risk non-compliance and reputational damage if they cannot provide timely and accurate dependency data to regulatory authorities.
+
+These scenarios emphasise the critical need for an advanced solution like Neo4j's Mutual Fund Dependency Analytics, which leverages graph database technology to model, analyse, and visualise complex investment relationships, offering unparalleled insights for business users and technical stakeholders.
+
+
+== 3. Solution
+
+Advanced database technologies, like Neo4j, are essential for tackling the complications of complex financial data. These technologies are particularly adept at managing interconnected data, making it easier to model intricate investment relationships and dependencies. By representing data as interconnected graphs, these databases enable financial services organisations to identify concealed patterns, analyse dependencies, and extract insightful information - ultimately transforming decision-making processes and risk management strategies.
+
+=== 3.1. How Graph Databases Can Help?
+
+Graph databases offer a transformative solution to financial services organisations' intricate challenges in the Mutual Fund Dependency Analytics use case. Here are five key reasons why a graph database is essential:
+
+1. *Unparalleled Relationship Mapping:* Graph databases excel at modelling complex relationships, enabling accurate depiction of investment dependencies that traditional databases struggle to capture.
+2. *Real-time Dependency Insights:* Graph databases facilitate real-time querying, allowing instant identification of dependencies and their effects, which is crucial for timely decision-making.
+3. *Holistic Portfolio Visualisation:* Graph-based representations provide a holistic view of portfolios, revealing hidden correlations and dependencies contributing to over-leverage and risk.
+Adaptive Scenario Analysis: Graph databases enable scenario modelling by tracing the impact of changes across interconnected assets, helping mitigate risks and adapt strategies proactively.
+Efficient Regulatory Compliance: With graph databases, tracking and reporting investment dependencies becomes streamlined, ensuring compliance with evolving regulatory demands and enhancing transparency.
+
+These attributes uniquely position graph databases as the linchpin for unlocking actionable insights and addressing the complex challenges inherent in Mutual Fund Dependency Analytics for financial services organisations.
+
+
+== 4. Modelling
+
+This section will show examples of cypher queries on an example graph. The intention is to illustrate what the queries look like and provide a guide on how to structure your data in a real setting. We will do this on a small graph of several nodes. The example graph will be based on the data model below:
+
+=== 4.1. Data Model
+
+image::finserv/fs-fund-dependency-analysis-data-model.svg[]
+
+==== 4.1.1 Required Data Fields
+
+Below are the fields required to get started:
+
+`Fund` Node:
+
+- `name`: Contains a easily readable fund name
+- `isin`: Represents the International Securities Identification Number for this fund
+
+`Holding` Node:
+
+This has no properties but is key in providing a clean way of linking all open stock positions to the higher level `Fund` node.
+
+`Stock` Node:
+
+- `name`: Contains a easily readable name for the company
+- `symbol`: Trading symbol for the equity
+- `isin`: Represents the International Securities Identification Number for this equity
+
+
+=== 4.2. Demo Data
+
+The following Cypher statement will create the example graph in the Neo4j database:
+
+[source, cypher, role=noheader]
+----
+// Create funds
+MERGE (f1:Fund {name: "Fundsmith Equity I Acc", isin: "0P0000RU81"})
+MERGE (f2:Fund {name: "Lindsell Train Global Funds plc", isin: "0P0000SVHP"})
+
+// Create stocks
+MERGE (novo:Stock {name: "Novo Nordisk A/S", symbol: "NOVO-B.CO", isin: "DK0060534915"})
+MERGE (msft:Stock {name: "Microsoft Corporation", symbol: "MSFT", isin: "US5949181045"})
+MERGE (or:Stock {name: "L'Oréal S.A.", symbol: "OR.PA", isin: "FR0000120321"})
+
+// Create relationships to stocks for Fundsmith
+MERGE (f1)-[:HOLDINGS]->(h1:Holdings)
+MERGE (h1)-[:INVESTED_IN {pct: 8.3}]->(msft)
+MERGE (h1)-[:INVESTED_IN {pct: 8.01}]->(novo)
+MERGE (h1)-[:INVESTED_IN {pct: 6.56}]->(or)
+
+// Create relationships to stocks for Lindsell
+MERGE (f2)-[:HOLDINGS]->(h2:Holdings)
+MERGE (h2)-[:INVESTED_IN {pct: 8.1}]->(msft)
+MERGE (h2)-[:INVESTED_IN {pct: 8.12}]->(novo)
+MERGE (h2)-[:INVESTED_IN {pct: 6.6}]->(or)
+----
+
+=== 4.3. Neo4j Scheme
+
+If you call:
+
+[source, cypher, role=noheader]
+----
+// Show neo4j scheme
+CALL db.schema.visualization()
+----
+
+You will see the following response:
+
+image::finserv/fs-fund-dependency-analysis-schema.svg[]
+
+== 5. Cypher Queries
+
+=== 5.1. Show all `Stocks` nodes for a single Fund
+
+To view the stocks invested in by a single fund, use this query:
+
+[source, cypher, role=noheader]
+----
+// Match all stocks Fundsmith has invested in
+MATCH path = (:Fund {name: "Fundsmith Equity I Acc"})-[:HOLDINGS]->(:Holdings)-[:INVESTED_IN]->(:Stock)
+RETURN path
+----
+
+=== 5.2. Show single `Stocks` nodes with the highest percentage of investment
+
+Using this query, you can easily view the stock with the highest percentage of the fund invested in it.
+
+[source, cypher, role=noheader]
+----
+// Return path showing single highest invested stock by fund
+MATCH path = (:Fund {name: "Fundsmith Equity I Acc"})-[:HOLDINGS]->(:Holdings)-[rel:INVESTED_IN]->(:Stock)
+RETURN path
+ORDER BY rel.pct DESC
+LIMIT 1
+----
+
+We will generate the same output as before, but it will be displayed in a table format this time
+
+[source, cypher, role=noheader]
+----
+// Return table with single highest invested stock by fund
+MATCH (f:Fund {name: "Fundsmith Equity I Acc"})-[:HOLDINGS]->(:Holdings)-[rel:INVESTED_IN]->(:Stock)
+RETURN f.name AS fundName, rel.pct AS pctInvestment
+ORDER BY rel.pct DESC
+LIMIT 1
+----
+
+=== 5.3. Show all `Stocks` nodes overlap with another fund
+
+With this query, you can effortlessly see every route that passes through a "Stock" node from one fund to another.
+
+[source, cypher, role=noheader]
+----
+// Return paths showing all overlapping position
+MATCH path = (:Fund)-[:HOLDINGS]->(:Holdings)-[:INVESTED_IN]->(:Stock)<-[:INVESTED_IN]-(:Holdings)<-[:HOLDINGS]-(:Fund)
+RETURN path
+----
+
+=== 5.4. Show all funds that have a 100% overlap in stocks
+
+This query allows you to assess the relationships between the `Holding` node and ensure that there is a complete overlap of 100%.
+
+[source, cypher, role=noheader]
+----
+// Return fund with 100% overlap of stocks
+MATCH path = (f1:Fund)-[:HOLDINGS]->(:Holdings)-[i1:INVESTED_IN]->(:Stock)<-[i2:INVESTED_IN]-(:Holdings)<-[:HOLDINGS]-(f2:Fund)
+WHERE ID(f1) > ID(f2)
+WITH f1, f2, COUNT(i1) AS fund1Count, COUNT(i2) AS fund2Count
+WHERE fund1Count = fund2Count
+RETURN f1.name AS fund1Name, fund1Count, fund2Count, f2.name AS fund2Name
+----
+
+=== 5.5. Show all funds that have a 100% overlap in stocks and the investments are with 1% of the same value
+
+This query allows you to assess the relationships between the `Holding` node and ensure that there is a complete overlap of 100%.
+
+[source, cypher, role=noheader]
+----
+// Return funds that have 100% overlap and have holdings within 1% of each other
+MATCH path = (f1:Fund)-[:HOLDINGS]->(:Holdings)-[i1:INVESTED_IN]->(:Stock)<-[i2:INVESTED_IN]-(:Holdings)<-[:HOLDINGS]-(f2:Fund)
+WHERE abs(i1.pct - i2.pct) < 1
+AND ID(f1) > ID(f2)
+WITH f1, f2, COUNT(i1) AS fund1Count, COUNT(i2) AS fund2Count
+WHERE fund1Count = fund2Count
+RETURN f1.name AS fund1Name, fund1Count, fund2Count, f2.name AS fund2Name
+----
