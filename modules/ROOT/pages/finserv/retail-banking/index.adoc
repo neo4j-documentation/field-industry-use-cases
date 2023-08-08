@@ -9,3 +9,8 @@ One significant advantage of Neo4j is its ability to perform real-time, ad-hoc q
 Moreover, Neo4j's flexibility allows for easy integration with existing systems and data sources, ensuring a seamless transition for retail banks. It provides the capability to scale horizontally, accommodating the growing data demands of retail banking operations.
 
 In conclusion, the combination of retail banking's data-intensive nature and Neo4j's graph database capabilities make them a perfect match. By utilising Neo4j, retail banks can unlock the full potential of their data, leading to improved operational efficiency, enhanced customer insights, and better decision-making in a highly competitive industry.
+
+== Use Cases
+
+* xref:finserv/retail-banking/synthetic-identity-fraud.adoc[]
+* xref:finserv/retail-banking/transaction-ring.adoc[]
