@@ -3,6 +3,7 @@
 *.iws
 *.sw?
 *~
+.vscode/*
 .DS_Store
 .cache
 .cache-main
