@@ -34,7 +34,7 @@ The example graph will be based on the data model below:
 
 === 4.1. Data Model
 
-image::finserv/fs-transaction-ring-data-model.svg[]
+image::finserv/fs-transaction-ring-data-relationship-version-model.svg[]
 
 ==== 4.1.1 Required Fields
 Below are the fields required to get started:
