@@ -1,0 +1,242 @@
+= Transaction Fraud Ring - Node Version
+
+== 1. Modelling
+
+This section will show examples of cypher queries on an example graph. The intention is to illustrate what the queries look like and provide a guide on how to structure your data in a real setting. We will do this on a small transaction network graph of several nodes connected in a ring structure.
+
+The example graph will be based on the data model below:
+
+=== 1.1. Data Model
+
+image::finserv/fs-transaction-ring-data-node-version-model.svg[]
+
+==== 1.1.1 Required Fields
+Below are the fields required to get started:
+
+`Account` Node:
+
+* `accountNumber`: Contains the account name of an account. This could be changed for any other identifier you use for an `Account`.
+
+`Transaction` Node:
+
+* `amount`:  Contains the amount of money transferred between accounts.
+* `date`:  Contains the date the transaction occurred.
+
+`FROM` Relationships:
+
+* No properties required
+
+`TO` Relationships:
+
+* No properties required
+
+=== 1.2. Demo Data
+
+The following Cypher statement will create the example graph in the Neo4j database:
+
+[source, cypher, role=noheader]
+----
+// Create all accounts
+CREATE (a1:Account {accountNumber: 1})
+CREATE (a2:Account {accountNumber: 2})
+CREATE (a3:Account {accountNumber: 3})
+CREATE (a4:Account {accountNumber: 4})
+
+
+// Create relationships between accounts
+CREATE (a1)-[:FROM]->(:TRANSACTION {amount: 1000, currency: "gbp", date: datetime()-duration({days: 3})})-[:TO]->(a2)
+CREATE (a2)-[:FROM]->(:TRANSACTION {amount: 900, currency: "gbp", date: datetime()-duration({days: 2})})-[:TO]->(a3)
+CREATE (a3)-[:FROM]->(:TRANSACTION {amount: 810, currency: "gbp", date: datetime()-duration({days: 1})})-[:TO]->(a4)
+CREATE (a4)-[:FROM]->(:TRANSACTION {amount: 729, currency: "gbp", date: datetime()})-[:TO]->(a1)
+----
+
+=== 1.3. Neo4j Schema
+
+[source, cypher, role=noheader]
+----
+// Show neo4j scheme
+CALL db.schema.visualization()
+----
+
+It will provide the following response:
+
+image::finserv/fs-transaction-ring-node-version-schema.svg[]
+
+After ingesting the data, Neo4j interprets the graph schema. In the schema, we can observe an `Account` node connected to another `Account` node via a `Transaction` node and two relationships, `FROM` and `TO`.
+
+== 2. Cypher Queries
+
+=== 2.1. Simple transaction ring
+
+In this query, we will identify a ring with the following requirements:
+
+* Account nodes should be connected via a `FROM` & `TO` relationship.
+* Ensure the direction of the transaction is followed (not a bidirectional query).
+* Find a ring greater than three transactions long but less than 7.
+
+[NOTE]
+====
+This Cypher query is compatible with Neo4j Version 5.9+.
+====
+
+[source, cypher, role=noheader]
+----
+// Neo4j Compatability: v5.9+
+// Identify simple transaction ring
+MATCH path=(a:Account)(()-[:FROM]->()-[:TO]->()){3,6}(a)
+RETURN path
+----
+
+=== 2.2. Transaction ring with no duplicate accounts
+In this query, we will identify a ring with the following requirements:
+
+* Account nodes should be connected via a `FROM` & `TO` relationship.
+* Ensure the direction of the transaction is followed (not a bidirectional query).
+* Find a ring greater than three transactions long but less than 7.
+* Ensure that the ring is made up of unique accounts.
+
+[NOTE]
+====
+This Cypher query is compatible with Neo4j Version 5.9+.
+====
+
+[source, cypher, role=noheader]
+----
+// Neo4j Compatability: v5.9+
+// Identify transaction ring with no duplicate accounts
+MATCH path=(a:Account)((a_i)-[:FROM]->(tx)-[:TO]->(a_j)){3,6}(a)
+// Here we ensure that one path has unique people involved in the chain
+WHERE size(apoc.coll.toSet(a_i)) = size(a_i)
+// Return all paths
+RETURN path
+----
+
+=== 5.3. Transaction ring with chronological transactions
+
+In this query, we will identify a ring with the following requirements:
+
+* Account nodes should be connected via a `FROM` & `TO` relationship.
+* Ensure the direction of the transaction is followed (not a bidirectional query).
+* Find a ring greater than three transactions long but less than 7.
+* Ensure that the ring is made up of unique accounts
+* Make sure that the `Transaction` node is in chronological order
+
+[NOTE]
+====
+This Cypher query is compatible with Neo4j Version 5.9+.
+====
+
+[source, cypher, role=noheader]
+----
+// Neo4j Compatability: v5.9+
+// Identify transaction ring where dates are in chronological order​
+MATCH path=(a:Account)-[:FROM]->(first_tx)
+    // Relationship validation
+    ((tx_i)-[:TO]->(a_i)-[:FROM]->(tx_j)
+        // Ensures the dates are in chronological order
+        WHERE tx_i.date < tx_j.date
+    )*
+    (last_tx)-[:TO]->(a)
+// Here we ensure that one path has unique people involved in the chain
+WHERE size(apoc.coll.toSet([a]+a_i)) = size([a]+a_i)
+// Return all paths
+RETURN path
+----
+
+=== 5.4. Transaction ring with 20% amount deduction
+
+When money is passed through a fraud ring, the amount that moves between accounts is often reduced by a fee of up to 20%. To account for this, our query will allow for a reduction of up to 20% at each transaction.
+
+In this query, we will identify a ring with the following requirements:
+
+* Account nodes should be connected via a `FROM` & `TO` relationship.
+* Ensure the direction of the transaction is followed (not a bidirectional query).
+* Find a ring greater than three transactions long but less than 7.
+* Ensure that the ring is made up of unique accounts
+* Make sure that the `Transaction` node is in chronological order
+* Check that the `Trasnction` node amount is within 20% of the previous `Transaction` amount..
+
+[NOTE]
+====
+This Cypher query is compatible with Neo4j Version 5.9+.
+====
+
+[source, cypher, role=noheader]
+----
+// Neo4j Compatability: v5.9+
+// Identify transaction ring where dates are in chronological order​
+MATCH path=(a:Account)-[:FROM]->(first_tx)
+    // Relationship validation
+    ((tx_i)-[:TO]->(a_i)-[:FROM]->(tx_j)
+        // Ensures the dates are in chronological order
+        WHERE tx_i.date < tx_j.date
+        // Checks that there is less than a 20% difference from the last `TRANSACTION` amount to the next
+        AND 0.80 <= tx_i.amount / tx_j.amount <= 1.00
+    )*
+    (last_tx)-[:TO]->(a)
+// Here we ensure that one path has unique people involved in the chain
+WHERE size(apoc.coll.toSet([a]+a_i)) = size([a]+a_i)
+// Return all paths
+RETURN path
+----
+
+==== 2.4.1. What is the query doing?
+
+The given Cypher query is designed to identify suspicious transaction rings in a graph database where accounts are connected by transactions. The query looks for cycles of transactions that fit certain criteria and then returns those cycles. Let's break down the query step-by-step.
+
+*1 - Identify the Start and End of Transaction Chains:*
+
+[source, cypher, role=noheader]
+----
+MATCH path=(a:Account)<-[:FROM]-(first_tx)
+      (last_tx)-[:TO]->(a)
+----
+
+This part identifies the start and the end of a transaction chain involving an account `(a:Account)`.
+first_tx is the first transaction in the chain, and last_tx is the last one.
+
+*2 - Relationship Validation and Intermediate Transactions:*
+
+[source, cypher, role=noheader]
+----
+((tx_i)-[:TO]->(a_i)<-[:FROM]-(tx_j)
+      WHERE tx_i.date < tx_j.date
+      AND 0.80 <= tx_i.amount / tx_j.amount <= 1.00
+)*
+----
+
+This part of the query specifies the conditions for the intermediate transactions in the chain.
+
+`(tx_i)-[:TO]->(a_i)<-[:FROM]-(tx_j)`
+
+Specifies that the transaction tx_i goes to an account a_i and tx_j comes from that account.
+
+`(tx_i.date < tx_j.date)`
+
+This ensures transactions are in chronological order.
+
+`0.80 <= tx_i.amount / tx_j.amount <= 1.00`
+
+Also checks that the amounts in the transactions are within 20% of each other.
+
+*3 - Ensure Unique Accounts in the Chain:*
+
+`WHERE size(apoc.coll.toSet([a]+a_i)) = size([a]+a_i)`
+
+This ensures that all accounts in the chain are unique.
+
+`apoc.coll.toSet([a]+a_i)`
+
+Converts the list of accounts in the chain to a set to remove duplicates.
+
+`size([a]+a_i)`
+
+Gives the total number of accounts in the chain.
+
+*4 - Return the Matching Chains:*
+
+RETURN path
+
+Finally, the query returns all paths that meet the above criteria.
+
+In summary, this query is another way to identify potentially suspicious activity by looking for closed loops of transactions with specific characteristics. Unlike the first query, this one uses the FROM and TO relationships to describe the money flow between accounts.

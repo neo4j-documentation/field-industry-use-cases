@@ -1,4 +1,4 @@
-= Transaction Fraud Ring
+= Transaction Fraud Ring - Relationship Version
 
 == 1. Introduction
 
@@ -79,7 +79,7 @@ CALL db.schema.visualization()
 
 It will provide the following response:
 
-image::finserv/fs-transaction-ring-schema.svg[]
+image::finserv/fs-transaction-ring-relationship-version-schema.svg[]
 
 After ingesting the data, Neo4j interprets the graph schema. In the schema, we can observe an `Account` node connected to another `Account` node via a `TRANSACTION` relationship. Despite having the same label, the `Account` nodes possess different properties, such as accountNumber. However, the schema only considers the labels on nodes and relationships.
 
