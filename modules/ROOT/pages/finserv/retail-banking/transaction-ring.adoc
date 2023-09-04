@@ -187,7 +187,7 @@ AND ALL(idx in range(0, size(rel)-2)
        // Ensures the dates are in chronological order
        WHERE (rel[idx]).date < (rel[idx+1]).date
        // Checks that there is less than a 20% difference from the last `TRANSACTION` amount to the next
-       AND (rel[idx+1].amount / rel[idx].amount) * 100 <= 20
+       AND rel[idx].amount >= rel[idx+1].amount >= 0.8 * rel[idx].amount
    )
 // Return all paths
 RETURN path
