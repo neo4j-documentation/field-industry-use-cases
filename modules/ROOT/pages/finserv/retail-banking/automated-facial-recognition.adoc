@@ -103,3 +103,9 @@ MATCH (p1:Face), (p2:Face)
 WHERE id(p1) > id(p2)
 RETURN p1.filename AS from, p2.filename AS to, gds.similarity.cosine(p1.embedding, p2.embedding) as similarity
 ----
+
+== Appendix
+
+I have compiled the code for inserting images as vector embeddings into Neo4j. You can access the Colab Notebook at:
+
+https://colab.research.google.com/drive/1bkbT2iJRlwfhP4mcjZJ25ZTnxmj4KOF1?usp=sharing[Colab: Neo4j Image Vector Embedding]
