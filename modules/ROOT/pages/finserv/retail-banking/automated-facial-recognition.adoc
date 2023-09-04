@@ -1,0 +1,105 @@
+= Automated Facial Recognition
+
+// .A walkthrough of Automated Facial Recognition use case
+// video::id[youtube]
+
+== 1. Introduction
+
+Retail banking is eyeing the gains that other sectors like retail make in deploying Automated Facial Recognition (AFR) technology. Originally leveraged for enhancing safety and optimising operational processes, AFR is increasingly seen as a tool for improving both security and customer experience in banking. AFR's algorithmic prowess in offering a "similarity score" provides a robust layer of authentication, thereby reducing the risks associated with fraud.
+
+However, the adoption of this technology is not without its challenges. There are considerable ethical and legal concerns, such as GDPR compliance and the potential for algorithmic discrimination. Moreover, the absence of specific legislation governing AFR poses a risk for early adopters in the banking sector. Yet, the drive for operational efficiency and a more secure customer experience pushes retail banks to consider AFR solutions seriously.
+
+While many retail banks have already implemented AFR technology, the key challenge lies in finding additional, lawful ways to leverage this data, particularly in fraud prevention scenarios. The technology holds the promise of secure transaction authentication and opens avenues for personalised customer services. As banks continue to innovate, the potential to use AFR in various fraud use cases is becoming increasingly evident. However, the sector must tread carefully, ensuring that technological advancement is balanced with regulatory compliance and ethical considerations.
+
+
+== 2. Scenario
+
+Regarding online banking, using image recognition technology is a significant step forward in enhancing security and making operations more efficient. Below are some important ways this advanced technology helps prevent fraud, verify identities, and improve transaction speed.
+
+* *Identity Verification:* Employing image recognition technology for facial and biometric scans provides additional security, lessening the possibility of unauthorised access to online banking accounts and bolstering customer confidence.
+
+* *Anomaly Detection:* Image recognition can analyse visual elements, such as geolocation tags or the background of selfies used in transaction verification, to detect suspicious activities. This proactive approach helps in identifying and preventing fraudulent transactions before they occur.
+
+* *Automated Document Verification:* Utilising image recognition can automate the verification of cheques and identification documents, hastening transactions and minimising human error, thereby rendering the banking process more efficient and secure.
+
+== 3. Solution
+
+Implementing AFR technology in retail banking serves a dual purpose: enhancing security and enriching customer experience. A particularly promising avenue is using facial recognition data for fraud prevention and beyond. Banks can map intricate relationships between transactions, account activities, and customer profiles by integrating this data into a graph-based approach. This network view allows for more sophisticated risk assessments and predictive analytics. For instance, unusual patterns can be quickly flagged, reducing both false positives and false negatives in fraud detection. Beyond security, the same data can be employed for personalised marketing or service recommendations, thus maximising its business value.
+
+=== 3.1. How Graph Databases Can Help?
+
+Graph databases like Neo4j offer unique advantages over traditional relational databases, especially in the context of Automated Facial Recognition (AFR) and fraud prevention. Here's how:
+
+* *Vector Representation for Enhanced Data Utility:* Storing a vector representation of a customer's facial image in Neo4j allows for advanced analytics. Paired with Neo4j's Graph Data Science (GDS) library, particularly the cosine similarity function, banks can derive richer insights from their data. This enables more precise fraud detection by comparing the cosine similarity between the stored facial vector and real-time facial data.
+
+* *Business Value:* This approach significantly enhances fraud detection capabilities, thereby reducing operational risks and potential financial losses. It also allows for real-time decision-making, thereby improving response times to potential security threats.
+
+* *Neo4j's Vector Search Index:* The newly introduced vector search index functionality in Neo4j 5.11 allows for approximate nearest neighbour searches on vector embeddings. These embeddings can represent facial images, and by indexing them, banks can efficiently perform similarity searches for fraud detection or customer verification.
+
+* *Business Value:* This new feature provides a more efficient and rapid mechanism for sifting through large facial data sets, making real-time fraud detection even more accurate and scalable.
+
+When it comes to detecting fraud and AFR, graph databases are a superior choice because they have the ability to map complex relationships and structures that traditional relational databases cannot handle. Graph models enable capturing entities such as customer accounts, transaction details, and relationships.
+
+Unlike traditional relational databases that operate on set theory, graph databases operate on graph theory, which allows for complex relationship-based queries. This is particularly useful in fraud detection, where understanding the context and relationships between different data points is essential to catch fraudulent activities.
+
+By adopting a graph-based approach, retail banks can perform complex queries in real time, identify patterns or anomalies more accurately, and secure their operations more effectively. Recent advancements in Neo4j, such as vector search indexes powered by Apache Lucene's Hierarchical Navigable Small World (HNSW) Graph, make the database more capable of handling complex use cases like AFR and fraud prevention.
+
+
+== 4. Modelling
+
+This section will show examples of cypher queries on an example graph. The intention is to illustrate what the queries look like and provide a guide on how to structure your data in a real setting. We will do this on a small graph of several nodes. The example graph will be based on the data model below:
+
+=== 4.1. Data Model
+
+image::finserv/fs-automated-facial-recognition-data-model.svg[]
+
+==== 4.1.1 Required Fields
+
+Below are the fields required to get started:
+
+`Face` Node:
+
+* `filename`: This refers to the name of the image. It can be altered for distinctiveness to avoid duplication in Neo4j.
+
+* `embedding`: Image node embeddings capture complex data relationships in a high-dimensional vector format for analysis and machine learning.
+
+=== 4.2. Demo Data
+
+The following Cypher statement will create the example graph in the Neo4j database:
+
+[source, cypher, role=noheader]
+----
+CREATE (:Face {filename: "face_1.jpg", embedding:[153, 254, 255, 0, 0, 253, 200, 252, 254, 100, 253]})
+CREATE (:Face {filename: "face_2.jpg", embedding:[253, 254, 252, 5, 252, 253, 253, 253, 255, 253, 252]})
+----
+
+=== 4.3. Neo4j Scheme
+
+If you call:
+
+[source, cypher, role=noheader]
+----
+// Show neo4j scheme
+CALL db.schema.visualization()
+----
+
+You will see the following response:
+
+image::finserv/fs-automated-facial-recognition-schema.svg[]
+
+You can not get much simpler than that.
+
+== 5. Cypher Queries
+
+=== 5.1. Identify Similar Images:
+
+The Cosine Similarity algorithm is a powerful tool utilised in Graph Data Science to discover the most similar images based on their vector embeddings. This algorithm is particularly handy in applications like image recognition and recommendation systems.
+
+By computing the cosine similarity between two vectors, we can ascertain their level of resemblance. The closer the similarity score is to 1, the more akin the vectors are. This enables us to promptly and precisely determine the most pertinent images based on their content. The Cosine Similarity algorithm is a crucial tool for effective and accurate image analysis and retrieval.
+
+[source, cypher, role=noheader]
+----
+MATCH (p1:Face), (p2:Face)
+WHERE id(p1) > id(p2)
+RETURN p1.filename AS from, p2.filename AS to, gds.similarity.cosine(p1.embedding, p2.embedding) as similarity
+----
