@@ -14,4 +14,4 @@ In conclusion, the combination of retail banking's data-intensive nature and Neo
 
 * xref:finserv/retail-banking/automated-facial-recognition.adoc[]
 * xref:finserv/retail-banking/synthetic-identity-fraud.adoc[]
-* xref:finserv/retail-banking/transaction-ring.adoc[]
+* xref:finserv/retail-banking/transaction-ring/transaction-ring-introduction.adoc[]

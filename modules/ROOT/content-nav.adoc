@@ -10,7 +10,7 @@
 ** xref:finserv/retail-banking/index.adoc[]
 *** xref:finserv/retail-banking/automated-facial-recognition.adoc[]
 *** xref:finserv/retail-banking/synthetic-identity-fraud.adoc[]
-*** xref:finserv/retail-banking/transaction-ring.adoc[]
+*** xref:finserv/retail-banking/transaction-ring/transaction-ring-introduction.adoc[]
 
 * xref:insurance/index.adoc[]
 ** xref:insurance/quote-fraud.adoc[]
