@@ -22,11 +22,11 @@ Below are the fields required to get started:
 * `amount`:  Contains the amount of money transferred between accounts.
 * `date`:  Contains the date the transaction occurred.
 
-`FROM` Relationships:
+`PERFORMS` Relationships:
 
 * No properties required
 
-`TO` Relationships:
+`BENEFITS_TO` Relationships:
 
 * No properties required
 
@@ -61,7 +61,7 @@ It will provide the following response:
 
 image::finserv/fs-transaction-ring-node-version-schema.svg[]
 
-After ingesting the data, Neo4j interprets the graph schema. In the schema, we can observe an `Account` node connected to another `Account` node via a `Transaction` node and two relationships, `FROM` and `TO`.
+After ingesting the data, Neo4j interprets the graph schema. In the schema, we can observe an `Account` node connected to another `Account` node via a `Transaction` node and two relationships, `PERFORMS` and `BENEFITS_TO`.
 
 == 2. Cypher Queries
 
@@ -69,7 +69,7 @@ After ingesting the data, Neo4j interprets the graph schema. In the schema, we c
 
 In this query, we will identify a ring with the following requirements:
 
-* Account nodes should be connected via a `FROM` & `TO` relationship.
+* Account nodes should be connected via a `PERFORMS` & `BENEFITS_TO` relationship.
 * Ensure the direction of the transaction is followed (not a bidirectional query).
 * Find a ring greater than three transactions long but less than 7.
 
@@ -89,7 +89,7 @@ RETURN path
 === 2.2. Transaction ring with no duplicate accounts
 In this query, we will identify a ring with the following requirements:
 
-* Account nodes should be connected via a `FROM` & `TO` relationship.
+* Account nodes should be connected via a `PERFORMS` & `BENEFITS_TO` relationship.
 * Ensure the direction of the transaction is followed (not a bidirectional query).
 * Find a ring greater than three transactions long but less than 7.
 * Ensure that the ring is made up of unique accounts.
@@ -114,7 +114,7 @@ RETURN path
 
 In this query, we will identify a ring with the following requirements:
 
-* Account nodes should be connected via a `FROM` & `TO` relationship.
+* Account nodes should be connected via a `PERFORMS` & `BENEFITS_TO` relationship.
 * Ensure the direction of the transaction is followed (not a bidirectional query).
 * Find a ring greater than three transactions long but less than 7.
 * Ensure that the ring is made up of unique accounts
@@ -148,7 +148,7 @@ When money is passed through a fraud ring, the amount that moves between account
 
 In this query, we will identify a ring with the following requirements:
 
-* Account nodes should be connected via a `FROM` & `TO` relationship.
+* Account nodes should be connected via a `PERFORMS` & `BENEFITS_TO` relationship.
 * Ensure the direction of the transaction is followed (not a bidirectional query).
 * Find a ring greater than three transactions long but less than 7.
 * Ensure that the ring is made up of unique accounts
@@ -259,4 +259,4 @@ RETURN path
 
 Finally, the query returns all paths that meet the above criteria.
 
-In summary, this query is another way to identify potentially suspicious activity by looking for closed loops of transactions with specific characteristics. Unlike the first query, this one uses the FROM and TO relationships to describe the money flow between accounts.
+In summary, this query is another way to identify potentially suspicious activity by looking for closed loops of transactions with specific characteristics. Unlike the first query, this one uses the PERFORMS and BENEFITS_TO relationships to describe the money flow between accounts.
