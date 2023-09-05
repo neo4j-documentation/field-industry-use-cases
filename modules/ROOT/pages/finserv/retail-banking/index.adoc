@@ -13,5 +13,6 @@ In conclusion, the combination of retail banking's data-intensive nature and Neo
 == Use Cases
 
 * xref:finserv/retail-banking/automated-facial-recognition.adoc[]
+* xref:finserv/retail-banking/entity-resolution.adoc[]
 * xref:finserv/retail-banking/synthetic-identity-fraud.adoc[]
 * xref:finserv/retail-banking/transaction-ring/transaction-ring-introduction.adoc[]

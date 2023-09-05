@@ -9,6 +9,7 @@
 
 ** xref:finserv/retail-banking/index.adoc[]
 *** xref:finserv/retail-banking/automated-facial-recognition.adoc[]
+*** xref:finserv/retail-banking/entity-resolution.adoc[]
 *** xref:finserv/retail-banking/synthetic-identity-fraud.adoc[]
 *** xref:finserv/retail-banking/transaction-ring/transaction-ring-introduction.adoc[]
 

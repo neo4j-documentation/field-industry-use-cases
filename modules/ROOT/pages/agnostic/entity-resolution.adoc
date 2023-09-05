@@ -1,0 +1,226 @@
+= Entity Resolution - Technical Walkthrough
+
+== 1. Industry Introductions
+
+* xref:finserv/retail-banking/entity-resolution.adoc[Retail Banking - Entity Resolution]
+
+== 2. Introduction
+As previously discussed, entity resolution is a crucial aspect of any data project, regardless of the type of data being analysed. This includes:
+
+* Customers
+* Trades
+* Products
+* Orders
+* Addresses
+* Policies
+* Product applications
+* and much more
+
+Whenever a human is required to enter information into a free text box, there is potential for data inconsistencies. This guide aims to demonstrate how a knowledge graph can be uniquely positioned to assist with this issue. In this example, we will focus on de-duplicating addresses, but the same principles can be applied to any aspect of your organisation.
+
+== 3. Modelling
+
+This section will show examples of cypher queries on an example graph. The intention is to illustrate what the queries look like and provide a guide on how to structure your data in a real setting. We will do this on a small graph of several nodes. The example graph will be based on the data model below:
+
+=== 3.1. Data Model
+
+image::agnostic/agnostic-entity-resolution-model.svg[]
+
+==== 3.1.1 Required Fields
+
+Below are the fields required to get started:
+
+`Adress` Node:
+
+* `RegAddressAddressLine1`: First line of the address
+* `RegAddressAddressLine2`: Second line of the address
+* `RegAddressPostTown`: Town 
+* `RegAddressPostCode`: Postcode
+* `Latitude`: Latitude based on postcode
+* `Longitude`: Longitude based on postcode
+
+=== 3.2. Demo Data
+
+The following Cypher statement will create the example graph in the Neo4j database:
+
+[source, cypher, role=noheader]
+----
+// Create all Address Nodes
+CREATE (:Address {`RegAddressAddressLine1`: "37 ALBYN PLACE", `RegAddressAddressLine2`: "ALBYN PLACE", RegAddressPostTown: "ABERDEEN", RegAddressPostCode: "AB101JB", FullAddress: "37 ALBYN PLACE ALBYN PLACE ABERDEEN AB101JB"})
+CREATE (:Address {`RegAddressAddressLine1`: "COMPANY NAME", `RegAddressAddressLine2`: "37 ALBYN PLACE", RegAddressPostTown: "ABERDEEN", RegAddressPostCode: "AB101JB", FullAddress: "COMPANY NAME 37 ALBYN PLACE ABERDEEN AB101JB"});
+
+// Update each Address Node with longitude and latitude
+MATCH (a:Address)
+CALL apoc.spatial.geocode(a.RegAddressPostCode) YIELD location
+SET a.Latitude = location.latitude,
+    a.Longitude = location.longitude;
+----
+
+=== 3.3. Neo4j Scheme
+
+If you call:
+
+[source, cypher, role=noheader]
+----
+// Show neo4j scheme
+CALL db.schema.visualization()
+----
+
+You will see the following response:
+
+image::agnostic/agnostic-entity-resolution-schema.svg[]
+
+== 4. Cypher Queries
+
+=== 4.1. Calculate the distance in meters between addresses
+
+This Cypher query is designed to calculate the distance between different `Address` nodes based on their geographical coordinates (latitude and longitude). A unique aspect of this query is its use of the `point.distance` function to compute the distance directly within the query, as well as the use of `ID(a1) > ID(a2)` to avoid duplicate comparisons.
+
+[source, cypher, role=noheader]
+----
+// Calculate the distance between Address Nodes
+MATCH (a1:Address), (a2:Address)
+WHERE ID(a1) > ID(a2)
+RETURN a1.FullAddress AS FullAddress1, a2.FullAddress AS FullAddress2,
+       point.distance(point({ latitude: a1.Latitude, longitude: a1.Longitude }),
+       point({ latitude: a2.Latitude, longitude: a2.Longitude })) AS DistanceInMeters
+----
+
+==== 4.1.1. What is the query doing?
+
+1. `MATCH (a1:Address), (a2:Address)`: This part of the query matches all nodes with the label `Address`. Two separate variables `a1` and `a2` are used to represent these `Address` nodes.
+
+2. `WHERE ID(a1) > ID(a2)`: This condition ensures that the query does not compare an address with itself and avoids duplicate comparisons by ensuring that `a1` and `a2` are distinct, based on their internal Neo4j IDs.
+
+3. `RETURN a1.FullAddress AS FullAddress1, a2.FullAddress AS FullAddress2`: This part of the query returns the full addresses of the two nodes being compared, renaming them as `FullAddress1` and `FullAddress2` for easier interpretation.
+
+4. `point.distance(point({ latitude: a1.Latitude, longitude: a1.Longitude }), point({ latitude: a2.Latitude, longitude: a2.Longitude })) AS DistanceInMeters`: This is the core part of the query, which calculates the geographical distance between the two address nodes.
+
+        a. `point({ latitude: a1.Latitude, longitude: a1.Longitude })` constructs a point from the latitude and longitude of `a1`.
+        b. `point({ latitude: a2.Latitude, longitude: a2.Longitude })` does the same for `a2`.
+        c. `point.distance()` is then used to compute the distance between these two points in meters.
+
+=== 4.2. Similarity Score Address Nodes
+
+This complex Cypher query aims to calculate similarity scores between different `Address` nodes based on multiple attributes, such as address lines and postcodes. The query uses the APOC (Awesome Procedures On Cypher) library's `apoc.cypher.mapParallel2` function to execute the similarity scoring in parallel, enhancing performance. The Levenshtein algorithm measures text similarity, allowing for a nuanced comparison of address fields. The query also incorporates several layers of selection logic to ensure high-quality similarity matching.
+
+[source, cypher, role=noheader]
+----
+// Parallel Similarity Scoring Version
+MATCH (a:Address)
+WITH COLLECT(DISTINCT(left(a.RegAddressPostCode, 3))) AS postcodes
+CALL apoc.cypher.mapParallel2("
+    MATCH (a:Address), (b:Address)
+        WHERE id(a) > id(b) AND a.RegAddressPostCode STARTS WITH _ AND b.RegAddressPostCode STARTS WITH _
+        // Pass Variables
+        WITH a, b,
+        // Build similarity scores
+        apoc.text.levenshteinSimilarity(a.RegAddressAddressLine1, b.RegAddressAddressLine1) AS line_1_sim,
+        apoc.text.levenshteinSimilarity(a.RegAddressAddressLine2, b.RegAddressAddressLine2) AS line_2_sim,
+        apoc.text.levenshteinSimilarity(a.RegAddressAddressLine1, b.RegAddressAddressLine2) AS a_b_line_1,
+        apoc.text.levenshteinSimilarity(a.RegAddressAddressLine2, b.RegAddressAddressLine1) AS b_a_line_1,
+        apoc.text.levenshteinSimilarity(a.RegAddressPostCode, b.RegAddressPostCode) AS post_sim,
+        apoc.text.levenshteinSimilarity(a.FullAddress, b.FullAddress) AS full_address_sim
+        WITH a, b, line_1_sim, line_2_sim, a_b_line_1, b_a_line_1, post_sim, full_address_sim, ((line_1_sim + line_2_sim) / 2) as add_1_2_calculation
+
+        // Selection logic //
+
+        // Limit the similarity of the full address
+        WHERE full_address_sim > 0.6
+
+        // Postcodes can not be too far apart
+            AND post_sim > 0.7
+            // Looks at addresses that have prefixes, e.g. 37 ALBYN PLACE vs COMPANY NAME 37 ALBYN PLACE
+            // This addition pushes the address into Line 2
+            AND ((line_1_sim = 1 OR a_b_line_1 = 1 OR b_a_line_1 = 1) AND post_sim > 0.85)
+            AND NOT (add_1_2_calculation > 0.6 AND full_address_sim > 0.91 AND post_sim > 0.9)
+
+        RETURN id(a) as a_id, a.FullAddress as a_FullAddress,id(b) as b_id, b.FullAddress as b_FullAddress, full_address_sim;
+    ",
+    {parallel:True, batchSize:1000, concurrency:6}, postcodes, 6) YIELD value
+RETURN value.a_id AS a_id, value.a_FullAddress AS a_full_address, value.b_id AS b_id, value.b_FullAddress AS b_full_address, value.full_address_sim AS full_address_similarity;
+----
+
+
+==== 4.2.1. What is the query doing?
+
+1. `MATCH (a:Address)`: Initiates the query by matching all nodes labeled Address.
+
+2. `WITH COLLECT(DISTINCT(left(a.RegAddressPostCode, 3))) AS postcodes`: Collects the distinct first three characters of these postcodes into a list called postcodes.
+
+3. `CALL apoc.cypher.mapParallel2("...", {parallel:True, batchSize:1000, concurrency:6}, postcodes, 6) YIELD value`: Executes the nested Cypher query in parallel, with a batch size of 1000 and a concurrency level of 6.
+
+==== Nested Query Details
+
+1. `MATCH (a:Address), (b:Address)`: Matches all pairs of Address nodes for comparison.
+
+2. `WHERE id(a) > id(b) AND a.RegAddressPostCode STARTS WITH _ AND b.RegAddressPostCode STARTS WITH _`: Ensures that each pair is unique and that both addresses start with a postcode in the postcodes list.
+
+3. *Levenshtein Similarity Calculations:* Utilises `apoc.text.levenshteinSimilarity` to calculate the similarity between different addresses `a` and `b` attributes.
+
+4. *Selection Logic:* Applies various conditions to filter the results. For instance, it demands a high similarity in full addresses (full_address_sim > 0.6) and postcodes (post_sim > 0.7).
+
+5. `RETURN id(a) as a_id, a.FullAddress as a_FullAddress, id(b) as b_id, b.FullAddress as b_FullAddress, full_address_sim;`: Returns the IDs and full addresses of `a` and `b`, along with the full address similarity score.
+
+This query is exceptionally well-suited for capturing nuanced relationships between addresses by incorporating advanced text similarity algorithms and detailed selection logic
+
+=== 4.3. Create Similarity Relationship between Address Nodes
+
+This Cypher query is intended to create a relationship of type `SIMILAR_ADDRESS` between `Address` nodes based on several similarity scores calculated via the Levenshtein algorithm. Notably, the query performs these calculations using the APOC (Awesome Procedures On Cypher) library's `apoc.text.levenshteinSimilarity` function. It also employs intricate selection logic to filter out relationships that don't meet specific similarity criteria. This query is particularly aimed at cases where addresses share common prefixes or when there are slight discrepancies in address lines.
+
+[source, cypher, role=noheader]
+----
+// Create Similarity Relationship
+MATCH (a:Address), (b:Address)
+
+// Pass Variables
+WITH a, b,
+
+// Build similarity scores
+apoc.text.levenshteinSimilarity(a.RegAddressAddressLine1, b.RegAddressAddressLine1) AS line_1_sim,
+apoc.text.levenshteinSimilarity(a.RegAddressAddressLine2, b.RegAddressAddressLine2) AS line_2_sim,
+apoc.text.levenshteinSimilarity(a.RegAddressAddressLine1, b.RegAddressAddressLine2) AS a_b_line_1,
+apoc.text.levenshteinSimilarity(a.RegAddressAddressLine2, b.RegAddressAddressLine1) AS b_a_line_1,
+apoc.text.levenshteinSimilarity(a.RegAddressPostCode, b.RegAddressPostCode) AS post_sim,
+apoc.text.levenshteinSimilarity(a.FullAddress, b.FullAddress) AS full_address_sim
+
+WITH a, b, line_1_sim, line_2_sim, a_b_line_1, b_a_line_1, post_sim, full_address_sim, ((line_1_sim + line_2_sim) / 2) as add_1_2_calculation
+
+// Selection logic
+
+// Limit the similarity of the full address
+WHERE full_address_sim > 0.6
+
+    // Postcodes can not be too far apart
+    AND post_sim > 0.7
+
+    // Looks at addresses who have prefixes, e.g. 37 ALBYN PLACE vs COMPANY NAME 37 ALBYN PLACE
+    // This addition pushes the address into Line 2
+    AND ((line_1_sim = 1 OR a_b_line_1 = 1 OR b_a_line_1 = 1) AND post_sim > 0.85)
+    AND NOT (add_1_2_calculation > 0.6 AND full_address_sim > 0.91 AND post_sim > 0.9)
+
+MERGE (a)-[:SIMILAR_ADDRESS {
+    full_address_similarity: full_address_sim,
+    postcode_similarity: post_sim,
+    line_2_similarity: line_2_sim,
+    line_1_similarity: line_1_sim,
+    line_1_2_similarity: a_b_line_1,
+    line_2_1_similarity: b_a_line_1
+    }]->(b);
+----
+
+==== 4.3.1. What is the query doing?
+
+* `MATCH (a:Address), (b:Address)`: The query starts by matching all nodes with the label Address, represented by variables `a` and `b`.
+
+* `WITH a, b, …`: This clause passes the matched `a` and `b` nodes and several calculated similarity scores to the subsequent query parts.
+
+* *Levenshtein Similarity Calculations:* It employs `apoc.text.levenshteinSimilarity`` to calculate similarity scores between various attributes of a and b, like address lines and postcodes.
+
+* `WITH a, b, line_1_sim, …`: The query retains the original nodes and the calculated similarity scores for the next part of the query.
+
+* *Selection Logic:* This query section imposes multiple filtering conditions to refine the similarity matching. These conditions consider the full address similarity, postcode similarity, and even address prefixes to create the most meaningful relationships.
+
+* `MERGE (a)-[:SIMILAR_ADDRESS {...}]->(b);`: Finally, it creates a `SIMILAR_ADDRESS` relationship between `a` and `b` if they satisfy the conditions. It also stores the calculated similarity scores as properties of this relationship for future use.
+
+This query is exceptionally well-suited for capturing nuanced relationships between addresses by incorporating advanced text similarity algorithms and detailed selection logic.

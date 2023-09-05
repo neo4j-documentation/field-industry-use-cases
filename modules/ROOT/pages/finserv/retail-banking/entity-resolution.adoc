@@ -1,0 +1,55 @@
+= Entity Resolution
+
+// .A walkthrough of Automated Facial Recognition use case
+// video::id[youtube]
+
+== 1. Introduction
+
+In the dynamic landscape of retail banking, the stakes for accurate and efficient entity resolution have never been higher. Traditional systems often operate in silos, leading to fragmented customer data and challenging obtaining a unified view of a single entity. This fragmentation compromises compliance with stringent regulatory requirements such as *AML (Anti-Money Laundering)* and *KYC (Know Your Customer)* and hampers effective risk management and customer engagement strategies.
+
+The current challenges posed by outdated entity resolution systems can manifest as operational inefficiencies, increased risk of financial crime, and missed opportunities for cross-selling and upselling. Moreover, as customer expectations for seamless and personalised services continue to rise, an inability to resolve entities accurately can result in lost business and damaged reputation.
+
+Investing in a modernised entity resolution system is not merely an operational upgrade; it's a strategic imperative. The cost and complexity of change are considerable, but the long-term business benefits far outweigh these challenges. Improved accuracy in *entity resolution enhances regulatory compliance, reduces the risk of fraud, and enables targeted customer engagement*. In a competitive market where customer trust and operational efficiency are paramount, lagging in this crucial area is not an option. Failing to adapt could result in regulatory penalties, reputational damage, and, ultimately, a loss of market share. Therefore, modernising entity resolution systems should be a top priority for any forward-thinking retail banking organisation.
+
+== 2. Scenario
+
+* *Regulatory Compliance:* Traditional systems struggle to meet the stringent demands of modern regulations such as AML (Anti-Money Laundering) and KYC (Know Your Customer). Non-compliance could lead to hefty fines and reputational damage.
+
+* *Fraud Detection:* Inadequate entity resolution hampers the bank's ability to identify suspicious activities across multiple accounts, increasing the risk of financial crimes like fraud and money laundering.
+
+* *Operational Inefficiencies:* Outdated entity resolution systems are often slow and require significant manual intervention, leading to higher operational costs and slower customer service.
+
+* *Customer Experience:* In the age of personalised banking, failure to accurately resolve entities results in missed opportunities for targeted marketing, cross-selling, and upselling, thereby affecting customer satisfaction and loyalty.
+
+* *Data Fragmentation:* Traditional systems usually operate in silos, making it difficult to consolidate customer data for a unified view, affecting risk management and decision-making processes.
+
+The retail banking industry is at a pivotal juncture where modernising entity resolution is not just an upgrade but a necessity. The cost and complexity of implementing a new system are significant, yet the potential downsides of not adapting are far more severe. These range from regulatory penalties and heightened risk of fraud to loss of customer trust and potential market share. By addressing these challenges, banks not only stand to improve operational efficiency but can also significantly enhance customer relationships and compliance postures. Therefore, the strategic importance of upgrading entity resolution systems in the current competitive and regulatory environment cannot be overstated.
+
+
+== 3. Solution
+
+To overcome the challenges in entity resolution, retail banks should consider implementing advanced technologies that offer real-time, comprehensive insights. Graph databases provide a robust solution, revolutionising how data is connected and queried. Addressing issues from regulatory compliance to customer experience, the technology offers a multi-faceted approach to solving complex business problems. Failing to modernise in a sector where data-driven decisions are vital could be costly. The investment in change, although significant, positions the bank for greater efficiency, compliance, and customer satisfaction in the long term.recommendations, thus maximising its business value.
+
+=== 3.1. How Graph Databases Can Help?
+
+* *Regulatory Compliance (AML/KYC):* Graph databases can dynamically link disparate data points, helping to identify complex relationships and hidden patterns that could signify money laundering or fraud. This ensures a more robust, real-time compliance mechanism.
+
+* *Fraud Detection:* The real-time analysis of relationships and connections allows graph databases to spot inconsistencies or suspicious behaviours across multiple accounts and transactions, thereby significantly improving fraud detection capabilities.
+
+* *Operational Efficiency:* Traditional relational databases require complex queries for entity resolution, which can be time-consuming and resource-intensive. Graph databases simplify this by treating relationships as first-class citizens, reducing the time and computational power needed.
+
+* *Enhanced Customer Experience:* By consolidating fragmented data, graph databases enable a 360-degree view of the customer. This facilitates targeted marketing strategies, personalised services, and effective cross-selling and upselling.
+
+* *Risk Management:* Graph databases can provide more nuanced risk assessments by examining the intricate web of relationships between different entities, be they individual customers or corporate accounts.
+
+==== Technical Insight
+
+Graph databases are uniquely positioned to solve these challenges because they are designed to handle interconnected data naturally. Unlike traditional databases that store data in tables, graph databases focus on the relationships between data points. This is especially useful in retail banking, where understanding the connections between accounts, transactions, and customers is vital for compliance, fraud detection, and customer engagement. By using graph algorithms, organisations can perform deep relational analytics, thereby uncovering insights that would be impossible, or at least computationally expensive, to obtain with traditional systems.
+
+In a highly competitive and regulated industry, adopting graph database technology is not just a matter of keeping up with the times but a strategic necessity for risk mitigation, regulatory compliance, and maintaining a competitive edge.
+
+== 4. Technical Walkthrough
+
+A technical deep dive into this use case can be found here:
+
+* xref:agnostic/entity-resolution.adoc[] 

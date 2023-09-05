@@ -289,7 +289,7 @@ CASE
 END AS Fraud_Level
 ----
 
-=== 5.5. Real-time fraud scoring
+=== 5.6. Real-time fraud scoring
 
 For our last cypher query, we'll add a new quote to Neo4j and run a fraud score calculation to obtain a real-time response showing the similarity score. This code could be used behind an API or directly in Cypher, which would provide an in-flight indication of fraud.
 
