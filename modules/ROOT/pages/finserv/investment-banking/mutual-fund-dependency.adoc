@@ -37,8 +37,8 @@ Graph databases offer a transformative solution to financial services organisati
 1. *Unparalleled Relationship Mapping:* Graph databases excel at modelling complex relationships, enabling accurate depiction of investment dependencies that traditional databases struggle to capture.
 2. *Real-time Dependency Insights:* Graph databases facilitate real-time querying, allowing instant identification of dependencies and their effects, which is crucial for timely decision-making.
 3. *Holistic Portfolio Visualisation:* Graph-based representations provide a holistic view of portfolios, revealing hidden correlations and dependencies contributing to over-leverage and risk.
-Adaptive Scenario Analysis: Graph databases enable scenario modelling by tracing the impact of changes across interconnected assets, helping mitigate risks and adapt strategies proactively.
-Efficient Regulatory Compliance: With graph databases, tracking and reporting investment dependencies becomes streamlined, ensuring compliance with evolving regulatory demands and enhancing transparency.
+4. *Adaptive Scenario Analysis:* Graph databases enable scenario modelling by tracing the impact of changes across interconnected assets, helping mitigate risks and adapt strategies proactively.
+5. *Efficient Regulatory Compliance:* With graph databases, tracking and reporting investment dependencies becomes streamlined, ensuring compliance with evolving regulatory demands and enhancing transparency.
 
 These attributes uniquely position graph databases as the linchpin for unlocking actionable insights and addressing the complex challenges inherent in Mutual Fund Dependency Analytics for financial services organisations.
 
