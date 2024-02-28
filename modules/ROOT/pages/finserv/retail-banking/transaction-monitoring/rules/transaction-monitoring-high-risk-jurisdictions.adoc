@@ -1,0 +1,129 @@
+= Third-party payment to high-risk jurisdiction
+
+== 1. Introduction
+
+Transaction monitoring is a fundamental pillar in retail banking, ensuring the integrity and safety of financial transactions. It plays a pivotal role in detecting and preventing financial fraud, money laundering, and other illicit activities, safeguarding the bank and its customers from potential threats and losses.
+
+The "*Third-party payment to high-risk jurisdiction*" rule monitors transactions directed towards regions or countries categorised as high-risk for financial misconduct. By identifying such transactions, banks can scrutinise them more closely, ensuring they comply with regulatory compliances and aren't a conduit for nefarious activities.
+
+== 2. Rule Breakdown
+
+- *Time Range:* 
+* Evaluate all data over a rolling 30-days (this can be any time period)
+
+- *Caching:*
+    * Money Mules
+
+- *Logic:*
+    1. Aggregate total value of inflow payments by unique source accounts
+    2. Match transactions to high-risk jurisdiction
+        * Where the value of an individual transaction is between 90% - 110% of the original inflow amount.
+
+== 3. Modelling
+
+This section will show examples of cypher queries on an example graph. The intention is to illustrate what the queries look like and provide a guide on how to structure your data in a real setting. We will do this on a small graph of several nodes. The example graph will be based on the data model below:
+
+=== 3.1. Data Model
+
+image::finserv/fs-transaction-monitoring-high-risk-jurisdictions-model.svg[]
+
+==== 3.1.1 Required Fields
+Below are the fields required to get started:
+
+`Account` Node:
+
+* `accountNumber`: Contains the account name of an account. This could be changed for any other identifier you use for an `Account`.
+
+`Transaction` Node:
+
+* `amount`:  Contains the amount of money transferred between accounts.
+* `date`:  Contains the date the transaction occurred.
+
+`PERFORMS` Relationships:
+
+* No properties required
+
+`BENEFITS_TO` Relationships:
+
+* No properties required
+
+=== 3.2. Demo Data
+
+The following Cypher statement will create the example graph in the Neo4j database:
+
+[source, cypher, role=noheader]
+----
+// Create all accounts
+CREATE (a1:Account {number: 1})
+CREATE (a2:Account {number: 2})
+CREATE (a3:Account {number: 3})
+CREATE (a4:Account {number: 4})
+CREATE (a5:Account {number: 5})
+CREATE (a6:Account {number: 6})
+CREATE (a7:Account:HighRiskJurisdiction {number: 7})
+
+// Create valid transaction relationships
+CREATE (a2)-[:TRANSACTION {amount: 1100, datetime: datetime()-duration({days: 29})}]->(a4)
+CREATE (a4)-[:TRANSACTION {amount: 100, datetime: datetime()-duration({days: 27})}]->(a6)
+CREATE (a4)-[:TRANSACTION {amount: 200, datetime: datetime()-duration({days: 26})}]->(a6)
+CREATE (a4)-[:TRANSACTION {amount: 600, datetime: datetime()-duration({days: 25})}]->(a6)
+CREATE (a6)-[:TRANSACTION {amount: 500, datetime: datetime()-duration({days: 3})}]->(a7)
+CREATE (a6)-[:TRANSACTION {amount: 500, datetime: datetime()-duration({days: 2})}]->(a7)
+
+// Create invalid transaction relationships
+CREATE (a1)-[:TRANSACTION {amount: 500, datetime: datetime()-duration({days: 60})}]->(a2)
+CREATE (a1)-[:TRANSACTION {amount: 500, datetime: datetime()-duration({days: 60})}]->(a2)
+CREATE (a3)-[:TRANSACTION {amount: 750, datetime: datetime()-duration({days: 28})}]->(a4)
+CREATE (a5)-[:TRANSACTION {amount: 100, datetime: datetime()-duration({days: 24})}]->(a6)
+CREATE (a5)-[:TRANSACTION {amount: 50, datetime: datetime()-duration({days: 24})}]->(a6)
+----
+
+=== 3.3. Neo4j Schema
+
+[source, cypher, role=noheader]
+----
+// Show neo4j scheme
+CALL db.schema.visualization()
+----
+
+It will provide the following response:
+
+image::finserv/fs-transaction-monitoring-high-risk-jurisdictions-schema.svg[]
+
+== 4. Cypher Queries
+
+=== 4.1. Enhanced Graph Version
+
+This is an enhanced version of the standard transaction monitoring rule, which is not achievable at scale and simplicity with the current system. *Why?*
+
+1. The *recursive traversed* back through the relationships indefinitely can not be implemented in any of the current systems
+2. The incredible performance by Neo4j was achieved by the fact we evaluated the following conditions at traversal time:
+    a. The value of the aggregated transactions is outside the bounds of 90% - 110% of the original transaction amount.
+    b. Where the dates of the transactions are outside the specified period. In this case, 30 days. 
+
+
+[source, cypher, role=noheader]
+----
+MATCH (l:Account)-[last_t:TRANSACTION]->(hrj:HighRiskJurisdiction)
+WHERE last_t.datetime >= datetime()-duration({days: 30})
+WITH l, hrj, SUM(last_t.amount) AS total_hrj_transctions
+MATCH path=(first)((a1)-[t]->(a2)
+   WHERE COLLECT {
+       WITH a1, a2
+       MATCH (a1)-[some_t]->(a2)
+       WHERE some_t.datetime >= datetime()-duration({days: 30})
+       WITH SUM(some_t.amount) AS s
+       RETURN 0.9 * total_hrj_transctions <= s <= 1.1 * total_hrj_transctions
+   } = [TRUE]
+)*(l)-[tx:TRANSACTION]->(hrj)
+   WHERE NOT EXISTS {
+       WITH first
+       MATCH (before)-[tx]->(first)
+       WHERE tx.datetime >= datetime()-duration({days: 30})
+       WITH SUM(tx.amount) AS sx, before
+       WHERE 0.9 * total_hrj_transctions <= sx <= 1.1 * total_hrj_transctions
+       RETURN before
+   } AND
+   tx.datetime >= datetime()-duration({days: 30})
+RETURN path
+----

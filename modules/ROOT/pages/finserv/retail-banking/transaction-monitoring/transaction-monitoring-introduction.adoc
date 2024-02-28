@@ -1,0 +1,41 @@
+= Transaction Monitoring
+
+// .A walkthrough of Automated Facial Recognition use case
+// video::id[youtube]
+
+== 1. Introduction
+
+Retail banking is undergoing rapid transformation, with existing transaction monitoring systems facing mounting challenges. Legacy systems, while familiar, are now struggling to detect intricate financial crimes, leading to potential revenue losses and reputational harm. Regulatory bodies, such as the Financial Conduct Authority (FCA), are intensifying their oversight, levying substantial fines for lapses in compliance. The modern financial landscape demands solutions that can handle a surge in transaction volumes, complex crime patterns, and the expectation for real-time detection. Remaining anchored to dated systems places organisations in a reactive position, at odds with criminals and regulators. Transitioning to a cutting-edge solution is no longer a luxury but a critical imperative. The real query is:
+
+[.center]
+*_“Can organisations afford the risks of stagnation?”_*
+
+Adopting a contemporary approach ensures compliance, protects brand integrity, and secures financial health.
+
+== 2. Scenario
+
+1. *Regulatory Compliance & Heavy Penalties:* Legacy systems are increasingly struggling to comply with updated regulations like the Fifth Money Laundering Directive (5MLD) by the EU. Inability to adhere can lead to hefty penalties from regulators such as the Financial Conduct Authority (FCA). A modern solution ensures up-to-date compliance and saves organisations from potential financial and reputational damages.
+
+2. *Growing Transaction Volumes:* The sheer volume of transactions in today's digital banking age can overwhelm older systems, leading to missed fraudulent activities. Newer solutions can handle this surge, ensuring all transactions are monitored efficiently.
+
+3. *Complex Financial Crime Patterns:* Financial criminals are employing more sophisticated tactics. Legacy systems might not detect these nuanced patterns, while contemporary solutions are designed to understand and react to evolving threats.
+
+4. *Real-time Detection Demand:* The industry now expects real-time alerts for suspicious activities. Dated systems often lag, but modern solutions can offer instantaneous alerts, enabling quicker response to potential threats.
+
+5. *Operational Efficiency & Cost:* Maintaining and patching older systems can be a resource-intensive endeavour. While initially complex and costly, transitioning to a newer solution can lead to longer-term operational efficiencies and potential cost savings, especially when considering potential regulatory fines and the cost of undetected fraudulent activities.
+
+== 3. Solution
+
+In the swiftly evolving landscape of retail banking, the industry's challenges demand a novel approach. To address complex financial crimes and comply with stringent regulations like the Fifth Money Laundering Directive (5MLD), it's crucial to adapt. Implementing a graph database offers a transformative solution, capturing intricate relationships between transactions, ensuring real-time detection, and bolstering compliance. While change entails complexity and cost, the long-term benefits of safeguarding reputation, ensuring regulatory adherence, and enhancing operational efficiency are paramount. Embracing this modern technology is not just strategic; it's imperative for future resilience.
+
+=== 3.1. How Graph Databases Can Help?
+
+1. *Enhanced Fraud Detection:* Understanding transactional relationships is vital within the multifaceted retail banking environment. Graph databases allow businesses to visualise the interconnected web of customer interactions, revealing concealed financial behaviours. This heightened insight equips organisations to counteract deceptive practices better and prevent potential revenue leakage.
+
+2. *Streamlined Regulatory Adaptation:* With ever-evolving mandates like the 5MLD, businesses need systems that can adapt without massive overhauls. Graph databases provide the agility to adjust to new regulatory requirements, ensuring businesses remain in good standing with the Financial Conduct Authority (FCA) and avoid hefty non-compliance penalties.
+
+3. *Operational Excellence & Timely Responses:* In today's competitive banking landscape, swift decision-making is crucial. Graph databases facilitate real-time monitoring, enabling businesses to act promptly on suspicious activities. This safeguards the brand and optimises operational costs, ensuring a more robust bottom line.
+
+== 4. Rules
+
+* xref:finserv/retail-banking/transaction-monitoring/rules/transaction-monitoring-high-risk-jurisdictions.adoc[]
