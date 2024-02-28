@@ -12,6 +12,8 @@
 *** xref:finserv/retail-banking/entity-resolution.adoc[]
 *** xref:finserv/retail-banking/synthetic-identity-fraud.adoc[]
 *** xref:finserv/retail-banking/transaction-ring/transaction-ring-introduction.adoc[]
+*** xref:finserv/retail-banking/transaction-monitoring/transaction-monitoring-introduction.adoc[]
+**** xref:finserv/retail-banking/transaction-monitoring/rules/transaction-monitoring-high-risk-jurisdictions.adoc[]
 
 * xref:insurance/index.adoc[]
 ** xref:insurance/quote-fraud.adoc[]

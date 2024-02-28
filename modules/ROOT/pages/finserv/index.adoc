@@ -15,3 +15,4 @@ Furthermore, Neo4j's flexibility and scalability make it an effective tool for m
 * xref:finserv/retail-banking/entity-resolution.adoc[]
 * xref:finserv/retail-banking/synthetic-identity-fraud.adoc[]
 * xref:finserv/retail-banking/transaction-ring/transaction-ring-introduction.adoc[]
+* xref:finserv/retail-banking/transaction-monitoring/transaction-monitoring-introduction.adoc[]
