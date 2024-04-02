@@ -11,7 +11,7 @@ The "*Third-party payment to high-risk jurisdiction*" rule monitors transactions
 - *Time Range:* 
 * Evaluate all data over a rolling 30-days (this can be any time period)
 
-- *Caching:*
+- *Catches:*
     * Money Mules
 
 - *Logic:*
