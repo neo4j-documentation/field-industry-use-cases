@@ -1,0 +1,6 @@
+= Industry Agnostic
+
+== Use Cases
+
+* xref:agnostic/entity-resolution.adoc[Entity Resolution]
+* xref:agnostic/it-service-graph/it-service-graph.adoc[]

@@ -17,3 +17,8 @@
 
 * xref:insurance/index.adoc[]
 ** xref:insurance/quote-fraud.adoc[]
+
+
+* xref:agnostic/index.adoc[]
+** xref:agnostic/entity-resolution.adoc[Entity Resolution]
+** xref:agnostic/it-service-graph/it-service-graph.adoc[]
