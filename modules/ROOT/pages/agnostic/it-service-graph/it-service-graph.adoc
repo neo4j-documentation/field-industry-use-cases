@@ -1,12 +1,12 @@
 = IT Service Graph
 
 == 1. Introduction
-Medium to large organisations have to support, operate and maintain large to huge IT environments with hundreds or even thousands of internal and external customer services. These environments are highly complex and full of dependencies between IT infrastructure, software, services, customers, service levels, providers, and many more. Applications are used to collect and maintain information about the environments to maintain those environments. However, those solutions are mostly dedicated to only a portion of the above-mentioned entities in an IT environment, and important relations between entities are sparsely available if they exist at all.
+Medium to large organisations have to support, operate and maintain large to huge IT environments with hundreds or even thousands of internal and external customer services. These environments are highly complex and full of dependencies between IT infrastructure, software, services, customers, service levels, providers, and many more. Applications are used to collect and maintain information about the environments in order  to support operating them. However, those solutions are mostly dedicated to only a portion of the above-mentioned entities in an IT environment, and important relations between entities are sparsely available if they exist at all. 
 
 == 2. Scenario
 Service downtime may lead to significant problems for an organisation and critical business problems, ranging from degradation of the company's reputation and/or credibility to revenue loss due to downtime of critical revenue-supporting applications.
 
-Hence, understanding all relationships and the possible cost of downtime in medium to large enterprises is critical. Monitoring and analysing relationships between infrastructure, software, services and users/customers will enable companies to understand the most critical entities in their IT Services landscape and take action to build resilience into those parts to mitigate outages and, thus, reduce the negative impact on the companies’ revenue driving services.
+Hence, understanding all relationships and the possible cost of downtime in medium to large enterprises is critical. Monitoring and analysing relationships between infrastructure, software, services and users/customers will enable companies to understand the most critical entities in their IT Services landscape and take action to build resilience into those parts to mitigate outages. This will help to increase uptime and reduce negative impact on the companies’ revenue driving services in case of failures.
 
 The applications mentioned in the introduction handle most of the data required to analyse an IT Services environment. Still, data is spread into several buckets, such as CMDBs, Service monitoring tools, case management systems, and often self-written applications. A company growing through acquisitions introduces an additional layer of complexity with even more different solutions to operating IT services.
 
@@ -25,7 +25,7 @@ This section will show examples of Cypher queries on an example IT Service Graph
 
 === 4.1. Data Model
 
-image::agnostic/it-service-graph/agnostic-it-service-graph-model.svg[]
+image::agnostic/it-service-graph/agnostic-it-service-graph-model.png[]
 
 ==== 4.1.1. Required Fields
 Below are the fields required to get started:
@@ -139,8 +139,8 @@ Going further, it is also easy to include the server that runs the services to u
 [source, cypher, role=noheader]
 ----
 // Match a complete service chain for the software GraphDB
-MATCH path=(:Server)<-[:INSTALLED_ON]-(:Software {swName: 'GraphDB'})-[:DELIVERS]->(:Service)-[:USED_BY]->(:Customer)
-RETURN path;
+MATCH path=(:Rack)<-[:IN_RACK]-(:Section)<-[:IN_SECTION]-(:Datacenter)<-[:LOCATED_IN]-(:Server)<-[:INSTALLED_ON]-(:Software {swName: 'GraphDB'})-[:DELIVERS]->(:Service)-[:USED_BY]->(:Customer)
+RETURN path
 ----
 
 === 5.2. Identify a complete service chain of a particular software
