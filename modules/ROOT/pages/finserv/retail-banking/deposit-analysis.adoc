@@ -1,0 +1,267 @@
+= Deposit Analysis
+
+# 1. Introduction
+
+The retail banking sector faces significant challenges in managing deposits due to shifting interest rates, evolving customer behaviours, and increasing technological advancements. Deposit growth is expected to remain sluggish through 2025, whilst the **cost of deposits has increased**, putting pressure on banks' net interest income. There's a competitive war for deposits, driven by the need for liquidity and depositors' reluctance to accept lower rates. Furthermore, macroeconomic headwinds and political uncertainty impact consumer behaviour and corporate borrowing. Banks are focusing on new customer acquisition and retention, **personalised pricing strategies**, and superior digital experiences to navigate these challenges.
+
+
+# 2. Scenario
+
+Graph databases excel at analysing the complexities of retail banking deposits. By leveraging the relationships between customers, accounts, and transactions, they enable banks to model and visualise customer behaviour. This empowers banks to optimise pricing strategies, identify potential risks, and personalise offers based on individual needs and market trends.
+
+Compared to traditional systems, graph databases provide real-time analysis, faster response times, and superior data modelling capabilities. These advantages translate to improved customer experiences, enhanced risk management, and increased profitability for retail banks.
+
+# 3. Solution
+
+Graph databases offer a unique approach to analysing banking deposits, going beyond the limitations of traditional relational databases. Graph databases model complex relationships and patterns between customers, accounts, and transactions, which is critical for understanding deposit behaviours. This is very similar to how graph databases are used in fraud detection, as described in the Claims Fraud document.  Using graph theory, graph databases can accurately represent entities and their connections, thus helping banks better manage deposits by providing a clear view of the relationships between data points. They allow for more sophisticated analysis to be done on connections within a dataset, going beyond the simple data within the dataset itself. This approach facilitates real-time analysis, allowing for quicker responses to changes in the market or customer activity, something traditional systems struggle with.
+
+## 3.1. How Graph Databases Can Help?
+
+* **Link Analysis:** Just as Neo4j can explore connections to uncover complex patterns, it can explore the connections between customer demographics, account activities, and transaction histories to uncover complex deposit patterns. This helps banks visualise how different factors interact and influence deposit trends.
+* **Pattern Detection:** Similar to how graph databases excel at identifying fraud patterns without a starting point, they can analyse deposit data to reveal hidden relationships and identify emerging trends. This can include identifying groups of customers with similar deposit behaviours or accounts related to unusual fund flows.
+* **Real-time Analysis**: Graph databases can monitor and analyse deposit activities in real-time. This allows banks to quickly identify unusual changes in deposit behaviour, analyse the impact of dynamic pricing strategies, and respond swiftly to market changes.
+
+Graph databases offer distinct advantages over traditional systems, particularly when dealing with the complex and interconnected nature of deposit data. By adopting this technology, banks can enhance their understanding of customer behaviour and improve their deposit strategies. This approach mirrors the effective use of graph databases in fraud detection.
+
+# 4. Modelling
+
+This section will show examples of cypher queries on an example graph. The intention is to illustrate what the queries look like and provide a guide on how to structure your data in a real setting. We will do this on a small graph of several nodes. The example graph will be based on the data model below:
+
+## 4.1. Data Model
+
+![Deposit Analysis Data Model](Data Model - Deposit Analysis.png)
+
+### 4.1.1 Required Fields
+
+Based on the provided test data and the structure of the Claims Fraud use case, here's how the required fields section can be expanded to include customer and account information, as well as deposits:
+
+**`Customer` Node:**
+
+*   **`id`**: Unique identifier for the customer
+
+**`Account` Node:**
+
+*   **`accountNumber`**: Unique identifier for the account
+*   **`accountType`**: (e.g., Internal, External) -- indicated by the labels in the test data
+
+**`Deposit` Node:**
+
+*   **`amount`**: The amount of the deposit
+*  **`date`**: The date of the deposit
+
+**Relationships:**
+
+*   **`HAS_ACCOUNT`**: Connects a Customer node to an Account node.
+*  **`DEPOSIT`**: Connects a Deposit node to an Account node.
+
+## 4.2. Demo Data
+```cypher
+// Create customers
+CREATE (c1:Customer {id: 1})
+CREATE (c2:Customer {id: 2})
+CREATE (c3:Customer {id: 3})
+
+// Create accounts
+CREATE (a1:Account:Internal {accountNumber: 1})
+CREATE (a2:Account:Internal {accountNumber: 2})
+CREATE (a3:Account:Internal {accountNumber: 3})
+
+// Create relationships - some accounts are shared between customers
+CREATE (c1)-[:HAS_ACCOUNT]->(a1)
+CREATE (c1)-[:HAS_ACCOUNT]->(a2)
+CREATE (c2)-[:HAS_ACCOUNT]->(a2)
+CREATE (c2)-[:HAS_ACCOUNT]->(a3)
+CREATE (c3)-[:HAS_ACCOUNT]->(a3)
+
+// Create deposits
+CREATE (:Deposit:Cash)-[:DEPOSIT {amount: 3000, date: datetime()-duration('P2M')}]->(a1)
+CREATE (:Deposit:Cash)-[:DEPOSIT {amount: 5000, date: datetime()-duration('P1M')}]->(a1)
+CREATE (:Deposit:Cash)-[:DEPOSIT {amount: 1000, date: datetime()}]->(a1)
+CREATE (:Deposit:Cash)-[:DEPOSIT {amount: 4000, date: datetime()}]->(a2)
+CREATE (:Deposit:Cash)-[:DEPOSIT {amount: 2000, date: datetime()}]->(a3)
+```
+
+## 4.3. Neo4j Scheme
+If you call:
+
+```
+// Show neo4j scheme
+CALL db.schema.visualization()
+```
+
+You will see the following response:
+
+image::finserv/fs-deposit-analysis-schema.svg[]
+
+# 5. Cypher Queries
+
+## 5.1. Find all deposits in last month
+
+```
+MATCH path=(:Account)<-[d:DEPOSIT]-(:Deposit)
+WHERE d.date > datetime()-duration('P1M')
+RETURN path
+```
+
+## 5.2. Get all deposits over the last three months with 50% overlap in funds
+In this query, we will identify a valid customer with the following requirements:
+
+* Cash Deposits have been made in the prior 2 rolling months
+* Cash Deposits have been made in the last rolling month
+* Get deposits for all Customer's Accounts
+*   Ensure at least 50% of deposits in current rolling month to prior 2 months
+
+```
+// Get sum of deposits in the rolling two month window
+// 1 month ago to 3 months ago
+MATCH (c:Customer)-[:HAS_ACCOUNT]->(:Account)<-[d:DEPOSIT]-(:Deposit)
+WHERE d.date < datetime()-duration('P1M')
+AND d.date > datetime()-duration('P3M')
+WITH AVG(d.amount) AS rollingTwoMnthDepositAvg, c
+WHERE rollingTwoMnthDepositAvg > 0
+
+
+// Get sum of deposits in the current rolling month
+MATCH (c)-[:HAS_ACCOUNT]->(:Account)<-[d:DEPOSIT]-(:Deposit)
+WHERE d.date > datetime()-duration('P1M')
+WITH c, rollingTwoMnthDepositAvg, SUM(d.amount) AS currentMonth
+WHERE currentMonth > 0
+
+
+// Make sure there is atleast 50% of the money being deposited between the current month
+// and the avg over the last 2 months
+WITH c, rollingTwoMnthDepositAvg, currentMonth
+WHERE (currentMonth / rollingTwoMnthDepositAvg) * 100 > 50
+
+
+// Get all deposits over the last three months for all accounts
+MATCH path=(c)-[:HAS_ACCOUNT]->(:Account)<-[d:DEPOSIT]-(:Deposit)
+WHERE d.date > datetime()-duration('P3M')
+
+
+RETURN path
+```
+
+Yes, there are additional queries that are more "graphy" in nature, leveraging the relationship and network analysis capabilities of graph databases, as described in the sources. These queries go beyond simple pattern matching to explore connections and structures within the data.
+
+Here are some examples, building on the previous queries and focusing on more complex graph analysis:
+
+## 5.3. Identifying Customer Account Sharing Networks
+
+This query identifies networks of customers who share accounts, which could indicate potential fraud rings or legitimate family/business relationships.
+
+```cypher
+// Find customers who share accounts and get their deposit patterns
+MATCH (c1:Customer)-[:HAS_ACCOUNT]->(a:Account)<-[:HAS_ACCOUNT]-(c2:Customer)
+WHERE c1.id < c2.id  // Avoid duplicate pairs
+WITH c1, c2, a
+
+// Get deposits for shared accounts
+OPTIONAL MATCH (d:Deposit)-[dep:DEPOSIT]->(a)
+WHERE dep.date > datetime()-duration('P3M')
+
+// Aggregate results
+WITH c1, c2, a, 
+     count(d) as depositCount,
+     coalesce(sum(dep.amount), 0) as totalDeposits  // Handle null case when no deposits
+
+// Return the relationship details
+RETURN 
+    c1.id as customer1,
+    c2.id as customer2,
+    collect(a.accountNumber) as sharedAccounts,
+    count(a) as numberOfSharedAccounts,
+    sum(depositCount) as totalDeposits,
+    sum(totalDeposits) as totalDepositAmount
+ORDER BY numberOfSharedAccounts DESC
+```
+
+## 5.4. Analysing Deposit Flow Patterns Between Accounts
+
+This query identifies patterns of deposits between accounts that occur within close time periods, which could indicate structured transactions or money movement patterns.
+
+```cypher
+// Find deposits and their accounts within the last 3 months
+MATCH (d1:Deposit)-[dep1:DEPOSIT]->(a1:Account)<-[:HAS_ACCOUNT]-(c1:Customer)
+WHERE dep1.date > datetime()-duration('P3M')
+
+// Find other deposits to different accounts within a 1 month window
+MATCH (d2:Deposit)-[dep2:DEPOSIT]->(a2:Account)<-[:HAS_ACCOUNT]-(c2:Customer)
+WHERE a1 <> a2
+AND abs(duration.between(dep1.date, dep2.date).days) < 30
+
+// Return the pattern of related deposits
+RETURN 
+    c1.id as customer1,
+    a1.accountNumber as account1,
+    dep1.amount as amount1,
+    dep1.date as date1,
+    c2.id as customer2, 
+    a2.accountNumber as account2,
+    dep2.amount as amount2,
+    dep2.date as date2,
+    abs(duration.between(dep1.date, dep2.date).days) as daysBetween
+ORDER BY daysBetween
+```
+
+**Explanation:**
+
+*   The first `MATCH` clause finds deposits made in the last three months and the associated customer.
+*  The second `MATCH` clause uses the previous account to traverse to the next deposit.
+*  The `WHERE` clause filters to make sure that all new deposits happen within one month of each other.
+*   The `RETURN` statement returns the original path and all related paths of deposit flows.
+*   This query analyses paths of deposit flows across accounts, which is a powerful graph-based analysis technique for identifying unusual financial movements.
+
+# 6. Graph Data Science (GDS)
+
+## 6.1. Community Detection in Deposit Networks
+
+This query utilises the Graph Data Science (GDS) library to identify communities within the deposit network.  The Louvain method is particularly effective for detecting communities in fraud networks.  This query is highly "graphy" because it uses a graph-specific algorithm to explore the structure of connections, as described in the source material. This approach may uncover groups of customers and accounts that are closely linked, indicating organised fraudulent activity.
+
+First project the graph:
+```
+// Create a graph projection
+CALL gds.graph.project(
+    'depositNetwork',
+    'Customer',
+    'HAS_ACCOUNT'
+)
+```
+
+Then run the Louvain algorithm:
+
+```
+// Run the Louvain algorithm
+CALL gds.louvain.stream('depositNetwork')
+YIELD nodeId, communityId
+
+// Return results
+RETURN gds.util.asNode(nodeId).id AS customerId, communityId
+```
+
+**Explanation:**
+*   The query first creates a graph projection of the customer and HAS_ACCOUNT relationship.
+*  It then runs the Louvain algorithm on the projection which identifies densely connected communities.
+*   The `RETURN` statement returns each customer ID, along with a community ID which indicates if the customer belongs to the same community, meaning they might be part of a larger fraud ring.
+
+## 6.2. Centrality Analysis for Identifying Key Players
+
+Centrality algorithms help identify the most influential or suspicious nodes in the network. This is another way that Graph Databases can identify anomalies that typical relational databases would miss, because the focus is on analysing the importance or influence of specific nodes.
+
+This requires the graph to be projected first as done in the previous section.
+
+```
+// Run PageRank
+CALL gds.pageRank.stream('depositNetwork')
+YIELD nodeId, score
+RETURN gds.util.asNode(nodeId).id AS entityId, score
+ORDER BY score DESC
+```
+
+**Explanation:**
+*  The query first creates a graph projection of the customers, accounts, and relationships.
+*  Then, it runs the PageRank algorithm to determine the importance of nodes in the graph, giving a score based on the number of connections and the importance of the connected nodes.
+*  The `RETURN` statement outputs the entity id and their pagerank score, which can be used to identify the most connected or important entities.
+*  Centrality algorithms help identify the most influential or suspicious nodes in the network.
+
+These queries illustrate how graph databases can be used to perform complex, network-based analysis that goes beyond traditional relational databases. They focus on identifying relationships, patterns, and paths within the data, which is essential for detecting fraud and managing risk. These queries also use more graph-specific approaches that are more difficult or impossible to achieve with relational databases.

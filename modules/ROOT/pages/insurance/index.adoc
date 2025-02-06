@@ -8,4 +8,5 @@ Using Neo4j, insurance companies can better analyse risk patterns, detect fraudu
 
 == Use Cases
 
+* xref:insurance/claims-fraud.adoc[]
 * xref:insurance/quote-fraud.adoc[]

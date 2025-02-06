@@ -1,0 +1,444 @@
+= Claims Fraud
+
+# 1. Introduction
+Claims fraud, especially fabricated injury claims, costs insurers billions and raises premiums for honest customers. Traditional fraud detection is slow and inaccurate. Graph databases where graph databases offer a solution by visualising complex connections between claimants, medical records, and social media. This reveals inconsistencies suggesting fraud, like claimants with severe injuries but no medical treatment. By using graph databases, insurers can better detect fraud, protect their finances, and ensure resources go to those who genuinely need them.
+
+# 2. Scenario
+
+## Types of Claims Fraud
+
+* **Motor insurance fraud:** Staged accidents, false whiplash claims, exaggerated repair costs, and vehicle dumping
+* **Property insurance fraud:** Arson, false burglary claims, inflated damage assessments, and fictitious property damage
+* **Exaggerated loss:** Inflated injuries, value of lost items, or cost of medical treatment
+* **Crash for cash scams:** Orchestrated accidents for false claims
+
+## Extent of the Problem
+
+* **Rising fraud:** In 2023, £1.1 billion in fraudulent claims were detected, a 4% increase from 2022, and the number of detected claims rose 16%
+* **Average claim value:** £13,000 in 2023
+* **Motor fraud prevalence:** 45,800 fraudulent motor claims detected in 2023, valued at £501 million
+* **Organised crime involvement:** Increasing sophistication and difficulty to detect
+
+## Challenges
+
+* **Complex fraud patterns:** Traditional systems struggle to detect complex fraud
+* **Sophisticated fraud tactics:** Fraudsters constantly evolve tactics
+* **Need for real-time detection:** Advanced analytics and machine learning are needed
+* **Data sharing and collaboration:** Challenging due to competition and data privacy
+
+# 3. Solution
+Graph databases offer a new way to detect fraud. Using graph theory, they are accurate and can model complex relationships and patterns between entities. Graph models represent entities and relationships, such as customer accounts, transactions, and their connections.
+
+Using graph databases has several benefits for fraud detection:
+
+* **Enhanced Fraud Detection:** Visualising customer interactions can reveal hidden patterns of fraud
+* **Real-Time Analysis:** Graph databases allow for real-time monitoring and faster responses to fraud
+* **Improved Accuracy:** Graph databases can identify patterns and anomalies more accurately than traditional databases
+
+## 3.1. How Graph Databases Can Help?
+
+1. **Link Analysis**: Neo4j can explore connections between claimants, medical professionals, and other related parties to uncover fraudulent networks.
+2. **Pattern Detection**: Graph databases excel at identifying patterns without a starting point, analysing data shapes rather than just the data itself, which is essential for uncovering complex fraud schemes.
+3. **Real-time Detection**: Neo4j allows for detecting suspicious activities as they occur.
+
+# 4. Modelling
+This section provides examples of Cypher queries to demonstrate how to structure your data and what queries might look like in a real-world scenario. The example graph will include nodes for individuals, medical professionals, claims, vehicles, and other relevant entities, and relationships such as HAS_CLAIM, TREATED_BY, and INVOLVED_IN to show how the entities are connected.
+
+## 4.1. Data Model
+
+### 4.1.1 Required Fields
+
+**`Claimant` Node:**
+
+* `name`: Name of the claimant
+
+**`MedicalProfessional` Node:**
+
+* `name`: Name of the medical professional
+
+**`Claim` Node:**
+
+* `claimID`: Unique identifier for the claim
+* `date`: Date of the claim
+* `amountClaimed`: Amount of money claimed
+
+**`Vehicle` Node:**
+
+* `VIN`: Vehicle Identification Number
+
+**Relationships:**
+```
+(Claimant)-[:HAS_CLAIM]->(Claim)
+(Claim)-[:TREATED_BY]->(MedicalProfessional)
+(Claimant)-[:OWNS]->(Vehicle)
+(Vehicle)-[:INVOLVED_IN]->(Claim)
+(MedicalProfessional)-[:TREATS]->(Claimant)
+```
+
+
+## 4.2. Demo Data
+
+The following Cypher statement will create the example graph in the Neo4j database:
+
+```
+//
+// 1. Create Claimants
+//
+CREATE (c1:Claimant {name: "John Doe"})
+CREATE (c2:Claimant {name: "Jane Smith"})
+CREATE (c3:Claimant {name: "Bob Johnson"})
+
+
+//
+// 2. Create Medical Professionals
+//
+CREATE (m1:MedicalProfessional {name: "Dr. Gregory House"})
+CREATE (m2:MedicalProfessional {name: "Dr. John Watson"})
+
+
+//
+// 3. Create Vehicles
+//
+CREATE (v1:Vehicle {VIN: "VIN-12345"})
+CREATE (v2:Vehicle {VIN: "VIN-67890"})
+CREATE (v3:Vehicle {VIN: "VIN-111213"})
+
+
+//
+// 4. Create Claims
+//
+CREATE (cl1:Claim {claimID: "CL100", date: date("2025-01-01"), amountClaimed: 5000})
+CREATE (cl2:Claim {claimID: "CL101", date: date("2025-01-05"), amountClaimed: 2000})
+CREATE (cl3:Claim {claimID: "CL102", date: date("2025-01-10"), amountClaimed: 10000})
+CREATE (cl4:Claim {claimID: "CL103", date: date("2025-01-12"), amountClaimed: 8000})
+
+
+//
+// 5. Establish Relationships
+//
+
+
+// John Doe has claim CL100, treated by Dr. House.
+// John Doe owns VIN-12345, which was involved in CL100.
+CREATE (c1)-[:HAS_CLAIM]->(cl1)
+CREATE (cl1)-[:TREATED_BY]->(m1)
+CREATE (c1)-[:OWNS]->(v1)
+CREATE (v1)-[:INVOLVED_IN]->(cl1)
+CREATE (m1)-[:TREATS]->(c1)
+
+
+// Jane Smith has claim CL101, treated by Dr. Watson.
+// Jane Smith owns VIN-67890, which was involved in CL101.
+CREATE (c2)-[:HAS_CLAIM]->(cl2)
+CREATE (cl2)-[:TREATED_BY]->(m2)
+CREATE (c2)-[:OWNS]->(v2)
+CREATE (v2)-[:INVOLVED_IN]->(cl2)
+CREATE (m2)-[:TREATS]->(c2)
+
+
+// Bob Johnson has claim CL102, treated by Dr. Watson.
+// Bob Johnson owns VIN-111213, which was involved in CL102.
+CREATE (c3)-[:HAS_CLAIM]->(cl3)
+CREATE (cl3)-[:TREATED_BY]->(m2)
+CREATE (c3)-[:OWNS]->(v3)
+CREATE (v3)-[:INVOLVED_IN]->(cl3)
+CREATE (m2)-[:TREATS]->(c3)
+
+
+// Create a second claim for John Doe (CL103),
+// which is also treated by Dr. House and involves the same vehicle VIN-12345.
+CREATE (c1)-[:HAS_CLAIM]->(cl4)
+CREATE (cl4)-[:TREATED_BY]->(m1)
+CREATE (v1)-[:INVOLVED_IN]->(cl4)
+CREATE (m1)-[:TREATS]->(c1)
+```
+
+## 4.3. Neo4j Scheme
+If you call:
+
+```
+// Show neo4j scheme
+CALL db.schema.visualization()
+```
+
+You will see the following response:
+
+image::insurance/insurance-claims-fraud-schema.svg[]
+
+
+# 5. Cypher Queries
+
+## 5.1. Identify Claimants with Multiple Claims
+In this query, we will identify claimants who have filed more than one claim since multiple claims can sometimes be a red flag.
+
+View Graph:
+```
+MATCH path=(c:Claimant)-[:HAS_CLAIM]->(cl:Claim)
+WITH c, count(cl) AS numClaims
+WHERE numClaims > 1
+RETURN path
+```
+
+View Statistics:
+```
+MATCH (m:MedicalProfessional)<-[:TREATED_BY]-(cl:Claim)
+WITH m, count(cl) AS claimCount, sum(cl.amountClaimed) AS totalAmount
+WHERE claimCount > 1 OR totalAmount > 5000
+RETURN m.name AS MedicalProfessional, claimCount, totalAmount
+ORDER BY totalAmount DESC
+```
+
+### What It Does:
+* Counts how many claims each `MedicalProfessional` is tied to.
+* Sums the total amount claimed.
+* Filters doctors who treat multiple claims or are tied to large claim sums.
+
+## 5.2. Identify Medical Professionals with Unusual Patterns
+Spot doctors or medical professionals who appear unusually frequently in claims or who are associated with exceptionally high total claim amounts.
+
+View Graph:
+```
+MATCH path=(m:MedicalProfessional)<-[:TREATED_BY]-(cl:Claim)
+WITH m, count(cl) AS claimCount, sum(cl.amountClaimed) AS totalAmount, path
+WHERE claimCount > 1 OR totalAmount > 5000
+RETURN path
+```
+
+Return Statistics:
+```
+MATCH (m:MedicalProfessional)<-[:TREATED_BY]-(cl:Claim)
+WITH m, count(cl) AS claimCount, sum(cl.amountClaimed) AS totalAmount
+WHERE claimCount > 1 OR totalAmount > 5000
+RETURN m.name AS MedicalProfessional, claimCount, totalAmount
+ORDER BY totalAmount DESC
+```
+
+### What It Does:
+*   Counts how many claims each `MedicalProfessional` is tied to.
+* Sums the total amount claimed.
+* Filters doctors who treat multiple claims or are tied to large claim sums.
+
+## 5.3. Identify Potential "Crash for Cash" Scams
+A "Crash for Cash" scam often involves staged accidents, where the same vehicles or ring of individuals keep showing up in multiple claims. One simple pattern is:
+* A single vehicle involved in multiple claims with potentially different claimants or suspicious claim dates/amounts.
+
+View Graph:
+```
+MATCH (v:Vehicle)-[:INVOLVED_IN]->(cl:Claim)
+WITH v, collect(cl) AS allClaims
+WHERE size(allClaims) > 1
+UNWIND allClaims AS claim
+MATCH path=(v)-[:INVOLVED_IN]->(claim)
+RETURN path
+```
+
+Return Statistics:
+```
+MATCH (v:Vehicle)-[:INVOLVED_IN]->(cl:Claim)
+WITH v, count(cl) AS claimCount
+WHERE claimCount > 1
+RETURN v.VIN AS Vehicle, claimCount
+```
+
+### What It Does:
+* Collects all claims linked to each vehicle.
+* Filters those that appear in more than one claim
+
+# 6. Graph Data Science (GDS)
+Graph Data Science (GDS) provides powerful algorithms for advanced fraud detection by analysing network structures and patterns. Here we explore key algorithms and their applications in insurance fraud detection.
+
+## 6.1. Graph Projections
+Before running any GDS algorithm, you must create a graph projection. A projection is an in-memory copy of your graph optimised for analytical processing.
+
+### 6.1.1. Basic Projection
+Here's a basic projection including all node types and relationships in our fraud detection graph:
+
+```cypher
+CALL gds.graph.project(
+    'fraud-graph',
+    // Node labels to include
+    ['Claimant', 'MedicalProfessional', 'Claim', 'Vehicle'],
+    // Relationship types to include
+    {
+        HAS_CLAIM: {orientation: 'UNDIRECTED'},
+        TREATED_BY: {orientation: 'UNDIRECTED'},
+        OWNS: {orientation: 'UNDIRECTED'},
+        INVOLVED_IN: {orientation: 'UNDIRECTED'}
+    }
+);
+```
+
+### 6.1.2. Specialised Projections
+For specific analyses, you might want to create more focused projections. For example, to analyse claimant relationships:
+
+```cypher
+// Project a graph of only claimants who share medical professionals
+CALL gds.graph.project(
+    'claimant-network',
+    'Claimant',
+    {
+        SHARES_DOCTOR: {
+            type: 'TREATED_BY',
+            orientation: 'UNDIRECTED'
+        }
+    }
+);
+```
+
+### 6.1.3. Managing Projections
+Useful commands for managing your projections:
+
+```cypher
+// List all projections
+CALL gds.graph.list();
+
+// Drop a projection when done
+CALL gds.graph.drop('fraud-graph');
+```
+
+## 6.2. Community Detection
+Community detection algorithms help identify clusters of nodes that are more densely connected to each other than to the rest of the network.
+
+### 6.2.1. Louvain Method
+The Louvain method is particularly effective for detecting communities in fraud networks:
+
+```cypher
+CALL gds.louvain.stream('fraud-graph')
+YIELD nodeId, communityId
+RETURN gds.util.asNode(nodeId).name AS name, communityId
+ORDER BY communityId ASC
+```
+
+This helps identify:
+* Groups of claimants who frequently file claims together
+* Medical professionals who consistently work with the same group of claimants
+* Vehicles involved in multiple claims with the same group of people
+
+## 6.3. Centrality Algorithms
+Centrality algorithms help identify the most influential or suspicious nodes in the network.
+
+### 6.3.1. PageRank
+PageRank helps identify key players in fraud networks:
+
+```cypher
+CALL gds.pageRank.stream('fraud-graph')
+YIELD nodeId, score
+RETURN gds.util.asNode(nodeId).name AS name, score
+ORDER BY score DESC
+```
+
+This reveals:
+* Medical professionals with unusually high connectivity to claims
+* Claimants who are central to multiple fraud schemes
+* Vehicles frequently involved in suspicious claims
+
+### 6.3.2. Betweenness Centrality
+Identifies nodes that act as bridges between different communities:
+
+```cypher
+CALL gds.betweenness.stream('fraud-graph')
+YIELD nodeId, score
+WITH gds.util.asNode(nodeId) as node, score
+RETURN 
+    labels(node)[0] as type,
+    CASE labels(node)[0]
+        WHEN 'Claimant' THEN node.name
+        WHEN 'MedicalProfessional' THEN node.name
+        WHEN 'Claim' THEN node.claimID
+        WHEN 'Vehicle' THEN node.VIN
+        ELSE 'Unknown'
+    END as identifier,
+    score as betweenness_score
+ORDER BY score DESC
+LIMIT 20;
+```
+
+This analysis reveals:
+* Key intermediaries in fraud networks (high betweenness score)
+* Entities that connect otherwise separate groups
+* Potential coordinators of fraud rings
+* Medical professionals who bridge different groups of claimants
+
+## 6.4. Node Similarity
+Node similarity algorithms help identify patterns that might indicate fraudulent behaviour.
+
+### 6.4.1. Node2Vec
+Node2Vec generates vector embeddings that can be used to measure node similarity. Here's how to use it effectively:
+
+```cypher
+// First, generate and store embeddings
+CALL gds.node2vec.write('fraud-graph', {
+    embeddingDimension: 128,
+    walkLength: 80,
+    walksPerNode: 10,
+    writeProperty: 'embedding'
+})
+YIELD nodePropertiesWritten;
+
+// Then find similar nodes using cosine similarity
+// For example, find claimants similar to 'John Doe'
+MATCH (source:Claimant {name: 'John Doe'})
+MATCH (other:Claimant)
+WHERE other <> source
+WITH source, other,
+     gds.similarity.cosine(source.embedding, other.embedding) AS similarity
+RETURN other.name AS similar_claimant,
+       similarity
+ORDER BY similarity DESC
+LIMIT 5;
+```
+
+This approach helps identify:
+* Groups of claimants with similar behaviour patterns
+* Medical professionals with similar patient networks
+* Claims that share suspicious characteristics
+* Potential fraud rings based on behavioural similarities
+
+## 6.5. Weakly Connected Components
+WCC helps identify isolated clusters of potentially fraudulent activity:
+
+```cypher
+// First identify the components
+CALL gds.wcc.stream('fraud-graph')
+YIELD nodeId, componentId
+WITH gds.util.asNode(nodeId) as node, componentId
+// Group by component and collect node information
+WITH componentId,
+     collect(DISTINCT labels(node)[0]) as nodeTypes,
+     count(*) as componentSize,
+     collect(DISTINCT 
+        CASE labels(node)[0]
+            WHEN 'Claimant' THEN node.name
+            WHEN 'MedicalProfessional' THEN node.name
+            WHEN 'Claim' THEN node.claimID
+            WHEN 'Vehicle' THEN node.VIN
+            ELSE null
+        END
+     ) as entities
+// Filter out null values and return meaningful information
+WITH componentId,
+     componentSize,
+     nodeTypes,
+     [x IN entities WHERE x IS NOT NULL] as connectedEntities
+RETURN 
+    componentId,
+    componentSize as size,
+    nodeTypes as types,
+    connectedEntities as entities
+ORDER BY size DESC
+LIMIT 10;
+```
+
+This query provides:
+
+* `componentId`: Unique identifier for each connected component
+* `size`: Number of nodes in the component
+* `types`: Types of nodes present in the component (Claimant, Claim, Vehicle, etc.)
+* `entities`: List of identifiable entities in the component (names, claim IDs, VINs)
+
+These GDS algorithms provide powerful tools for:
+
+* Identifying suspicious patterns in claims
+* Detecting organised fraud rings
+* Measuring the strength of connections between entities
+* Finding hidden relationships between seemingly unrelated claims
