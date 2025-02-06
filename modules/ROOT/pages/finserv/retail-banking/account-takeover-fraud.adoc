@@ -1,0 +1,441 @@
+= Account Takeover Fraud
+
+# 1. Introduction 
+
+Account Takeover Fraud (ATO) represents a sophisticated form of identity theft where cybercriminals gain unauthorised access to legitimate user accounts. This growing threat affects various account types, from financial services to social media platforms, with significant impact on both individuals and organisations. According to recent studies, 22% of U.S. adults have fallen victim to ATO fraud, with average individual losses reaching $12,000. The fraud typically involves credential theft through methods like phishing, data breaches, or social engineering, followed by account exploitation for unauthorised transactions or further fraudulent activities. As digital services expand, robust detection and prevention strategies become increasingly crucial for protecting against this evolving threat.
+
+# 2. Scenarios
+
+## Types of Account Takeover
+
+* **Financial account fraud:** Unauthorised transfers, fraudulent purchases, and credit card applications
+* **Email account compromise:** Access to personal information, password resets, and further account takeovers
+* **Social media hijacking:** Identity impersonation, scam distribution, and social engineering
+
+## Extent of the Problem
+
+* **Widespread impact:** 22% of U.S. adults have been victims of account takeover
+* **Financial losses:** Average individual losses amount to $12,000 per incident
+* **Business impact:** Significant reputational damage and potential legal consequences
+* **Rising sophistication:** Increasing use of automated tools and AI for large-scale attacks
+
+## Challenges
+
+* **Complex attack vectors:** Multiple entry points through phishing, malware, and social engineering
+* **Credential stuffing:** Automated attacks using stolen username/password combinations
+* **Device spoofing:** Fraudsters using advanced techniques to bypass device fingerprinting
+* **Authentication bypass:** Sophisticated methods to circumvent multi-factor authentication
+
+# 3. Solution
+
+Graph databases provide a powerful approach to detecting and preventing Account Takeover Fraud. By modelling the complex web of user behaviours, device interactions, and account activities as a connected network, graph technology can identify suspicious patterns that traditional systems might miss. This approach is particularly effective for ATO fraud, where multiple data points and relationships must be analysed simultaneously.
+
+## 3.1. How Graph Databases Can Help?
+
+1. **Device Fingerprinting**: Neo4j can track relationships between user accounts, devices, and IP addresses to identify suspicious login patterns and potential credential-stuffing attacks.
+
+2. **Behavioural Analysis**: Graph databases excel at modeling normal user behaviour patterns and detecting anomalies, such as:
+   * Unusual login times or locations
+   * Suspicious changes in transaction patterns
+   * Unexpected account setting modifications
+   * Abnormal navigation patterns within applications
+
+3. **Identity Verification Networks**: Create comprehensive identity graphs that connect:
+   * User accounts and associated email addresses
+   * Phone numbers and authentication methods
+   * Device fingerprints and login locations
+   * Transaction patterns and beneficiary relationships
+
+4. **Real-time Detection**: Neo4j enables:
+   * Instant validation of login attempts against known patterns
+   * Real-time analysis of transaction sequences
+   * Immediate identification of suspicious IP addresses or devices
+   * Dynamic risk scoring based on graph patterns
+
+5. **Network Analysis**: Uncover sophisticated fraud rings by:
+   * Identifying shared attributes between compromised accounts
+   * Detecting clusters of suspicious activity
+   * Tracing the spread of credential stuffing attacks
+   * Mapping relationships between known fraudulent entities
+
+# 4. Modelling
+This section provides examples of Cypher queries to demonstrate how to structure your data for detecting Account Takeover Fraud. The example graph will include nodes for users, devices, sessions, locations, and authentication events, with relationships showing how these entities interact during normal and suspicious account access patterns.
+
+## 4.1. Data Model
+
+### 4.1.1 Required Fields
+
+**`Person` Node:**
+
+* `id`: Unique identifier for the person
+* `email`: Primary email address
+
+**`Device` Node:**
+
+* `deviceID`: Unique identifier for the device
+* `deviceType`: Type of device (mobile, desktop, tablet)
+* `userAgent`: Browser/app user agent string
+
+**`IP` Node:**
+
+* `ip`: IP address
+
+**`ISP` Node:**
+
+* `isp`: Internet Service Provider
+
+**`Location` Node:**
+
+* `city`: City name
+* `country`: Country code
+
+**`Session` Node:**
+
+* `sessionID`: Unique session identifier
+* `status`: Session status (success, failed, suspicious)
+
+**`Event` Node:**
+
+* `eventID`: Unique event identifier
+* `eventType`: Type of authentication event
+* `timestamp`: Event timestamp
+* `status`: Authentication status
+
+
+**Relationships:**
+
+* `USED_BY`: Person uses device
+* `HAS_EVENT`: Person has event
+* `USES_IP`: Event uses IP
+* `HAS_LOCATION`: Event has location
+* `SESSION_USES_DEVICE`: Session uses device
+
+
+## 4.2. Demo Data
+
+The following Cypher statement will create an example graph demonstrating typical account access patterns:
+
+```
+//
+// Create Person nodes
+//
+CREATE (p1:Person {id: "P001", email: "user1@example.com"})
+CREATE (p2:Person {id: "P002", email: "user2@example.com"})
+CREATE (p3:Person { id: "P003", email: "user3@example.com"})
+
+//
+// Create Device nodes
+//
+CREATE (d1:Device {id: "WEB001", deviceType: "desktop", userAgent: "Mozilla/5.0 Chrome/91.0"})
+CREATE (d2:Device {id: "WEB002", deviceType: "mobile", userAgent: "Mozilla/5.0 Mobile Safari/537.36"})
+CREATE (d3:Device {id: "SUSPICIOUS001", deviceType: "desktop", userAgent: "Mozilla/5.0 Firefox/89.0"})
+
+//
+// Create IP nodes
+//
+CREATE (ip1:IP {ip: "192.168.1.1"})
+CREATE (ip2:IP {ip: "10.0.0.1"})
+CREATE (ip3:IP {ip: "203.0.113.1"})
+CREATE (ip4:IP {ip: "198.51.100.1"})
+CREATE (ip5:IP {ip: "172.16.0.1"})
+
+//
+// Create ISP nodes
+//
+CREATE (isp1:ISP {isp: "BT"})
+CREATE (isp2:ISP {isp: "Orange"})
+CREATE (isp3:ISP {isp: "Verizon"})
+CREATE (isp4:ISP {isp: "China Telecom"})
+
+//
+// Create Location nodes
+//
+CREATE (l1:Location {city: "London", country: "UK"})
+CREATE (l2:Location {city: "Paris", country: "France"})
+CREATE (l3:Location {city: "Beijing", country: "China"})
+CREATE (l4:Location {city: "Lagos", country: "Nigeria"})
+CREATE (l5:Location {city: "New York", country: "USA"})
+
+//
+// Create Session nodes
+//
+CREATE (s1:Session {id: "SESS001", status: "success"})
+CREATE (s2:Session {id: "SESS002", status: "success"})
+CREATE (s3:Session {id: "SESS003", status: "failed"})
+CREATE (s4:Session {id: "SESS004", status: "failed"})
+CREATE (s5:Session {id: "SESS005", status: "failed"})
+
+//
+// Create Event nodes
+//
+CREATE (e1:Event {created: datetime("2024-03-01T10:00:00"), id: "EVT001", sessionKey: "SESS001", status: "success"})
+CREATE (e2:Event {created: datetime("2024-03-01T10:05:00"), id: "EVT002", sessionKey: "SESS002", status: "success"})
+CREATE (e3:Event {created: datetime("2024-03-01T11:00:00"), id: "EVT003", sessionKey: "SESS003", status: "failed"})
+CREATE (e4:Event {created: datetime("2024-03-01T11:05:00"), id: "EVT004", sessionKey: "SESS004", status: "failed"})
+CREATE (e5:Event {created: datetime("2024-03-01T11:10:00"), id: "EVT005", sessionKey: "SESS005", status: "failed"})
+
+//
+// Create Relationships
+//
+
+// Pattern 1: Single device logging into multiple accounts
+CREATE (d3)-[:USED_BY]->(p1)
+CREATE (d3)-[:USED_BY]->(p2)
+CREATE (d3)-[:USED_BY]->(p3)
+
+// Pattern 2: Different locations logging into single account
+CREATE (p1)-[:HAS_EVENT]->(e1)
+CREATE (e1)-[:USES_IP]->(ip1)
+CREATE (e1)-[:HAS_LOCATION]->(l1)
+CREATE (p1)-[:HAS_EVENT]->(e2)
+CREATE (e2)-[:USES_IP]->(ip3)
+CREATE (e2)-[:HAS_LOCATION]->(l3)
+
+// Pattern 3: Multiple failed login attempts from different IPs
+CREATE (p2)-[:HAS_EVENT]->(e3)
+CREATE (e3)-[:USES_IP]->(ip2)
+CREATE (e3)-[:HAS_LOCATION]->(l2)
+CREATE (p2)-[:HAS_EVENT]->(e4)
+CREATE (e4)-[:USES_IP]->(ip4)
+CREATE (e4)-[:HAS_LOCATION]->(l4)
+CREATE (p2)-[:HAS_EVENT]->(e5)
+CREATE (e5)-[:USES_IP]->(ip5)
+CREATE (e5)-[:HAS_LOCATION]->(l5)
+
+// Additional contextual relationships
+CREATE (ip1)-[:IS_ALLOCATED_TO]->(isp1)
+CREATE (ip2)-[:IS_ALLOCATED_TO]->(isp2)
+CREATE (ip3)-[:IS_ALLOCATED_TO]->(isp4)
+CREATE (ip4)-[:IS_ALLOCATED_TO]->(isp3)
+CREATE (ip5)-[:IS_ALLOCATED_TO]->(isp3)
+
+// Session device relationships
+CREATE (s1)-[:SESSION_USES_DEVICE]->(d1)
+CREATE (s2)-[:SESSION_USES_DEVICE]->(d3)
+CREATE (s3)-[:SESSION_USES_DEVICE]->(d2)
+CREATE (s4)-[:SESSION_USES_DEVICE]->(d2)
+CREATE (s5)-[:SESSION_USES_DEVICE]->(d2)
+```
+
+## 4.3. Neo4j Schema
+If you call:
+
+```
+// Show neo4j schema
+CALL db.schema.visualization()
+```
+
+You will see the following response:
+
+image::finserv/fs-account-takeover-fraud-schema.svg[]
+
+# 5. Cypher Queries
+
+## 5.1. Single device logging into multiple different accounts
+In this query, we will identify devices that have been used to access multiple different user accounts, which is a common pattern in credential stuffing attacks and account takeover attempts.
+
+View Graph:
+```cypher
+// Show the relationships between suspicious devices and multiple accounts
+MATCH path=(d:Device)-[:USED_BY]->(p:Person)
+WITH d, count(p) as accountCount
+WHERE accountCount > 1
+MATCH path=(d)-[:USED_BY]->(p:Person)
+RETURN path
+```
+
+View Statistics:
+```cypher
+// Get detailed statistics about devices accessing multiple accounts
+MATCH (d:Device)-[:USED_BY]->(p:Person)
+WITH d, 
+     count(p) as uniqueAccounts,
+     collect(p.email) as compromisedEmails,
+     d.deviceType as deviceType,
+     d.userAgent as userAgent
+WHERE uniqueAccounts > 1
+RETURN d.id as DeviceID,
+       deviceType as DeviceType,
+       userAgent as UserAgent,
+       uniqueAccounts as NumberOfAccounts,
+       compromisedEmails as CompromisedAccounts
+ORDER BY uniqueAccounts DESC
+```
+
+### What It Does:
+* First query visualises the network of suspicious devices and their connections to multiple accounts
+* Second query provides detailed statistics about each suspicious device, including:
+  * Number of unique accounts accessed
+  * Device type and user agent information
+  * List of potentially compromised email accounts
+
+### Risk Indicators:
+* Devices accessing more than 2 different accounts within 24 hours
+* Failed login attempts across multiple accounts
+* Suspicious user agent strings or device characteristics
+* Rapid succession of login attempts indicating automated attacks
+
+## 5.2. Suspicious Session Patterns
+In these queries, we analyse session patterns to identify potential account takeover attempts through unusual session behaviours, failed login attempts, and suspicious location changes within sessions.
+
+View Failed Login Attempts:
+```cypher
+// Show clusters of failed login attempts within a time window
+MATCH (p:Person)-[:HAS_EVENT]->(e:Event)
+WHERE e.status = 'failed'
+WITH p, e
+ORDER BY e.created
+WITH p,
+     collect({
+         eventId: e.id,
+         eventTime: e.created,
+         status: e.status
+     }) as attempts
+WHERE size(attempts) >= 3
+RETURN p.email as UserEmail,
+       attempts,
+       size(attempts) as FailedAttempts
+ORDER BY FailedAttempts DESC
+```
+
+View Location Changes:
+```cypher
+// Detect rapid location changes within sessions
+MATCH (p:Person)-[:HAS_EVENT]->(e:Event)-[:HAS_LOCATION]->(l:Location)
+WITH p, e, l
+ORDER BY e.created
+WITH p,
+     collect({
+         location: l.city + ', ' + l.country,
+         eventTime: e.created
+     }) as locations
+WHERE size(locations) > 1
+RETURN p.email as UserEmail,
+       locations,
+       size(locations) as LocationChanges
+ORDER BY LocationChanges DESC
+```
+
+View Session Timeline:
+```cypher
+// Analyse session patterns over time
+MATCH (p:Person)-[:HAS_EVENT]->(e:Event), (s:Session)-[:SESSION_USES_DEVICE]->(d:Device)
+WHERE e.sessionKey = s.id
+WITH p, d, e, s
+RETURN p.email as UserEmail,
+       d.id as DeviceID,
+       d.deviceType as DeviceType,
+       e.created as EventTime,
+       s.status as SessionStatus,
+       duration.between(
+           min(e.created),
+           max(e.created)
+       ).minutes as SessionDurationMinutes
+ORDER BY e.created
+```
+
+### What It Does:
+* First query identifies clusters of failed login attempts:
+  * Groups failed attempts by user
+  * Shows the sequence and timing of failures
+  * Helps identify brute force attacks
+
+* Second query detects suspicious location changes:
+  * Tracks location changes within user sessions
+  * Identifies physically impossible travel patterns
+  * Helps spot location spoofing or compromised accounts
+
+* Third query analyses session patterns:
+  * Shows the complete timeline of session events
+  * Tracks device changes within sessions
+  * Measures session duration and activity patterns
+
+### Risk Indicators:
+* Multiple failed login attempts within a short time window
+* Rapid changes in login location
+* Unusual session duration or activity patterns
+* Multiple devices used within single session
+* Mismatched device types or user agents
+* Sessions outside normal user patterns
+
+## 5.3. Multiple Failed Login Attempts from Different IPs
+In these queries, we analyse patterns of failed login attempts from different IP addresses targeting the same account, which is a common indicator of brute force attacks.
+
+View Failed Login Pattern:
+```cypher
+// Show accounts with multiple failed login attempts from different IPs
+MATCH (p:Person)-[:HAS_EVENT]->(e:Event)-[:USES_IP]->(ip:IP)
+WHERE e.status = 'failed'
+WITH p, count(DISTINCT ip) as uniqueIPs, collect(DISTINCT ip.ip) as ipAddresses,
+     count(e) as totalFailedAttempts
+WHERE uniqueIPs >= 2
+RETURN p.email as TargetAccount,
+       totalFailedAttempts as FailedAttempts,
+       uniqueIPs as NumberOfUniqueIPs,
+       ipAddresses as IPAddresses
+ORDER BY totalFailedAttempts DESC
+```
+
+View Detailed Timeline:
+```cypher
+// Show detailed timeline of failed attempts with location context
+MATCH (p:Person)-[:HAS_EVENT]->(e:Event)-[:USES_IP]->(ip:IP),
+      (e)-[:HAS_LOCATION]->(l:Location),
+      (ip)-[:IS_ALLOCATED_TO]->(isp:ISP)
+WHERE e.status = 'failed'
+WITH p, count(DISTINCT ip) as uniqueIPs
+WHERE uniqueIPs >= 2
+MATCH (p)-[:HAS_EVENT]->(e:Event)-[:USES_IP]->(ip:IP),
+      (e)-[:HAS_LOCATION]->(l:Location),
+      (ip)-[:IS_ALLOCATED_TO]->(isp:ISP)
+WHERE e.status = 'failed'
+RETURN p.email as TargetAccount,
+       e.created as AttemptTime,
+       ip.ip as IPAddress,
+       l.city + ', ' + l.country as Location,
+       isp.isp as ISP
+ORDER BY p.email, e.created
+```
+
+View Geographic Distribution:
+```cypher
+// Show geographic distribution of failed attempts
+MATCH (p:Person)-[:HAS_EVENT]->(e:Event)-[:HAS_LOCATION]->(l:Location)
+WHERE e.status = 'failed'
+WITH p, l, count(e) as attemptsFromLocation
+WITH p, 
+     count(DISTINCT l) as uniqueLocations,
+     collect(DISTINCT {
+         location: l.city + ', ' + l.country,
+         attempts: attemptsFromLocation
+     }) as locationBreakdown
+WHERE uniqueLocations >= 2
+RETURN p.email as TargetAccount,
+       uniqueLocations as NumberOfLocations,
+       locationBreakdown as LocationBreakdown
+ORDER BY uniqueLocations DESC
+```
+
+### What It Does:
+* First query provides an overview of accounts under attack:
+  * Counts total failed attempts per account
+  * Shows number of unique IPs used
+  * Lists all IP addresses involved
+
+* Second query shows the detailed timeline:
+  * Chronological sequence of failed attempts
+  * Geographic location of each attempt
+  * ISP information for each IP
+  * Helps identify attack patterns and timing
+
+* Third query analyses geographic distribution:
+  * Shows number of unique locations
+  * Provides breakdown of attempts per location
+  * Helps identify geographically dispersed attacks
+
+### Risk Indicators:
+* Multiple failed attempts from different IPs within a short timeframe
+* Geographically impossible location changes between attempts
+* Failed attempts from known high-risk ISPs or locations
+* Systematic pattern in timing of attempts suggesting automation
+* Large number of unique IPs targeting single account
