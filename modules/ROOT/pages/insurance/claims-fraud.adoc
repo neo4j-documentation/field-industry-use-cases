@@ -14,7 +14,7 @@ Claims fraud, especially fabricated injury claims, costs insurers billions and r
 
 ## Extent of the Problem
 
-* **Rising fraud:** In 2023, £1.1 billion in fraudulent claims were detected, a 4% increase from 2022, and the number of detected claims rose 16%
+* **Rising fraud:** In 2023, £1.1 billion in fraudulent claims were detected, a 4% increase from 2022, and the number of detected fraudulent claims rose 16%
 * **Average claim value:** £13,000 in 2023
 * **Motor fraud prevalence:** 45,800 fraudulent motor claims detected in 2023, valued at £501 million
 * **Organised crime involvement:** Increasing sophistication and difficulty to detect
