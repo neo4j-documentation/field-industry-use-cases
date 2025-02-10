@@ -101,15 +101,21 @@ This section provides examples of Cypher queries to demonstrate how to structure
 * `timestamp`: Event timestamp
 * `status`: Authentication status
 
+**`Account` Node:**
+
+* `accountNumber`: Unique account number
 
 **Relationships:**
 
 * `USED_BY`: Person uses device
-* `HAS_EVENT`: Person has event
+* `PARTICIPATED_IN_EVENT`: Person participated in event
 * `USES_IP`: Event uses IP
 * `HAS_LOCATION`: Event has location
 * `SESSION_USES_DEVICE`: Session uses device
-
+* `OWNS`: Person owns account
+* `IS_ALLOCATED_TO`: IP is allocated to ISP
+* `LOCATED_IN`: IP is located in Location
+* `HAS_EVENT`: Session has event
 
 ## 4.2. Demo Data
 
@@ -175,6 +181,13 @@ CREATE (e4:Event {created: datetime("2024-03-01T11:05:00"), id: "EVT004", sessio
 CREATE (e5:Event {created: datetime("2024-03-01T11:10:00"), id: "EVT005", sessionKey: "SESS005", status: "failed"})
 
 //
+// Create Account nodes
+//
+CREATE (a1:Account {accountNumber: "ACC001"})
+CREATE (a2:Account {accountNumber: "ACC002"})
+CREATE (a3:Account {accountNumber: "ACC003"})
+
+//
 // Create Relationships
 //
 
@@ -184,21 +197,21 @@ CREATE (d3)-[:USED_BY]->(p2)
 CREATE (d3)-[:USED_BY]->(p3)
 
 // Pattern 2: Different locations logging into single account
-CREATE (p1)-[:HAS_EVENT]->(e1)
+CREATE (p1)-[:PARTICIPATED_IN_EVENT]->(e1)
 CREATE (e1)-[:USES_IP]->(ip1)
 CREATE (e1)-[:HAS_LOCATION]->(l1)
-CREATE (p1)-[:HAS_EVENT]->(e2)
+CREATE (p1)-[:PARTICIPATED_IN_EVENT]->(e2)
 CREATE (e2)-[:USES_IP]->(ip3)
 CREATE (e2)-[:HAS_LOCATION]->(l3)
 
 // Pattern 3: Multiple failed login attempts from different IPs
-CREATE (p2)-[:HAS_EVENT]->(e3)
+CREATE (p2)-[:PARTICIPATED_IN_EVENT]->(e3)
 CREATE (e3)-[:USES_IP]->(ip2)
 CREATE (e3)-[:HAS_LOCATION]->(l2)
-CREATE (p2)-[:HAS_EVENT]->(e4)
+CREATE (p2)-[:PARTICIPATED_IN_EVENT]->(e4)
 CREATE (e4)-[:USES_IP]->(ip4)
 CREATE (e4)-[:HAS_LOCATION]->(l4)
-CREATE (p2)-[:HAS_EVENT]->(e5)
+CREATE (p2)-[:PARTICIPATED_IN_EVENT]->(e5)
 CREATE (e5)-[:USES_IP]->(ip5)
 CREATE (e5)-[:HAS_LOCATION]->(l5)
 
@@ -209,12 +222,31 @@ CREATE (ip3)-[:IS_ALLOCATED_TO]->(isp4)
 CREATE (ip4)-[:IS_ALLOCATED_TO]->(isp3)
 CREATE (ip5)-[:IS_ALLOCATED_TO]->(isp3)
 
+// Connect IP to Location
+CREATE (ip1)-[:LOCATED_IN]->(l1)
+CREATE (ip2)-[:LOCATED_IN]->(l2)
+CREATE (ip3)-[:LOCATED_IN]->(l3)
+CREATE (ip4)-[:LOCATED_IN]->(l4)
+CREATE (ip5)-[:LOCATED_IN]->(l5)
+
 // Session device relationships
 CREATE (s1)-[:SESSION_USES_DEVICE]->(d1)
 CREATE (s2)-[:SESSION_USES_DEVICE]->(d3)
 CREATE (s3)-[:SESSION_USES_DEVICE]->(d2)
 CREATE (s4)-[:SESSION_USES_DEVICE]->(d2)
 CREATE (s5)-[:SESSION_USES_DEVICE]->(d2)
+
+// Connect Session to Event
+CREATE (s1)-[:HAS_EVENT]->(e1)
+CREATE (s2)-[:HAS_EVENT]->(e2)
+CREATE (s3)-[:HAS_EVENT]->(e3)
+CREATE (s4)-[:HAS_EVENT]->(e4)
+CREATE (s5)-[:HAS_EVENT]->(e5)
+
+// Update Relationships
+CREATE (p1)-[:OWNS]->(a1)
+CREATE (p2)-[:OWNS]->(a2)
+CREATE (p3)-[:OWNS]->(a3)
 ```
 
 ## 4.3. Neo4j Schema
@@ -237,17 +269,17 @@ In this query, we will identify devices that have been used to access multiple d
 View Graph:
 ```cypher
 // Show the relationships between suspicious devices and multiple accounts
-MATCH path=(d:Device)-[:USED_BY]->(p:Person)
+MATCH path=(d:Device)-[:USED_BY]->(p:Person)-[:OWNS]->(a:Account)
 WITH d, count(p) as accountCount
 WHERE accountCount > 1
-MATCH path=(d)-[:USED_BY]->(p:Person)
+MATCH path=(d)-[:USED_BY]->(p:Person)-[:OWNS]->(a:Account)
 RETURN path
 ```
 
 View Statistics:
 ```cypher
 // Get detailed statistics about devices accessing multiple accounts
-MATCH (d:Device)-[:USED_BY]->(p:Person)
+MATCH (d:Device)-[:USED_BY]->(p:Person)-[:OWNS]->(a:Account)
 WITH d, 
      count(p) as uniqueAccounts,
      collect(p.email) as compromisedEmails,
@@ -281,7 +313,7 @@ In these queries, we analyse session patterns to identify potential account take
 View Failed Login Attempts:
 ```cypher
 // Show clusters of failed login attempts within a time window
-MATCH (p:Person)-[:HAS_EVENT]->(e:Event)
+MATCH (p:Person)-[:PARTICIPATED_IN_EVENT]->(e:Event)
 WHERE e.status = 'failed'
 WITH p, e
 ORDER BY e.created
@@ -301,7 +333,7 @@ ORDER BY FailedAttempts DESC
 View Location Changes:
 ```cypher
 // Detect rapid location changes within sessions
-MATCH (p:Person)-[:HAS_EVENT]->(e:Event)-[:HAS_LOCATION]->(l:Location)
+MATCH (p:Person)-[:PARTICIPATED_IN_EVENT]->(e:Event)-[:HAS_LOCATION]->(l:Location)
 WITH p, e, l
 ORDER BY e.created
 WITH p,
@@ -319,7 +351,7 @@ ORDER BY LocationChanges DESC
 View Session Timeline:
 ```cypher
 // Analyse session patterns over time
-MATCH (p:Person)-[:HAS_EVENT]->(e:Event), (s:Session)-[:SESSION_USES_DEVICE]->(d:Device)
+MATCH (p:Person)-[:PARTICIPATED_IN_EVENT]->(e:Event), (d:Device)<-[:SESSION_USES_DEVICE]-(s:Session)-[:HAS_EVENT]->(e:Event)
 WHERE e.sessionKey = s.id
 WITH p, d, e, s
 RETURN p.email as UserEmail,
@@ -364,7 +396,7 @@ In these queries, we analyse patterns of failed login attempts from different IP
 View Failed Login Pattern:
 ```cypher
 // Show accounts with multiple failed login attempts from different IPs
-MATCH (p:Person)-[:HAS_EVENT]->(e:Event)-[:USES_IP]->(ip:IP)
+MATCH (p:Person)-[:PARTICIPATED_IN_EVENT]->(e:Event)-[:USES_IP]->(ip:IP)
 WHERE e.status = 'failed'
 WITH p, count(DISTINCT ip) as uniqueIPs, collect(DISTINCT ip.ip) as ipAddresses,
      count(e) as totalFailedAttempts
@@ -379,13 +411,13 @@ ORDER BY totalFailedAttempts DESC
 View Detailed Timeline:
 ```cypher
 // Show detailed timeline of failed attempts with location context
-MATCH (p:Person)-[:HAS_EVENT]->(e:Event)-[:USES_IP]->(ip:IP),
+MATCH (p:Person)-[:PARTICIPATED_IN_EVENT]->(e:Event)-[:USES_IP]->(ip:IP),
       (e)-[:HAS_LOCATION]->(l:Location),
       (ip)-[:IS_ALLOCATED_TO]->(isp:ISP)
 WHERE e.status = 'failed'
 WITH p, count(DISTINCT ip) as uniqueIPs
 WHERE uniqueIPs >= 2
-MATCH (p)-[:HAS_EVENT]->(e:Event)-[:USES_IP]->(ip:IP),
+MATCH (p)-[:PARTICIPATED_IN_EVENT]->(e:Event)-[:USES_IP]->(ip:IP),
       (e)-[:HAS_LOCATION]->(l:Location),
       (ip)-[:IS_ALLOCATED_TO]->(isp:ISP)
 WHERE e.status = 'failed'
@@ -400,7 +432,7 @@ ORDER BY p.email, e.created
 View Geographic Distribution:
 ```cypher
 // Show geographic distribution of failed attempts
-MATCH (p:Person)-[:HAS_EVENT]->(e:Event)-[:HAS_LOCATION]->(l:Location)
+MATCH (p:Person)-[:PARTICIPATED_IN_EVENT]->(e:Event)-[:HAS_LOCATION]->(l:Location)
 WHERE e.status = 'failed'
 WITH p, l, count(e) as attemptsFromLocation
 WITH p, 
