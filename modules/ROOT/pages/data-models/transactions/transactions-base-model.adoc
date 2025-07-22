@@ -12,9 +12,9 @@ This document defines a standardised Neo4j data model for banking transactions a
 * Executable demonstration code for validation and testing
 * Standard naming conventions following Neo4j best practices
 
-*Raw Markdown Version of Data Model:* 
+*Raw Text Version of Data Model:* 
 
-link:{attachmentsdir}/transactions-base-model.txt[RAW Markdown File,window=_blank]
+link:{attachmentsdir}/transactions-base-model.txt[RAW Text File,window=_blank]
 
 == 1. Node Labels and Properties
 
