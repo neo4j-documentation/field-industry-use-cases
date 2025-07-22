@@ -14,7 +14,7 @@ This document defines a standardised Neo4j data model for banking transactions a
 
 *Raw Markdown Version of Data Model:* 
 
-link:{attachmentsdir}/transactions-base-model.md[RAW Markdown File]
+link:{attachmentsdir}/transactions-base-model.txt[RAW Markdown File,window=_blank]
 
 == 1. Node Labels and Properties
 
