@@ -27,3 +27,6 @@
 * xref:agnostic/index.adoc[]
 ** xref:agnostic/entity-resolution.adoc[Entity Resolution]
 ** xref:agnostic/it-service-graph/it-service-graph.adoc[]
+
+* xref:data-models/index.adoc[]
+** xref:data-models/transactions/transactions-base-model.adoc[]

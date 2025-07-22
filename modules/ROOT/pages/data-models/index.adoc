@@ -1,0 +1,48 @@
+= Data Models
+
+Reusable Neo4j data models that power industry use cases across financial services, insurance, and other domains. These standardised models provide the foundation for solving complex business challenges with graph technology.
+
+== Overview
+
+Data models are the backbone of effective graph database implementations. The models documented here represent battle-tested patterns that have emerged from real-world industry deployments. Each model is designed to be:
+
+* *Reusable* - Can be adapted across multiple use cases and industries
+* *Scalable* - Tested with enterprise-grade data volumes  
+* *Standards-compliant* - Follows Neo4j best practices and industry conventions
+* *Production-ready* - Includes constraints, indices, and performance optimisations
+
+These models serve as technical specifications for building robust graph solutions, whether you're implementing fraud detection, entity resolution, transaction monitoring, or other graph-powered applications.
+
+== Available Data Models
+
+=== Financial Services
+
+==== xref:data-models/transactions/transactions-base-model.adoc[Transaction and Account Data Model]
+
+*Key Features:*
+
+* Complete customer identity modelling (documents, biometrics, contact information)
+* Transaction flows with movement decomposition for complex payment scenarios
+* Digital access patterns (devices, IP addresses, sessions)
+* Account relationships and counterparty management
+* Comprehensive constraint definitions ensuring data integrity
+
+*Supported Use Cases:*
+
+* Account takeover fraud detection
+* Transaction monitoring and AML compliance
+* Entity resolution across customer touchpoints
+* Deposit analysis and money laundering detection
+* Synthetic identity fraud prevention
+
+== Using These Models
+
+Each data model includes:
+
+1. *Node and relationship definitions* with complete property specifications
+2. *Constraint and index recommendations* for performance and data quality
+3. *Executable demonstration code* for testing and validation
+4. *Integration guidance* for connecting to existing systems
+5. *Query patterns* for common business scenarios
+
+These models can be implemented directly or adapted to fit your specific data sources and business requirements.
