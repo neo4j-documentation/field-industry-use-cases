@@ -1,5 +1,7 @@
 = Transaction and Account Data Model
 
+image::data-models/transaction-base-model/transactions-base-model.png[Transaction and Account Data Model Diagram,800,align="center"]
+
 This document defines a standardised Neo4j data model for banking transactions and customer data.
 
 *Key Features for Automated Processing:*
@@ -13,8 +15,6 @@ This document defines a standardised Neo4j data model for banking transactions a
 *Raw Markdown Version of Data Model:* 
 
 link:{attachmentsdir}/transactions-base-model.md[RAW Markdown File]
-
-
 
 == 1. Node Labels and Properties
 

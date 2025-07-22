@@ -19,6 +19,8 @@ These models serve as technical specifications for building robust graph solutio
 
 ==== xref:data-models/transactions/transactions-base-model.adoc[Transaction and Account Data Model]
 
+image::data-models/transaction-base-model/transactions-base-model.png[Transaction and Account Data Model Diagram,800,align="center"]
+
 *Key Features:*
 
 * Complete customer identity modelling (documents, biometrics, contact information)
