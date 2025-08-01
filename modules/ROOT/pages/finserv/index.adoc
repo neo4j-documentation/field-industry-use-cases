@@ -6,15 +6,32 @@ Furthermore, Neo4j's flexibility and scalability make it an effective tool for m
 
 == Investment Banking
 
-* xref:finserv/investment-banking/mutual-fund-dependency.adoc[]
+=== Product Graph
+
 * xref:finserv/investment-banking/regulatory-dependency-mapping.adoc[]
+
+=== Process Graph
+
+* xref:finserv/investment-banking/mutual-fund-dependency.adoc[]
 
 == Retail Banking
 
+=== Transactions Graph
+
+All these use cases use the same base data model, which you can find xref:data-models/transactions/transactions-base-model.adoc[]
+
+==== Aanalytics
+
+* xref:finserv/retail-banking/deposit-analysis.adoc[]
+
+===== Fraud Use Cases
+
 * xref:finserv/retail-banking/account-takeover-fraud.adoc[]
 * xref:finserv/retail-banking/automated-facial-recognition.adoc[]
-* xref:finserv/retail-banking/deposit-analysis.adoc[]
-* xref:finserv/retail-banking/entity-resolution.adoc[]
 * xref:finserv/retail-banking/synthetic-identity-fraud.adoc[]
-*** xref:finserv/retail-banking/transaction-ring.adoc[]
+* xref:finserv/retail-banking/transaction-ring.adoc[]
 * xref:finserv/retail-banking/transaction-monitoring/transaction-monitoring-introduction.adoc[]
+
+=== Other
+
+* xref:finserv/retail-banking/entity-resolution.adoc[]
