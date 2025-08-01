@@ -32,10 +32,11 @@ Below are the fields required to get started:
 
 `Account` Node:
 
-* `accountNumber`: Contains the account name of an account. This could be changed for any other identifier you use for an `Account`.
+* `accountNumber`: Contains the account identifier. This could be changed for any other identifier you use for an `Account`.
 
 `Transaction` Node:
 
+* `transactionId`: Unique system identifier for the transaction.
 * `amount`:  Contains the amount of money transferred between accounts.
 * `date`:  Contains the date the transaction occurred.
 
@@ -54,28 +55,28 @@ The following Cypher statement will create the example graph in the Neo4j databa
 [source, cypher, role=noheader]
 ----
 // Create all accounts
-CREATE (a1:Account {number: 1})
-CREATE (a2:Account {number: 2})
-CREATE (a3:Account {number: 3})
-CREATE (a4:Account {number: 4})
-CREATE (a5:Account {number: 5})
-CREATE (a6:Account {number: 6})
-CREATE (a7:Account:HighRiskJurisdiction {number: 7})
+CREATE (a1:Account:Internal {accountNumber: "ACC001"})
+CREATE (a2:Account:Internal {accountNumber: "ACC002"})
+CREATE (a3:Account:Internal {accountNumber: "ACC003"})
+CREATE (a4:Account:Internal {accountNumber: "ACC004"})
+CREATE (a5:Account:Internal {accountNumber: "ACC005"})
+CREATE (a6:Account:Internal {accountNumber: "ACC006"})
+CREATE (a7:Account:External:HighRiskJurisdiction {accountNumber: "ACC007"})
 
-// Create valid transaction relationships
-CREATE (a2)-[:TRANSACTION {amount: 1100, datetime: datetime()-duration({days: 29})}]->(a4)
-CREATE (a4)-[:TRANSACTION {amount: 100, datetime: datetime()-duration({days: 27})}]->(a6)
-CREATE (a4)-[:TRANSACTION {amount: 200, datetime: datetime()-duration({days: 26})}]->(a6)
-CREATE (a4)-[:TRANSACTION {amount: 600, datetime: datetime()-duration({days: 25})}]->(a6)
-CREATE (a6)-[:TRANSACTION {amount: 500, datetime: datetime()-duration({days: 3})}]->(a7)
-CREATE (a6)-[:TRANSACTION {amount: 500, datetime: datetime()-duration({days: 2})}]->(a7)
+// Create valid transactions
+CREATE (a2)-[:PERFORMS]->(:Transaction {transactionId: "TXN001", amount: 1100, date: datetime()-duration({days: 29})})-[:BENEFITS_TO]->(a4)
+CREATE (a4)-[:PERFORMS]->(:Transaction {transactionId: "TXN002", amount: 100, date: datetime()-duration({days: 27})})-[:BENEFITS_TO]->(a6)
+CREATE (a4)-[:PERFORMS]->(:Transaction {transactionId: "TXN003", amount: 200, date: datetime()-duration({days: 26})})-[:BENEFITS_TO]->(a6)
+CREATE (a4)-[:PERFORMS]->(:Transaction {transactionId: "TXN004", amount: 600, date: datetime()-duration({days: 25})})-[:BENEFITS_TO]->(a6)
+CREATE (a6)-[:PERFORMS]->(:Transaction {transactionId: "TXN005", amount: 500, date: datetime()-duration({days: 3})})-[:BENEFITS_TO]->(a7)
+CREATE (a6)-[:PERFORMS]->(:Transaction {transactionId: "TXN006", amount: 500, date: datetime()-duration({days: 2})})-[:BENEFITS_TO]->(a7)
 
-// Create invalid transaction relationships
-CREATE (a1)-[:TRANSACTION {amount: 500, datetime: datetime()-duration({days: 60})}]->(a2)
-CREATE (a1)-[:TRANSACTION {amount: 500, datetime: datetime()-duration({days: 60})}]->(a2)
-CREATE (a3)-[:TRANSACTION {amount: 750, datetime: datetime()-duration({days: 28})}]->(a4)
-CREATE (a5)-[:TRANSACTION {amount: 100, datetime: datetime()-duration({days: 24})}]->(a6)
-CREATE (a5)-[:TRANSACTION {amount: 50, datetime: datetime()-duration({days: 24})}]->(a6)
+// Create invalid transactions (outside time window or not matching criteria)
+CREATE (a1)-[:PERFORMS]->(:Transaction {transactionId: "TXN007", amount: 500, date: datetime()-duration({days: 60})})-[:BENEFITS_TO]->(a2)
+CREATE (a1)-[:PERFORMS]->(:Transaction {transactionId: "TXN008", amount: 500, date: datetime()-duration({days: 60})})-[:BENEFITS_TO]->(a2)
+CREATE (a3)-[:PERFORMS]->(:Transaction {transactionId: "TXN009", amount: 750, date: datetime()-duration({days: 28})})-[:BENEFITS_TO]->(a4)
+CREATE (a5)-[:PERFORMS]->(:Transaction {transactionId: "TXN010", amount: 100, date: datetime()-duration({days: 24})})-[:BENEFITS_TO]->(a6)
+CREATE (a5)-[:PERFORMS]->(:Transaction {transactionId: "TXN011", amount: 50, date: datetime()-duration({days: 24})})-[:BENEFITS_TO]->(a6)
 ----
 
 === 3.3. Neo4j Schema
@@ -104,26 +105,26 @@ This is an enhanced version of the standard transaction monitoring rule, which i
 
 [source, cypher, role=noheader]
 ----
-MATCH (l:Account)-[last_t:TRANSACTION]->(hrj:HighRiskJurisdiction)
-WHERE last_t.datetime >= datetime()-duration({days: 30})
-WITH l, hrj, SUM(last_t.amount) AS total_hrj_transctions
-MATCH path=(first)((a1)-[t]->(a2)
+MATCH (l:Account)-[:PERFORMS]->(last_t:Transaction)-[:BENEFITS_TO]->(hrj:HighRiskJurisdiction)
+WHERE last_t.date >= datetime()-duration({days: 30})
+WITH l, hrj, SUM(last_t.amount) AS total_hrj_transactions
+MATCH path=(first)((a1)-[:PERFORMS]->(t:Transaction)-[:BENEFITS_TO]->(a2)
    WHERE COLLECT {
        WITH a1, a2
-       MATCH (a1)-[some_t]->(a2)
-       WHERE some_t.datetime >= datetime()-duration({days: 30})
+       MATCH (a1)-[:PERFORMS]->(some_t:Transaction)-[:BENEFITS_TO]->(a2)
+       WHERE some_t.date >= datetime()-duration({days: 30})
        WITH SUM(some_t.amount) AS s
-       RETURN 0.9 * total_hrj_transctions <= s <= 1.1 * total_hrj_transctions
+       RETURN 0.9 * total_hrj_transactions <= s <= 1.1 * total_hrj_transactions
    } = [TRUE]
-)*(l)-[tx:TRANSACTION]->(hrj)
+)*(l)-[:PERFORMS]->(tx:Transaction)-[:BENEFITS_TO]->(hrj)
    WHERE NOT EXISTS {
        WITH first
-       MATCH (before)-[tx]->(first)
-       WHERE tx.datetime >= datetime()-duration({days: 30})
+       MATCH (before)-[:PERFORMS]->(tx:Transaction)-[:BENEFITS_TO]->(first)
+       WHERE tx.date >= datetime()-duration({days: 30})
        WITH SUM(tx.amount) AS sx, before
-       WHERE 0.9 * total_hrj_transctions <= sx <= 1.1 * total_hrj_transctions
+       WHERE 0.9 * total_hrj_transactions <= sx <= 1.1 * total_hrj_transactions
        RETURN before
    } AND
-   tx.datetime >= datetime()-duration({days: 30})
+   tx.date >= datetime()-duration({days: 30})
 RETURN path
 ----
