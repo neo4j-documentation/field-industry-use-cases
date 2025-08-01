@@ -46,6 +46,7 @@ Below are the fields required to get started:
 
 `Transaction` Node:
 
+* `transactionId`: Unique system identifier for the transaction.
 * `amount`:  Contains the amount of money transferred between accounts.
 * `date`:  Contains the date the transaction occurred.
 
@@ -70,10 +71,10 @@ CREATE (a3:Account {accountNumber: 3})
 CREATE (a4:Account {accountNumber: 4})
 
 // Create relationships between accounts
-CREATE (a1)-[:PERFORMS]->(:TRANSACTION {amount: 1000, currency: "gbp", date: datetime()-duration({days: 3})})-[:BENEFITS_TO]->(a2)
-CREATE (a2)-[:PERFORMS]->(:TRANSACTION {amount: 900, currency: "gbp", date: datetime()-duration({days: 2})})-[:BENEFITS_TO]->(a3)
-CREATE (a3)-[:PERFORMS]->(:TRANSACTION {amount: 810, currency: "gbp", date: datetime()-duration({days: 1})})-[:BENEFITS_TO]->(a4)
-CREATE (a4)-[:PERFORMS]->(:TRANSACTION {amount: 729, currency: "gbp", date: datetime()})-[:BENEFITS_TO]->(a1)
+CREATE (a1)-[:PERFORMS]->(:Transaction {transactionId: "TXN001", amount: 1000, currency: "gbp", date: datetime()-duration({days: 3})})-[:BENEFITS_TO]->(a2)
+CREATE (a2)-[:PERFORMS]->(:Transaction {transactionId: "TXN002", amount: 900, currency: "gbp", date: datetime()-duration({days: 2})})-[:BENEFITS_TO]->(a3)
+CREATE (a3)-[:PERFORMS]->(:Transaction {transactionId: "TXN003", amount: 810, currency: "gbp", date: datetime()-duration({days: 1})})-[:BENEFITS_TO]->(a4)
+CREATE (a4)-[:PERFORMS]->(:Transaction {transactionId: "TXN004", amount: 729, currency: "gbp", date: datetime()})-[:BENEFITS_TO]->(a1)
 ----
 
 === 4.3. Neo4j Schema
@@ -180,7 +181,7 @@ In this query, we will identify a ring with the following requirements:
 * Find a ring greater than three transactions long but less than 7.
 * Ensure that the ring is made up of unique accounts
 * Make sure that the `Transaction` node is in chronological order
-* Check that the `Trasnction` node amount is within 20% of the previous `Transaction` amount..
+* Check that the `Transaction` node amount is within 20% of the previous `Transaction` amount..
 
 [NOTE]
 ====
@@ -196,7 +197,7 @@ MATCH path=(a:Account)-[:PERFORMS]->(first_tx)
     ((tx_i)-[:BENEFITS_TO]->(a_i)-[:PERFORMS]->(tx_j)
         // Ensures the dates are in chronological order
         WHERE tx_i.date < tx_j.date
-        // Checks that there is less than a 20% difference from the last `TRANSACTION` amount to the next
+        // Checks that there is less than a 20% difference from the last `Transaction` amount to the next
         AND 0.80 <= tx_i.amount / tx_j.amount <= 1.00
     )*
     (last_tx)-[:BENEFITS_TO]->(a)
