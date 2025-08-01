@@ -20,11 +20,11 @@ Furthermore, Neo4j's flexibility and scalability make it an effective tool for m
 
 All these use cases use the same base data model, which you can find xref:data-models/transactions/transactions-base-model.adoc[]
 
-==== Aanalytics
+==== Transactional Analytics
 
 * xref:finserv/retail-banking/deposit-analysis.adoc[]
 
-===== Fraud Use Cases
+===== Transactional Fraud Use Cases
 
 * xref:finserv/retail-banking/account-takeover-fraud.adoc[]
 * xref:finserv/retail-banking/automated-facial-recognition.adoc[]
