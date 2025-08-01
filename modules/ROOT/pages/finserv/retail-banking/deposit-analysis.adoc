@@ -1,21 +1,21 @@
 = Deposit Analysis
 
-# 1. Introduction
+== 1. Introduction
 
 The retail banking sector faces significant challenges in managing deposits due to shifting interest rates, evolving customer behaviours, and increasing technological advancements. Deposit growth is expected to remain sluggish through 2025, whilst the **cost of deposits has increased**, putting pressure on banks' net interest income. There's a competitive war for deposits, driven by the need for liquidity and depositors' reluctance to accept lower rates. Furthermore, macroeconomic headwinds and political uncertainty impact consumer behaviour and corporate borrowing. Banks are focusing on new customer acquisition and retention, **personalised pricing strategies**, and superior digital experiences to navigate these challenges.
 
 
-# 2. Scenario
+== 2. Scenario
 
 Graph databases excel at analysing the complexities of retail banking deposits. By leveraging the relationships between customers, accounts, and transactions, they enable banks to model and visualise customer behaviour. This empowers banks to optimise pricing strategies, identify potential risks, and personalise offers based on individual needs and market trends.
 
 Compared to traditional systems, graph databases provide real-time analysis, faster response times, and superior data modelling capabilities. These advantages translate to improved customer experiences, enhanced risk management, and increased profitability for retail banks.
 
-# 3. Solution
+== 3. Solution
 
 Graph databases offer a unique approach to analysing banking deposits, going beyond the limitations of traditional relational databases. Graph databases model complex relationships and patterns between customers, accounts, and transactions, which is critical for understanding deposit behaviours. This is very similar to how graph databases are used in fraud detection, as described in the Claims Fraud document.  Using graph theory, graph databases can accurately represent entities and their connections, thus helping banks better manage deposits by providing a clear view of the relationships between data points. They allow for more sophisticated analysis to be done on connections within a dataset, going beyond the simple data within the dataset itself. This approach facilitates real-time analysis, allowing for quicker responses to changes in the market or customer activity, something traditional systems struggle with.
 
-## 3.1. How Graph Databases Can Help?
+=== 3.1. How Graph Databases Can Help?
 
 * **Link Analysis:** Just as Neo4j can explore connections to uncover complex patterns, it can explore the connections between customer demographics, account activities, and transaction histories to uncover complex deposit patterns. This helps banks visualise how different factors interact and influence deposit trends.
 * **Pattern Detection:** Similar to how graph databases excel at identifying fraud patterns without a starting point, they can analyse deposit data to reveal hidden relationships and identify emerging trends. This can include identifying groups of customers with similar deposit behaviours or accounts related to unusual fund flows.
@@ -23,48 +23,51 @@ Graph databases offer a unique approach to analysing banking deposits, going bey
 
 Graph databases offer distinct advantages over traditional systems, particularly when dealing with the complex and interconnected nature of deposit data. By adopting this technology, banks can enhance their understanding of customer behaviour and improve their deposit strategies. This approach mirrors the effective use of graph databases in fraud detection.
 
-# 4. Modelling
+== 4. Modelling
 
 This section will show examples of cypher queries on an example graph. The intention is to illustrate what the queries look like and provide a guide on how to structure your data in a real setting. We will do this on a small graph of several nodes. The example graph will be based on the data model below:
 
-## 4.1. Data Model
+=== 4.1. Data Model
 
-![Deposit Analysis Data Model](Data Model - Deposit Analysis.png)
+image::finserv/fs-deposit-analysis-date-model.svg[]
 
-### 4.1.1 Required Fields
+==== 4.1.1 Required Fields
 
-Based on the provided test data and the structure of the Claims Fraud use case, here's how the required fields section can be expanded to include customer and account information, as well as deposits:
+Minimal fields required for deposit analysis:
 
-**`Customer` Node:**
+`Customer` Node:
 
-*   **`id`**: Unique identifier for the customer
+*   `customerId`: Unique identifier for the customer
 
-**`Account` Node:**
+`Account` Node:
 
-*   **`accountNumber`**: Unique identifier for the account
-*   **`accountType`**: (e.g., Internal, External) -- indicated by the labels in the test data
+*   `accountId`: Unique identifier for the account  
+*   `accountNumber`: Account number
 
-**`Deposit` Node:**
+`Transaction` Node:
 
-*   **`amount`**: The amount of the deposit
-*  **`date`**: The date of the deposit
+*   `transactionId`: Unique identifier for the transaction
+*   `amount`: The amount of the transaction
+*   `timestamp`: The timestamp of the transaction
+*   `type`: The transaction type (e.g., "CASH_DEPOSIT")
 
-**Relationships:**
+Relationships:
 
-*   **`HAS_ACCOUNT`**: Connects a Customer node to an Account node.
-*  **`DEPOSIT`**: Connects a Deposit node to an Account node.
+*   `HAS_ACCOUNT`: Connects a Customer node to an Account node
+*   `PERFORMS`: Connects an Account node to a Transaction node (outgoing)
+*   `BENEFITS_TO`: Connects a Transaction node to an Account node (incoming)
 
-## 4.2. Demo Data
+=== 4.2. Demo Data
 ```cypher
 // Create customers
-CREATE (c1:Customer {id: 1})
-CREATE (c2:Customer {id: 2})
-CREATE (c3:Customer {id: 3})
+CREATE (c1:Customer {customerId: "CUST_001"})
+CREATE (c2:Customer {customerId: "CUST_002"})
+CREATE (c3:Customer {customerId: "CUST_003"})
 
 // Create accounts
-CREATE (a1:Account:Internal {accountNumber: 1})
-CREATE (a2:Account:Internal {accountNumber: 2})
-CREATE (a3:Account:Internal {accountNumber: 3})
+CREATE (a1:Account {accountId: "ACC_001", accountNumber: "1000001"})
+CREATE (a2:Account {accountId: "ACC_002", accountNumber: "1000002"})
+CREATE (a3:Account {accountId: "ACC_003", accountNumber: "1000003"})
 
 // Create relationships - some accounts are shared between customers
 CREATE (c1)-[:HAS_ACCOUNT]->(a1)
@@ -73,15 +76,22 @@ CREATE (c2)-[:HAS_ACCOUNT]->(a2)
 CREATE (c2)-[:HAS_ACCOUNT]->(a3)
 CREATE (c3)-[:HAS_ACCOUNT]->(a3)
 
-// Create deposits
-CREATE (:Deposit:Cash)-[:DEPOSIT {amount: 3000, date: datetime()-duration('P2M')}]->(a1)
-CREATE (:Deposit:Cash)-[:DEPOSIT {amount: 5000, date: datetime()-duration('P1M')}]->(a1)
-CREATE (:Deposit:Cash)-[:DEPOSIT {amount: 1000, date: datetime()}]->(a1)
-CREATE (:Deposit:Cash)-[:DEPOSIT {amount: 4000, date: datetime()}]->(a2)
-CREATE (:Deposit:Cash)-[:DEPOSIT {amount: 2000, date: datetime()}]->(a3)
+// Create transactions (cash deposits)
+CREATE (t1:Transaction {transactionId: "TXN_001", amount: 3000.0, timestamp: datetime()-duration('P2M'), type: "CASH_DEPOSIT"})
+CREATE (t2:Transaction {transactionId: "TXN_002", amount: 5000.0, timestamp: datetime()-duration('P1M'), type: "CASH_DEPOSIT"})
+CREATE (t3:Transaction {transactionId: "TXN_003", amount: 1000.0, timestamp: datetime(), type: "CASH_DEPOSIT"})
+CREATE (t4:Transaction {transactionId: "TXN_004", amount: 4000.0, timestamp: datetime(), type: "CASH_DEPOSIT"})
+CREATE (t5:Transaction {transactionId: "TXN_005", amount: 2000.0, timestamp: datetime(), type: "CASH_DEPOSIT"})
+
+// Create transaction relationships
+CREATE (a1)-[:PERFORMS]->(t1)-[:BENEFITS_TO]->(a1)
+CREATE (a1)-[:PERFORMS]->(t2)-[:BENEFITS_TO]->(a1)
+CREATE (a1)-[:PERFORMS]->(t3)-[:BENEFITS_TO]->(a1)
+CREATE (a2)-[:PERFORMS]->(t4)-[:BENEFITS_TO]->(a2)
+CREATE (a3)-[:PERFORMS]->(t5)-[:BENEFITS_TO]->(a3)
 ```
 
-## 4.3. Neo4j Scheme
+=== 4.3. Neo4j Scheme
 If you call:
 
 ```
@@ -89,179 +99,278 @@ If you call:
 CALL db.schema.visualization()
 ```
 
-You will see the following response:
+You will see the following response showing Customer, Account, and Transaction nodes with HAS_ACCOUNT, PERFORMS, and BENEFITS_TO relationships:
 
-image::finserv/fs-deposit-analysis-schema.svg[]
+image::finserv/fs-deposit-analysis-schema.png[]
 
-# 5. Cypher Queries
+== 5. Cypher Queries
 
-## 5.1. Find all deposits in last month
+These queries demonstrate how graph databases support key deposit management objectives: identifying consistent depositors for retention, analysing customer relationships for household banking opportunities, and understanding deposit flow patterns for pricing strategies.
 
-```
-MATCH path=(:Account)<-[d:DEPOSIT]-(:Deposit)
-WHERE d.date > datetime()-duration('P1M')
-RETURN path
-```
+=== 5.1. Recent Deposit Activity Analysis
 
-## 5.2. Get all deposits over the last three months with 50% overlap in funds
-In this query, we will identify a valid customer with the following requirements:
-
-* Cash Deposits have been made in the prior 2 rolling months
-* Cash Deposits have been made in the last rolling month
-* Get deposits for all Customer's Accounts
-*   Ensure at least 50% of deposits in current rolling month to prior 2 months
-
-```
-// Get sum of deposits in the rolling two month window
-// 1 month ago to 3 months ago
-MATCH (c:Customer)-[:HAS_ACCOUNT]->(:Account)<-[d:DEPOSIT]-(:Deposit)
-WHERE d.date < datetime()-duration('P1M')
-AND d.date > datetime()-duration('P3M')
-WITH AVG(d.amount) AS rollingTwoMnthDepositAvg, c
-WHERE rollingTwoMnthDepositAvg > 0
-
-
-// Get sum of deposits in the current rolling month
-MATCH (c)-[:HAS_ACCOUNT]->(:Account)<-[d:DEPOSIT]-(:Deposit)
-WHERE d.date > datetime()-duration('P1M')
-WITH c, rollingTwoMnthDepositAvg, SUM(d.amount) AS currentMonth
-WHERE currentMonth > 0
-
-
-// Make sure there is atleast 50% of the money being deposited between the current month
-// and the avg over the last 2 months
-WITH c, rollingTwoMnthDepositAvg, currentMonth
-WHERE (currentMonth / rollingTwoMnthDepositAvg) * 100 > 50
-
-
-// Get all deposits over the last three months for all accounts
-MATCH path=(c)-[:HAS_ACCOUNT]->(:Account)<-[d:DEPOSIT]-(:Deposit)
-WHERE d.date > datetime()-duration('P3M')
-
-
-RETURN path
-```
-
-Yes, there are additional queries that are more "graphy" in nature, leveraging the relationship and network analysis capabilities of graph databases, as described in the sources. These queries go beyond simple pattern matching to explore connections and structures within the data.
-
-Here are some examples, building on the previous queries and focusing on more complex graph analysis:
-
-## 5.3. Identifying Customer Account Sharing Networks
-
-This query identifies networks of customers who share accounts, which could indicate potential fraud rings or legitimate family/business relationships.
+Identify all recent deposit activity to understand current deposit flows and customer engagement patterns. This supports liquidity planning and helps identify active customers who may be responsive to competitive rate offers.
 
 ```cypher
-// Find customers who share accounts and get their deposit patterns
+// Find all deposits in the last month with customer and account context
+MATCH path = (c:Customer)-[:HAS_ACCOUNT]->(a:Account)-[:PERFORMS]->(t:Transaction)-[:BENEFITS_TO]->(a)
+WHERE t.timestamp > datetime()-duration('P1M')
+AND t.type = "CASH_DEPOSIT"
+
+RETURN path
+```
+
+This query visualizes the deposit flow patterns, showing how customers connect to accounts and their recent transaction activities. For analytical results, use:
+
+```cypher
+// Same query returning tabular data for analysis
+MATCH (c:Customer)-[:HAS_ACCOUNT]->(a:Account)-[:PERFORMS]->(t:Transaction)-[:BENEFITS_TO]->(a)
+WHERE t.timestamp > datetime()-duration('P1M')
+AND t.type = "CASH_DEPOSIT"
+
+RETURN 
+    c.customerId,
+    a.accountNumber,
+    t.amount,
+    t.timestamp
+ORDER BY t.timestamp DESC
+```
+
+**Business Value:** Provides real-time view of deposit activity for liquidity management and identifies recently active customers for targeted retention campaigns.
+
+=== 5.2. Consistent High-Value Depositor Identification
+
+Identify customers who demonstrate consistent deposit behaviour - these are high-value customers for retention and premium pricing strategies. The query finds customers with sustained deposit activity and consistent deposit levels.
+
+**Business Objective:**
+
+These customers are prime candidates for:
+
+* Premium deposit rates and personalised pricing
+* Retention campaigns during competitive periods
+* Relationship banking and additional product offerings
+* Priority customer service and dedicated relationship management
+
+```cypher
+// Find consistent high-value depositors for retention and premium pricing
+MATCH (c:Customer)-[:HAS_ACCOUNT]->(a:Account)-[:PERFORMS]->(t:Transaction)-[:BENEFITS_TO]->(a)
+WHERE t.type = "CASH_DEPOSIT" 
+AND t.timestamp > datetime()-duration('P3M')
+
+WITH c, a, t,
+  CASE 
+    WHEN t.timestamp > datetime()-duration('P1M') THEN 'current'
+    ELSE 'prior_two_months' 
+  END AS period
+
+WITH c, period, SUM(t.amount) AS total_deposits, COUNT(t) AS transaction_count
+WHERE total_deposits > 0
+
+WITH c, 
+  COALESCE(SUM(CASE WHEN period = 'current' THEN total_deposits END), 0) AS current_month,
+  COALESCE(SUM(CASE WHEN period = 'prior_two_months' THEN total_deposits END), 0) AS prior_two_months,
+  COALESCE(SUM(CASE WHEN period = 'current' THEN transaction_count END), 0) AS current_txn_count,
+  COALESCE(SUM(CASE WHEN period = 'prior_two_months' THEN transaction_count END), 0) AS prior_txn_count
+
+// Filter for consistent depositors (maintained at least 50% of deposit level)
+WHERE current_month > 0 
+AND prior_two_months > 0
+AND (current_month / prior_two_months) >= 0.5
+
+// Return customer analysis with retention priority scoring
+MATCH (c)-[:HAS_ACCOUNT]->(a:Account)
+RETURN 
+    c.customerId,
+    current_month,
+    prior_two_months,
+    current_month + prior_two_months AS total_deposits_3m,
+    current_txn_count + prior_txn_count AS total_transactions,
+    (current_month + prior_two_months) / (current_txn_count + prior_txn_count) AS avg_deposit_size,
+    current_month / prior_two_months AS consistency_ratio,
+    count(DISTINCT a) AS account_count,
+    // Priority score for retention campaigns
+    (current_month + prior_two_months) * (current_month / prior_two_months) AS retention_priority_score
+ORDER BY retention_priority_score DESC
+```
+
+**Business Value:** Identifies high-value, consistent depositors who should receive premium pricing, dedicated relationship management, and priority retention efforts during competitive periods.
+
+=== 5.3. Household and Relationship Banking Analysis
+
+Identify customers who share accounts to understand household relationships and joint financial management. This enables household-level deposit strategies, family banking packages, and relationship-based pricing.
+
+**Business Objective:** 
+
+Understanding account sharing patterns helps with:
+
+* **Household Banking Strategies:** Offer family account packages and joint pricing
+* **Relationship Retention:** Losing one family member could impact multiple accounts
+* **Cross-selling Opportunities:** Identify family units for comprehensive financial services
+* **Risk Assessment:** Understand deposit concentration within family units
+
+```cypher
+// Visualize household banking relationships and shared account networks
+MATCH path = (c1:Customer)-[:HAS_ACCOUNT]->(a:Account)<-[:HAS_ACCOUNT]-(c2:Customer)
+WHERE c1.customerId < c2.customerId  // Avoid duplicate pairs
+
+// Include transaction paths for shared accounts
+OPTIONAL MATCH txPath = (a)-[:PERFORMS]->(t:Transaction)-[:BENEFITS_TO]->(a)
+WHERE t.timestamp > datetime()-duration('P3M')
+AND t.type = "CASH_DEPOSIT"
+
+// Return all paths showing household connections
+WITH path, collect(txPath) as transactionPaths
+LIMIT 25
+
+RETURN path, transactionPaths
+```
+
+This visualization reveals household banking networks by showing customers connected through shared accounts and their transaction flows. For household-level analytics:
+
+```cypher
+// Analyze household/relationship banking patterns through shared accounts
 MATCH (c1:Customer)-[:HAS_ACCOUNT]->(a:Account)<-[:HAS_ACCOUNT]-(c2:Customer)
-WHERE c1.id < c2.id  // Avoid duplicate pairs
+WHERE c1.customerId < c2.customerId  // Avoid duplicate pairs
 WITH c1, c2, a
 
-// Get deposits for shared accounts
-OPTIONAL MATCH (d:Deposit)-[dep:DEPOSIT]->(a)
-WHERE dep.date > datetime()-duration('P3M')
+// Get deposit activity for shared accounts over last 3 months
+OPTIONAL MATCH (a)-[:PERFORMS]->(t:Transaction)-[:BENEFITS_TO]->(a)
+WHERE t.timestamp > datetime()-duration('P3M')
+AND t.type = "CASH_DEPOSIT"
 
-// Aggregate results
+// Calculate household deposit metrics
 WITH c1, c2, a, 
-     count(d) as depositCount,
-     coalesce(sum(dep.amount), 0) as totalDeposits  // Handle null case when no deposits
+     count(t) as depositCount,
+     coalesce(sum(t.amount), 0) as totalDeposits,
+     coalesce(avg(t.amount), 0) as avgDepositSize
 
-// Return the relationship details
+// Aggregate at household level
+WITH c1, c2,
+     collect(a.accountNumber) as sharedAccounts,
+     count(a) as numberOfSharedAccounts,
+     sum(depositCount) as totalTransactions,
+     sum(totalDeposits) as householdDepositValue,
+     avg(avgDepositSize) as avgHouseholdDepositSize
+
+// Calculate household banking potential
 RETURN 
-    c1.id as customer1,
-    c2.id as customer2,
-    collect(a.accountNumber) as sharedAccounts,
-    count(a) as numberOfSharedAccounts,
-    sum(depositCount) as totalDeposits,
-    sum(totalDeposits) as totalDepositAmount
-ORDER BY numberOfSharedAccounts DESC
+    c1.customerId as primaryCustomer,
+    c2.customerId as relationshipCustomer,
+    numberOfSharedAccounts,
+    householdDepositValue,
+    totalTransactions,
+    avgHouseholdDepositSize,
+    // Household value score for relationship banking offers
+    householdDepositValue * numberOfSharedAccounts as householdValue
+ORDER BY householdValue DESC
 ```
 
-## 5.4. Analysing Deposit Flow Patterns Between Accounts
+**Business Value:** Enables household-level deposit strategies, relationship banking packages, and helps identify high-value family units for premium services and retention efforts.
 
-This query identifies patterns of deposits between accounts that occur within close time periods, which could indicate structured transactions or money movement patterns.
+== 6. Graph Data Science (GDS)
+
+Graph Data Science algorithms help banks optimise deposit strategies by analysing customer behaviour patterns, identifying high-value customer segments, and understanding deposit flow networks. These insights support personalised pricing strategies, customer retention efforts, and competitive positioning in the deposit market.
+
+=== 6.1. Customer Segmentation for Personalised Pricing
+
+Community detection helps identify customer segments with similar deposit behaviours, enabling banks to develop targeted pricing strategies and personalised offers. This directly supports the business goal of implementing personalised pricing strategies to compete for deposits.
+
+==== Customer-Account Bipartite Projection
+First, create a focused projection that captures customer-account relationships:
 
 ```cypher
-// Find deposits and their accounts within the last 3 months
-MATCH (d1:Deposit)-[dep1:DEPOSIT]->(a1:Account)<-[:HAS_ACCOUNT]-(c1:Customer)
-WHERE dep1.date > datetime()-duration('P3M')
-
-// Find other deposits to different accounts within a 1 month window
-MATCH (d2:Deposit)-[dep2:DEPOSIT]->(a2:Account)<-[:HAS_ACCOUNT]-(c2:Customer)
-WHERE a1 <> a2
-AND abs(duration.between(dep1.date, dep2.date).days) < 30
-
-// Return the pattern of related deposits
-RETURN 
-    c1.id as customer1,
-    a1.accountNumber as account1,
-    dep1.amount as amount1,
-    dep1.date as date1,
-    c2.id as customer2, 
-    a2.accountNumber as account2,
-    dep2.amount as amount2,
-    dep2.date as date2,
-    abs(duration.between(dep1.date, dep2.date).days) as daysBetween
-ORDER BY daysBetween
-```
-
-**Explanation:**
-
-*   The first `MATCH` clause finds deposits made in the last three months and the associated customer.
-*  The second `MATCH` clause uses the previous account to traverse to the next deposit.
-*  The `WHERE` clause filters to make sure that all new deposits happen within one month of each other.
-*   The `RETURN` statement returns the original path and all related paths of deposit flows.
-*   This query analyses paths of deposit flows across accounts, which is a powerful graph-based analysis technique for identifying unusual financial movements.
-
-# 6. Graph Data Science (GDS)
-
-## 6.1. Community Detection in Deposit Networks
-
-This query utilises the Graph Data Science (GDS) library to identify communities within the deposit network.  The Louvain method is particularly effective for detecting communities in fraud networks.  This query is highly "graphy" because it uses a graph-specific algorithm to explore the structure of connections, as described in the source material. This approach may uncover groups of customers and accounts that are closely linked, indicating organised fraudulent activity.
-
-First project the graph:
-```
-// Create a graph projection
+// Create customer-account bipartite graph for segmentation analysis
 CALL gds.graph.project(
-    'depositNetwork',
-    'Customer',
+    'customerAccountNetwork',
+    ['Customer', 'Account'],
     'HAS_ACCOUNT'
 )
 ```
 
-Then run the Louvain algorithm:
-
-```
-// Run the Louvain algorithm
-CALL gds.louvain.stream('depositNetwork')
+==== Community Detection for Customer Segments
+```cypher
+// Run Louvain algorithm to identify customer segments
+CALL gds.louvain.stream('customerAccountNetwork')
 YIELD nodeId, communityId
+WITH gds.util.asNode(nodeId) AS node, communityId
+WHERE 'Customer' IN labels(node)
 
-// Return results
-RETURN gds.util.asNode(nodeId).id AS customerId, communityId
+// Analyze segment characteristics
+MATCH (c:Customer)-[:HAS_ACCOUNT]->(a:Account)-[:PERFORMS]->(t:Transaction)
+WHERE c.customerId = node.customerId
+AND t.type = 'CASH_DEPOSIT'
+AND t.timestamp > datetime()-duration('P3M')
+
+WITH communityId, c,
+     count(t) as depositFrequency,
+     sum(t.amount) as totalDeposits,
+     avg(t.amount) as avgDepositSize
+
+RETURN 
+    communityId,
+    count(c) as customersInSegment,
+    avg(depositFrequency) as avgDepositFrequency,
+    avg(totalDeposits) as avgTotalDeposits,
+    avg(avgDepositSize) as avgDepositSize
+ORDER BY avgTotalDeposits DESC
 ```
 
-**Explanation:**
-*   The query first creates a graph projection of the customer and HAS_ACCOUNT relationship.
-*  It then runs the Louvain algorithm on the projection which identifies densely connected communities.
-*   The `RETURN` statement returns each customer ID, along with a community ID which indicates if the customer belongs to the same community, meaning they might be part of a larger fraud ring.
+**Business Value:**
+- Identifies customer segments with similar deposit patterns
+- Enables targeted pricing strategies for different segments
+- Supports personalised retention offers based on segment behaviour
+- Helps optimise marketing campaigns for specific customer groups
 
-## 6.2. Centrality Analysis for Identifying Key Players
+=== 6.2. High-Value Customer Identification
 
-Centrality algorithms help identify the most influential or suspicious nodes in the network. This is another way that Graph Databases can identify anomalies that typical relational databases would miss, because the focus is on analysing the importance or influence of specific nodes.
+Centrality analysis identifies customers who are most valuable to the bank's deposit strategy, helping prioritize retention efforts and competitive responses.
 
-This requires the graph to be projected first as done in the previous section.
-
+==== Customer-to-Customer Network via Shared Accounts
+```cypher
+// Create customer network based on shared accounts and deposit volumes
+CALL gds.graph.project.cypher(
+    'customerDepositNetwork',
+    'MATCH (c:Customer) RETURN id(c) AS id, labels(c) AS labels',
+    'MATCH (c1:Customer)-[:HAS_ACCOUNT]->(a:Account)<-[:HAS_ACCOUNT]-(c2:Customer)
+     WITH c1, c2, a
+     MATCH (a)-[:PERFORMS]->(t:Transaction)
+     WHERE t.type = "CASH_DEPOSIT" AND t.timestamp > datetime()-duration("P3M")
+     RETURN id(c1) AS source, id(c2) AS target, sum(t.amount) AS weight'
+)
 ```
-// Run PageRank
-CALL gds.pageRank.stream('depositNetwork')
+
+==== PageRank for Customer Importance
+```cypher
+// Identify high-value customers based on network importance
+CALL gds.pageRank.stream('customerDepositNetwork', {
+    relationshipWeightProperty: 'weight'
+})
 YIELD nodeId, score
-RETURN gds.util.asNode(nodeId).id AS entityId, score
+
+// Get customer details and deposit behaviour
+WITH gds.util.asNode(nodeId) AS customer, score
+MATCH (customer)-[:HAS_ACCOUNT]->(a:Account)-[:PERFORMS]->(t:Transaction)
+WHERE t.type = 'CASH_DEPOSIT'
+AND t.timestamp > datetime()-duration('P3M')
+
+WITH customer, score,
+     count(DISTINCT a) as accountCount,
+     sum(t.amount) as totalDeposits,
+     count(t) as transactionCount
+
+RETURN 
+    customer.customerId,
+    score as networkImportance,
+    accountCount,
+    totalDeposits,
+    transactionCount,
+    totalDeposits/transactionCount as avgTransactionSize
 ORDER BY score DESC
+LIMIT 10
 ```
 
-**Explanation:**
-*  The query first creates a graph projection of the customers, accounts, and relationships.
-*  Then, it runs the PageRank algorithm to determine the importance of nodes in the graph, giving a score based on the number of connections and the importance of the connected nodes.
-*  The `RETURN` statement outputs the entity id and their pagerank score, which can be used to identify the most connected or important entities.
-*  Centrality algorithms help identify the most influential or suspicious nodes in the network.
-
-These queries illustrate how graph databases can be used to perform complex, network-based analysis that goes beyond traditional relational databases. They focus on identifying relationships, patterns, and paths within the data, which is essential for detecting fraud and managing risk. These queries also use more graph-specific approaches that are more difficult or impossible to achieve with relational databases.
+**Business Value:**
+- Identifies customers with highest network value for retention priority
+- Supports competitive response strategies for high-value customers
+- Enables proactive customer management and personalised service
+- Helps optimise resource allocation for customer acquisition and retention

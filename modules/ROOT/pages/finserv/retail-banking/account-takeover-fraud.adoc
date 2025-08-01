@@ -1,36 +1,36 @@
 = Account Takeover Fraud
 
-# 1. Introduction 
+== 1. Introduction 
 
 Account Takeover Fraud (ATO) represents a sophisticated form of identity theft where cybercriminals gain unauthorised access to legitimate user accounts. This growing threat affects various account types, from financial services to social media platforms, with significant impact on both individuals and organisations. According to recent studies, 22% of U.S. adults have fallen victim to ATO fraud, with average individual losses reaching $12,000. The fraud typically involves credential theft through methods like phishing, data breaches, or social engineering, followed by account exploitation for unauthorised transactions or further fraudulent activities. As digital services expand, robust detection and prevention strategies become increasingly crucial for protecting against this evolving threat.
 
-# 2. Scenarios
+== 2. Scenarios
 
-## Types of Account Takeover
+=== Types of Account Takeover
 
 * **Financial account fraud:** Unauthorised transfers, fraudulent purchases, and credit card applications
 * **Email account compromise:** Access to personal information, password resets, and further account takeovers
 * **Social media hijacking:** Identity impersonation, scam distribution, and social engineering
 
-## Extent of the Problem
+=== Extent of the Problem
 
 * **Widespread impact:** 22% of U.S. adults have been victims of account takeover
 * **Financial losses:** Average individual losses amount to $12,000 per incident
 * **Business impact:** Significant reputational damage and potential legal consequences
 * **Rising sophistication:** Increasing use of automated tools and AI for large-scale attacks
 
-## Challenges
+=== Challenges
 
 * **Complex attack vectors:** Multiple entry points through phishing, malware, and social engineering
 * **Credential stuffing:** Automated attacks using stolen username/password combinations
 * **Device spoofing:** Fraudsters using advanced techniques to bypass device fingerprinting
 * **Authentication bypass:** Sophisticated methods to circumvent multi-factor authentication
 
-# 3. Solution
+== 3. Solution
 
 Graph databases provide a powerful approach to detecting and preventing Account Takeover Fraud. By modelling the complex web of user behaviours, device interactions, and account activities as a connected network, graph technology can identify suspicious patterns that traditional systems might miss. This approach is particularly effective for ATO fraud, where multiple data points and relationships must be analysed simultaneously.
 
-## 3.1. How Graph Databases Can Help?
+=== 3.1. How Graph Databases Can Help?
 
 1. **Device Fingerprinting**: Neo4j can track relationships between user accounts, devices, and IP addresses to identify suspicious login patterns and potential credential-stuffing attacks.
 
@@ -58,12 +58,12 @@ Graph databases provide a powerful approach to detecting and preventing Account 
    * Tracing the spread of credential stuffing attacks
    * Mapping relationships between known fraudulent entities
 
-# 4. Modelling
+== 4. Modelling
 This section provides examples of Cypher queries to demonstrate how to structure your data for detecting Account Takeover Fraud. The example graph will include nodes for users, devices, sessions, locations, and authentication events, with relationships showing how these entities interact during normal and suspicious account access patterns.
 
-## 4.1. Data Model
+=== 4.1. Data Model
 
-### 4.1.1 Required Fields
+==== 4.1.1 Required Fields
 
 **`Person` Node:**
 
@@ -117,7 +117,7 @@ This section provides examples of Cypher queries to demonstrate how to structure
 * `LOCATED_IN`: IP is located in Location
 * `HAS_EVENT`: Session has event
 
-## 4.2. Demo Data
+=== 4.2. Demo Data
 
 The following Cypher statement will create an example graph demonstrating typical account access patterns:
 
@@ -249,7 +249,7 @@ CREATE (p2)-[:OWNS]->(a2)
 CREATE (p3)-[:OWNS]->(a3)
 ```
 
-## 4.3. Neo4j Schema
+=== 4.3. Neo4j Schema
 If you call:
 
 ```
@@ -261,9 +261,9 @@ You will see the following response:
 
 image::finserv/fs-account-takeover-fraud-schema.svg[]
 
-# 5. Cypher Queries
+== 5. Cypher Queries
 
-## 5.1. Single device logging into multiple different accounts
+=== 5.1. Single device logging into multiple different accounts
 In this query, we will identify devices that have been used to access multiple different user accounts, which is a common pattern in credential stuffing attacks and account takeover attempts.
 
 View Graph:
@@ -294,20 +294,20 @@ RETURN d.id as DeviceID,
 ORDER BY uniqueAccounts DESC
 ```
 
-### What It Does:
+==== What It Does:
 * First query visualises the network of suspicious devices and their connections to multiple accounts
 * Second query provides detailed statistics about each suspicious device, including:
   * Number of unique accounts accessed
   * Device type and user agent information
   * List of potentially compromised email accounts
 
-### Risk Indicators:
+==== Risk Indicators:
 * Devices accessing more than 2 different accounts within 24 hours
 * Failed login attempts across multiple accounts
 * Suspicious user agent strings or device characteristics
 * Rapid succession of login attempts indicating automated attacks
 
-## 5.2. Suspicious Session Patterns
+=== 5.2. Suspicious Session Patterns
 In these queries, we analyse session patterns to identify potential account takeover attempts through unusual session behaviours, failed login attempts, and suspicious location changes within sessions.
 
 View Failed Login Attempts:
@@ -366,7 +366,7 @@ RETURN p.email as UserEmail,
 ORDER BY e.created
 ```
 
-### What It Does:
+==== What It Does:
 * First query identifies clusters of failed login attempts:
   * Groups failed attempts by user
   * Shows the sequence and timing of failures
@@ -382,7 +382,7 @@ ORDER BY e.created
   * Tracks device changes within sessions
   * Measures session duration and activity patterns
 
-### Risk Indicators:
+==== Risk Indicators:
 * Multiple failed login attempts within a short time window
 * Rapid changes in login location
 * Unusual session duration or activity patterns
@@ -390,7 +390,7 @@ ORDER BY e.created
 * Mismatched device types or user agents
 * Sessions outside normal user patterns
 
-## 5.3. Multiple Failed Login Attempts from Different IPs
+=== 5.3. Multiple Failed Login Attempts from Different IPs
 In these queries, we analyse patterns of failed login attempts from different IP addresses targeting the same account, which is a common indicator of brute force attacks.
 
 View Failed Login Pattern:
@@ -448,7 +448,7 @@ RETURN p.email as TargetAccount,
 ORDER BY uniqueLocations DESC
 ```
 
-### What It Does:
+==== What It Does:
 * First query provides an overview of accounts under attack:
   * Counts total failed attempts per account
   * Shows number of unique IPs used
@@ -465,7 +465,7 @@ ORDER BY uniqueLocations DESC
   * Provides breakdown of attempts per location
   * Helps identify geographically dispersed attacks
 
-### Risk Indicators:
+==== Risk Indicators:
 * Multiple failed attempts from different IPs within a short timeframe
 * Geographically impossible location changes between attempts
 * Failed attempts from known high-risk ISPs or locations

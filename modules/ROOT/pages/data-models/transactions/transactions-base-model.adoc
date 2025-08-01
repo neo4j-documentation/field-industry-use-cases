@@ -167,7 +167,7 @@ link:{attachmentsdir}/transactions-base-model.txt[RAW Text File,window=_blank]
 
 *Properties:*
 
-** `number` (String): Complete phone number including country code (e.g., "447971020304")
+** `phoneNumber` (String): Complete phone number including country code
 ** `countryCode` (String): Optional: International dialling code with plus prefix (e.g., "+44", "+1")
 ** `createdAt` (DateTime): Timestamp when this phone number was first recorded in the system
 

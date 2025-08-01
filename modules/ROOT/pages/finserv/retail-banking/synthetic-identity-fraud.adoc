@@ -41,19 +41,19 @@ Below are the fields required to get started:
 
 `Customer` Node:
 
-* `name`: Contains the name of the customer. This could be changed for the customer id or some other identifier for the customer.
+* `customerId`: Contains the unique system identifier for the customer record.
 
 `Passport` Node:
 
-* `number`:  Contains the passport number used by `Customer`
+* `passportNumber`:  Contains the passport number used by `Customer`
 
 `Phone` Node:
 
-* `number`:  Contains the phone number used by `Customer`
+* `phoneNumber`:  Contains the phone number used by `Customer`
 
 `Email` Node:
 
-* `email`:  Contains the email address used by `Customer`
+* `address`:  Contains the email address used by `Customer`
 
 
 === 4.2. Demo Data
@@ -63,15 +63,15 @@ The following Cypher statement will create the example graph in the Neo4j databa
 [source, cypher, role=noheader]
 ----
 // Create all people nodes
-CREATE (c1:Customer {name: "Michael"})
-CREATE (c2:Customer {name: "Adam"})
-CREATE (c3:Customer {name: "Alice"})
+CREATE (c1:Customer {customerId: "CUS001"})
+CREATE (c2:Customer {customerId: "CUS002"})
+CREATE (c3:Customer {customerId: "CUS003"})
 // Create email node
-CREATE (email:Email {email: "michael@abc.com"})
+CREATE (email:Email {address: "michael@abc.com"})
 // Create phone node
-CREATE (phone:Phone {number: 7971020304})
+CREATE (phone:Phone {phoneNumber: "9999990304"})
 // Create passport node
-CREATE (passport:Passport {number: 123456789})
+CREATE (passport:Passport {passportNumber: 1234567890})
 
 
 // Create email relationship
@@ -198,8 +198,8 @@ When using the `stream` execution mode, the algorithm will provide the component
 ----
 CALL gds.wcc.stream('myGraph')
 YIELD nodeId, componentId
-RETURN gds.util.asNode(nodeId).name AS name, componentId
-ORDER BY componentId, name
+RETURN gds.util.asNode(nodeId).customerId AS customerId, componentId
+ORDER BY componentId, customerId
 ----
 
 ==== 6.1.3 GDS Write

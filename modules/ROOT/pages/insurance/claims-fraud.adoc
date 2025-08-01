@@ -1,32 +1,32 @@
 = Claims Fraud
 
-# 1. Introduction
+== 1. Introduction
 Claims fraud, especially fabricated injury claims, costs insurers billions and raises premiums for honest customers. Traditional fraud detection is slow and inaccurate. Graph databases where graph databases offer a solution by visualising complex connections between claimants, medical records, and social media. This reveals inconsistencies suggesting fraud, like claimants with severe injuries but no medical treatment. By using graph databases, insurers can better detect fraud, protect their finances, and ensure resources go to those who genuinely need them.
 
-# 2. Scenario
+== 2. Scenario
 
-## Types of Claims Fraud
+=== Types of Claims Fraud
 
 * **Motor insurance fraud:** Staged accidents, false whiplash claims, exaggerated repair costs, and vehicle dumping
 * **Property insurance fraud:** Arson, false burglary claims, inflated damage assessments, and fictitious property damage
 * **Exaggerated loss:** Inflated injuries, value of lost items, or cost of medical treatment
 * **Crash for cash scams:** Orchestrated accidents for false claims
 
-## Extent of the Problem
+=== Extent of the Problem
 
 * **Rising fraud:** In 2023, £1.1 billion in fraudulent claims were detected, a 4% increase from 2022, and the number of detected fraudulent claims rose 16%
 * **Average claim value:** £13,000 in 2023
 * **Motor fraud prevalence:** 45,800 fraudulent motor claims detected in 2023, valued at £501 million
 * **Organised crime involvement:** Increasing sophistication and difficulty to detect
 
-## Challenges
+=== Challenges
 
 * **Complex fraud patterns:** Traditional systems struggle to detect complex fraud
 * **Sophisticated fraud tactics:** Fraudsters constantly evolve tactics
 * **Need for real-time detection:** Advanced analytics and machine learning are needed
 * **Data sharing and collaboration:** Challenging due to competition and data privacy
 
-# 3. Solution
+== 3. Solution
 Graph databases offer a new way to detect fraud. Using graph theory, they are accurate and can model complex relationships and patterns between entities. Graph models represent entities and relationships, such as customer accounts, transactions, and their connections.
 
 Using graph databases has several benefits for fraud detection:
@@ -35,18 +35,18 @@ Using graph databases has several benefits for fraud detection:
 * **Real-Time Analysis:** Graph databases allow for real-time monitoring and faster responses to fraud
 * **Improved Accuracy:** Graph databases can identify patterns and anomalies more accurately than traditional databases
 
-## 3.1. How Graph Databases Can Help?
+=== 3.1. How Graph Databases Can Help?
 
 1. **Link Analysis**: Neo4j can explore connections between claimants, medical professionals, and other related parties to uncover fraudulent networks.
 2. **Pattern Detection**: Graph databases excel at identifying patterns without a starting point, analysing data shapes rather than just the data itself, which is essential for uncovering complex fraud schemes.
 3. **Real-time Detection**: Neo4j allows for detecting suspicious activities as they occur.
 
-# 4. Modelling
+== 4. Modelling
 This section provides examples of Cypher queries to demonstrate how to structure your data and what queries might look like in a real-world scenario. The example graph will include nodes for individuals, medical professionals, claims, vehicles, and other relevant entities, and relationships such as HAS_CLAIM, TREATED_BY, and INVOLVED_IN to show how the entities are connected.
 
-## 4.1. Data Model
+=== 4.1. Data Model
 
-### 4.1.1 Required Fields
+==== 4.1.1 Required Fields
 
 **`Claimant` Node:**
 
@@ -76,7 +76,7 @@ This section provides examples of Cypher queries to demonstrate how to structure
 ```
 
 
-## 4.2. Demo Data
+=== 4.2. Demo Data
 
 The following Cypher statement will create the example graph in the Neo4j database:
 
@@ -153,7 +153,7 @@ CREATE (v1)-[:INVOLVED_IN]->(cl4)
 CREATE (m1)-[:TREATS]->(c1)
 ```
 
-## 4.3. Neo4j Scheme
+=== 4.3. Neo4j Scheme
 If you call:
 
 ```
@@ -166,9 +166,9 @@ You will see the following response:
 image::insurance/insurance-claims-fraud-schema.svg[]
 
 
-# 5. Cypher Queries
+== 5. Cypher Queries
 
-## 5.1. Identify Claimants with Multiple Claims
+=== 5.1. Identify Claimants with Multiple Claims
 In this query, we will identify claimants who have filed more than one claim since multiple claims can sometimes be a red flag.
 
 View Graph:
@@ -188,12 +188,12 @@ RETURN m.name AS MedicalProfessional, claimCount, totalAmount
 ORDER BY totalAmount DESC
 ```
 
-### What It Does:
+==== What It Does:
 * Counts how many claims each `MedicalProfessional` is tied to.
 * Sums the total amount claimed.
 * Filters doctors who treat multiple claims or are tied to large claim sums.
 
-## 5.2. Identify Medical Professionals with Unusual Patterns
+=== 5.2. Identify Medical Professionals with Unusual Patterns
 Spot doctors or medical professionals who appear unusually frequently in claims or who are associated with exceptionally high total claim amounts.
 
 View Graph:
@@ -213,12 +213,12 @@ RETURN m.name AS MedicalProfessional, claimCount, totalAmount
 ORDER BY totalAmount DESC
 ```
 
-### What It Does:
+==== What It Does:
 *   Counts how many claims each `MedicalProfessional` is tied to.
 * Sums the total amount claimed.
 * Filters doctors who treat multiple claims or are tied to large claim sums.
 
-## 5.3. Identify Potential "Crash for Cash" Scams
+=== 5.3. Identify Potential "Crash for Cash" Scams
 A "Crash for Cash" scam often involves staged accidents, where the same vehicles or ring of individuals keep showing up in multiple claims. One simple pattern is:
 * A single vehicle involved in multiple claims with potentially different claimants or suspicious claim dates/amounts.
 
@@ -240,17 +240,17 @@ WHERE claimCount > 1
 RETURN v.VIN AS Vehicle, claimCount
 ```
 
-### What It Does:
+==== What It Does:
 * Collects all claims linked to each vehicle.
 * Filters those that appear in more than one claim
 
-# 6. Graph Data Science (GDS)
+== 6. Graph Data Science (GDS)
 Graph Data Science (GDS) provides powerful algorithms for advanced fraud detection by analysing network structures and patterns. Here we explore key algorithms and their applications in insurance fraud detection.
 
-## 6.1. Graph Projections
+=== 6.1. Graph Projections
 Before running any GDS algorithm, you must create a graph projection. A projection is an in-memory copy of your graph optimised for analytical processing.
 
-### 6.1.1. Basic Projection
+==== 6.1.1. Basic Projection
 Here's a basic projection including all node types and relationships in our fraud detection graph:
 
 ```cypher
@@ -268,7 +268,7 @@ CALL gds.graph.project(
 );
 ```
 
-### 6.1.2. Specialised Projections
+==== 6.1.2. Specialised Projections
 For specific analyses, you might want to create more focused projections. For example, to analyse claimant relationships:
 
 ```cypher
@@ -285,7 +285,7 @@ CALL gds.graph.project(
 );
 ```
 
-### 6.1.3. Managing Projections
+==== 6.1.3. Managing Projections
 Useful commands for managing your projections:
 
 ```cypher
@@ -296,10 +296,10 @@ CALL gds.graph.list();
 CALL gds.graph.drop('fraud-graph');
 ```
 
-## 6.2. Community Detection
+=== 6.2. Community Detection
 Community detection algorithms help identify clusters of nodes that are more densely connected to each other than to the rest of the network.
 
-### 6.2.1. Louvain Method
+==== 6.2.1. Louvain Method
 The Louvain method is particularly effective for detecting communities in fraud networks:
 
 ```cypher
@@ -314,10 +314,10 @@ This helps identify:
 * Medical professionals who consistently work with the same group of claimants
 * Vehicles involved in multiple claims with the same group of people
 
-## 6.3. Centrality Algorithms
+=== 6.3. Centrality Algorithms
 Centrality algorithms help identify the most influential or suspicious nodes in the network.
 
-### 6.3.1. PageRank
+==== 6.3.1. PageRank
 PageRank helps identify key players in fraud networks:
 
 ```cypher
@@ -332,7 +332,7 @@ This reveals:
 * Claimants who are central to multiple fraud schemes
 * Vehicles frequently involved in suspicious claims
 
-### 6.3.2. Betweenness Centrality
+==== 6.3.2. Betweenness Centrality
 Identifies nodes that act as bridges between different communities:
 
 ```cypher
@@ -359,10 +359,10 @@ This analysis reveals:
 * Potential coordinators of fraud rings
 * Medical professionals who bridge different groups of claimants
 
-## 6.4. Node Similarity
+=== 6.4. Node Similarity
 Node similarity algorithms help identify patterns that might indicate fraudulent behaviour.
 
-### 6.4.1. Node2Vec
+==== 6.4.1. Node2Vec
 Node2Vec generates vector embeddings that can be used to measure node similarity. Here's how to use it effectively:
 
 ```cypher
@@ -394,7 +394,7 @@ This approach helps identify:
 * Claims that share suspicious characteristics
 * Potential fraud rings based on behavioural similarities
 
-## 6.5. Weakly Connected Components
+=== 6.5. Weakly Connected Components
 WCC helps identify isolated clusters of potentially fraudulent activity:
 
 ```cypher
