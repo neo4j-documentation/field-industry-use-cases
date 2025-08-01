@@ -59,9 +59,9 @@ Below are the fields required to get started:
 
 `Face` Node:
 
-* `filename`: This refers to the name of the image. It can be altered for distinctiveness to avoid duplication in Neo4j.
+* `faceId`: Unique identifier for the face biometric record
 
-* `embedding`: Image node embeddings capture complex data relationships in a high-dimensional vector format for analysis and machine learning.
+* `embedding`: High-dimensional vector representation of facial features (typically 512-1536 dimensions)
 
 === 4.2. Demo Data
 
@@ -69,17 +69,17 @@ The following Cypher statement will create the example graph in the Neo4j databa
 
 [source, cypher, role=noheader]
 ----
-CREATE (:Face {filename: "face_1.jpg", embedding:[153, 254, 255, 0, 0, 253, 200, 252, 254, 100, 253]})
-CREATE (:Face {filename: "face_2.jpg", embedding:[253, 254, 252, 5, 252, 253, 253, 253, 255, 253, 252]})
+CREATE (:Face {faceId: "FACE001", embedding:[0.153, 0.254, 0.255, 0.0, 0.0, 0.253, 0.200, 0.252, 0.254, 0.100, 0.253]})
+CREATE (:Face {faceId: "FACE002", embedding:[0.253, 0.254, 0.252, 0.005, 0.252, 0.253, 0.253, 0.253, 0.255, 0.253, 0.252]})
 ----
 
-=== 4.3. Neo4j Scheme
+=== 4.3. Neo4j Schema
 
 If you call:
 
 [source, cypher, role=noheader]
 ----
-// Show neo4j scheme
+// Show neo4j schema
 CALL db.schema.visualization()
 ----
 
@@ -87,22 +87,23 @@ You will see the following response:
 
 image::finserv/fs-automated-facial-recognition-schema.svg[]
 
-You can not get much simpler than that.
-
 == 5. Cypher Queries
 
-=== 5.1. Identify Similar Images:
+=== 5.1. Identify Similar Face Embeddings
 
-The Cosine Similarity algorithm is a powerful tool utilised in Graph Data Science to discover the most similar images based on their vector embeddings. This algorithm is particularly handy in applications like image recognition and recommendation systems.
+The Cosine Similarity algorithm is a powerful tool utilised in Graph Data Science to discover the most similar face embeddings based on their vector representations. This algorithm is particularly valuable for fraud detection and identity verification.
 
-By computing the cosine similarity between two vectors, we can ascertain their level of resemblance. The closer the similarity score is to 1, the more akin the vectors are. This enables us to promptly and precisely determine the most pertinent images based on their content. The Cosine Similarity algorithm is a crucial tool for effective and accurate image analysis and retrieval.
+By computing the cosine similarity between two vectors, we can ascertain their level of resemblance. The closer the similarity score is to 1, the more akin the vectors are. This enables rapid and accurate identity matching for security purposes.
 
 [source, cypher, role=noheader]
 ----
-MATCH (p1:Face), (p2:Face)
-WHERE id(p1) > id(p2)
-RETURN p1.filename AS from, p2.filename AS to, gds.similarity.cosine(p1.embedding, p2.embedding) as similarity
+MATCH (f1:Face), (f2:Face)
+WHERE id(f1) > id(f2)
+RETURN f1.faceId AS face1, f2.faceId AS face2,
+       vector.similarity.cosine(f1.embedding, f2.embedding) as similarity
+ORDER BY similarity DESC
 ----
+
 
 == Appendix
 
