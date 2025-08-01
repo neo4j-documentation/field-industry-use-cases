@@ -1,16 +1,43 @@
-= Transaction Fraud Ring - Node Version
+= Transaction Fraud Ring
+:page-aliases: finserv/retail-banking/transaction-ring/transaction-ring-relationship-version.adoc, finserv/retail-banking/transaction-ring/transaction-ring-node-version.adoc, finserv/retail-banking/transaction-ring/transaction-ring-introduction.adoc
 
-== 1. Modelling
+== 1. Introduction
+
+A transaction fraud ring refers to a group of people collaborating to engage in fraudulent activities, like transferring funds through multiple accounts. These rings work across different locations and employ diverse strategies to evade detection. It is critical for financial organisations to detect these rings, especially with enhancement to Contingent Reimbursement Model (CRM).
+
+== 2. Scenario
+
+The requirement for financial institutes to implement and stop transaction fraud has been around for many years and is core to many regulations. 
+
+One example of this is enhancements that are being made to protect customers from Authorised Push Payment scams. The UK has increased customer protection and placed a more significant responsibility on financial institutions to help mitigate these scams. 
+
+One of the fastest-growing scams is the Authorised Push Payment (APP) fraud. It resulted in a loss of over *£249 million in the first half of 2022*, a 30% increase compared to the same period in 2020. Reference
+
+Understanding fraudulent behaviour inside your network is one of many ways to help mitigate these scams, as you can identify fraudulent accounts inside your banking estate.
+
+== 3. Solution
+
+Neo4j offer an improved method of uncovering transaction fraud rings and other sophisticated scams with a high degree of accuracy and is capable of stopping advanced fraud scenarios in real-time.
+
+=== How Graph Databases Can Help?
+
+Implementing Neo4j can help execute analysis that was not previously possible. Examples of the scenarios are:
+
+* Execute ring-based queries to follow transactions as they are sent to both internal and external beneficiaries.
+* In real-time, perform advanced analytics on the transaction rings to understand patterns.
+* Understand common exit and entry accounts in possible fraudulent activities.
+
+== 5. Modelling
 
 This section will show examples of cypher queries on an example graph. The intention is to illustrate what the queries look like and provide a guide on how to structure your data in a real setting. We will do this on a small transaction network graph of several nodes connected in a ring structure.
 
 The example graph will be based on the data model below:
 
-=== 1.1. Data Model
+=== 4.1. Data Model
 
 image::finserv/fs-transaction-ring-data-node-version-model.svg[]
 
-==== 1.1.1 Required Fields
+==== 4.1.1 Required Fields
 Below are the fields required to get started:
 
 `Account` Node:
@@ -30,7 +57,7 @@ Below are the fields required to get started:
 
 * No properties required
 
-=== 1.2. Demo Data
+=== 4.2. Demo Data
 
 The following Cypher statement will create the example graph in the Neo4j database:
 
@@ -49,7 +76,7 @@ CREATE (a3)-[:PERFORMS]->(:TRANSACTION {amount: 810, currency: "gbp", date: date
 CREATE (a4)-[:PERFORMS]->(:TRANSACTION {amount: 729, currency: "gbp", date: datetime()})-[:BENEFITS_TO]->(a1)
 ----
 
-=== 1.3. Neo4j Schema
+=== 4.3. Neo4j Schema
 
 [source, cypher, role=noheader]
 ----
@@ -63,9 +90,9 @@ image::finserv/fs-transaction-ring-node-version-schema.svg[]
 
 After ingesting the data, Neo4j interprets the graph schema. In the schema, we can observe an `Account` node connected to another `Account` node via a `Transaction` node and two relationships, `PERFORMS` and `BENEFITS_TO`.
 
-== 2. Cypher Queries
+== 5. Cypher Queries
 
-=== 2.1. Simple transaction ring
+=== 5.1. Simple transaction ring
 
 In this query, we will identify a ring with the following requirements:
 
@@ -86,7 +113,7 @@ MATCH path=(a:Account)(()-[:PERFORMS]->()-[:BENEFITS_TO]->()){3,6}(a)
 RETURN path
 ----
 
-=== 2.2. Transaction ring with no duplicate accounts
+=== 5.2. Transaction ring with no duplicate accounts
 In this query, we will identify a ring with the following requirements:
 
 * Account nodes should be connected via a `PERFORMS` & `BENEFITS_TO` relationship.
@@ -110,7 +137,7 @@ WHERE size(apoc.coll.toSet(a_i)) = size(a_i)
 RETURN path
 ----
 
-=== 2.3. Transaction ring with chronological transactions
+=== 5.3. Transaction ring with chronological transactions
 
 In this query, we will identify a ring with the following requirements:
 
@@ -142,7 +169,7 @@ WHERE size(apoc.coll.toSet([a]+a_i)) = size([a]+a_i)
 RETURN path
 ----
 
-=== 2.4. Transaction ring with 20% amount deduction
+=== 5.4. Transaction ring with 20% amount deduction
 
 When money is passed through a fraud ring, the amount that moves between accounts is often reduced by a fee of up to 20%. To account for this, our query will allow for a reduction of up to 20% at each transaction.
 
@@ -179,7 +206,7 @@ WHERE size(apoc.coll.toSet([a]+a_i)) = size([a]+a_i)
 RETURN path
 ----
 
-==== 2.4.1. What is the query doing?
+==== 5.4.1. What is the query doing?
 
 The given Cypher query is designed to identify suspicious transaction rings in a graph database where accounts are connected by transactions. The query looks for cycles of transactions that fit certain criteria and then returns those cycles. Let's break down the query step-by-step.
 
