@@ -65,41 +65,42 @@ This section provides examples of Cypher queries to demonstrate how to structure
 
 ==== 4.1.1 Required Fields
 
-**`Person` Node:**
+**`Customer` Node:**
 
-* `id`: Unique identifier for the person
-* `email`: Primary email address
+* `customerId`: Unique identifier for the customer
 
 **`Device` Node:**
 
-* `deviceID`: Unique identifier for the device
+* `deviceId`: Unique identifier for the device
 * `deviceType`: Type of device (mobile, desktop, tablet)
 * `userAgent`: Browser/app user agent string
+* `createdAt`: Timestamp when device was first recorded
 
 **`IP` Node:**
 
-* `ip`: IP address
+* `ipAddress`: IP address
+* `createdAt`: Timestamp when IP was first observed
 
 **`ISP` Node:**
 
-* `isp`: Internet Service Provider
+* `name`: Internet Service Provider name
+* `createdAt`: Timestamp when ISP was first recorded
 
 **`Location` Node:**
 
 * `city`: City name
+* `postCode`: Postal code (optional)
 * `country`: Country code
+* `latitude`: Geographic latitude (optional)
+* `longitude`: Geographic longitude (optional)
+* `createdAt`: Timestamp when location was first recorded
 
 **`Session` Node:**
 
-* `sessionID`: Unique session identifier
+* `sessionId`: Unique session identifier
 * `status`: Session status (success, failed, suspicious)
+* `createdAt`: Timestamp when session was initiated
 
-**`Event` Node:**
-
-* `eventID`: Unique event identifier
-* `eventType`: Type of authentication event
-* `timestamp`: Event timestamp
-* `status`: Authentication status
 
 **`Account` Node:**
 
@@ -107,15 +108,12 @@ This section provides examples of Cypher queries to demonstrate how to structure
 
 **Relationships:**
 
-* `USED_BY`: Person uses device
-* `PARTICIPATED_IN_EVENT`: Person participated in event
-* `USES_IP`: Event uses IP
-* `HAS_LOCATION`: Event has location
+* `USED_BY`: Device used by customer
+* `USES_IP`: Session uses IP address
 * `SESSION_USES_DEVICE`: Session uses device
-* `OWNS`: Person owns account
+* `HAS_ACCOUNT`: Customer has account
 * `IS_ALLOCATED_TO`: IP is allocated to ISP
-* `LOCATED_IN`: IP is located in Location
-* `HAS_EVENT`: Session has event
+* `LOCATED_IN`: IP/Location located in country
 
 === 4.2. Demo Data
 
@@ -123,62 +121,54 @@ The following Cypher statement will create an example graph demonstrating typica
 
 ```
 //
-// Create Person nodes
+// Create Customer nodes (minimal info for fraud detection)
 //
-CREATE (p1:Person {id: "P001", email: "user1@example.com"})
-CREATE (p2:Person {id: "P002", email: "user2@example.com"})
-CREATE (p3:Person { id: "P003", email: "user3@example.com"})
+CREATE (c1:Customer {customerId: "CUS001"})
+CREATE (c2:Customer {customerId: "CUS002"})
+CREATE (c3:Customer {customerId: "CUS003"})
 
 //
 // Create Device nodes
 //
-CREATE (d1:Device {id: "WEB001", deviceType: "desktop", userAgent: "Mozilla/5.0 Chrome/91.0"})
-CREATE (d2:Device {id: "WEB002", deviceType: "mobile", userAgent: "Mozilla/5.0 Mobile Safari/537.36"})
-CREATE (d3:Device {id: "SUSPICIOUS001", deviceType: "desktop", userAgent: "Mozilla/5.0 Firefox/89.0"})
+CREATE (d1:Device {deviceId: "DEV001", deviceType: "desktop", userAgent: "Mozilla/5.0 Chrome/91.0", createdAt: datetime("2024-03-01T09:00:00")})
+CREATE (d2:Device {deviceId: "DEV002", deviceType: "mobile", userAgent: "Mozilla/5.0 Mobile Safari/537.36", createdAt: datetime("2024-03-01T09:30:00")})
+CREATE (d3:Device {deviceId: "SUSPICIOUS001", deviceType: "desktop", userAgent: "Mozilla/5.0 Firefox/89.0", createdAt: datetime("2024-03-01T10:00:00")})
 
 //
 // Create IP nodes
 //
-CREATE (ip1:IP {ip: "192.168.1.1"})
-CREATE (ip2:IP {ip: "10.0.0.1"})
-CREATE (ip3:IP {ip: "203.0.113.1"})
-CREATE (ip4:IP {ip: "198.51.100.1"})
-CREATE (ip5:IP {ip: "172.16.0.1"})
+CREATE (ip1:IP {ipAddress: "192.168.1.1", createdAt: datetime("2024-03-01T09:00:00")})
+CREATE (ip2:IP {ipAddress: "10.0.0.1", createdAt: datetime("2024-03-01T10:00:00")})
+CREATE (ip3:IP {ipAddress: "203.0.113.1", createdAt: datetime("2024-03-01T10:05:00")})
+CREATE (ip4:IP {ipAddress: "198.51.100.1", createdAt: datetime("2024-03-01T11:00:00")})
+CREATE (ip5:IP {ipAddress: "172.16.0.1", createdAt: datetime("2024-03-01T11:05:00")})
 
 //
 // Create ISP nodes
 //
-CREATE (isp1:ISP {isp: "BT"})
-CREATE (isp2:ISP {isp: "Orange"})
-CREATE (isp3:ISP {isp: "Verizon"})
-CREATE (isp4:ISP {isp: "China Telecom"})
+CREATE (isp1:ISP {name: "BT", createdAt: datetime("2024-01-01T00:00:00")})
+CREATE (isp2:ISP {name: "Orange", createdAt: datetime("2024-01-01T00:00:00")})
+CREATE (isp3:ISP {name: "Verizon", createdAt: datetime("2024-01-01T00:00:00")})
+CREATE (isp4:ISP {name: "China Telecom", createdAt: datetime("2024-01-01T00:00:00")})
 
 //
 // Create Location nodes
 //
-CREATE (l1:Location {city: "London", country: "UK"})
-CREATE (l2:Location {city: "Paris", country: "France"})
-CREATE (l3:Location {city: "Beijing", country: "China"})
-CREATE (l4:Location {city: "Lagos", country: "Nigeria"})
-CREATE (l5:Location {city: "New York", country: "USA"})
+CREATE (l1:Location {city: "London", country: "UK", latitude: 51.5074, longitude: -0.1278, createdAt: datetime("2024-01-01T00:00:00")})
+CREATE (l2:Location {city: "Paris", country: "France", latitude: 48.8566, longitude: 2.3522, createdAt: datetime("2024-01-01T00:00:00")})
+CREATE (l3:Location {city: "Beijing", country: "China", latitude: 39.9042, longitude: 116.4074, createdAt: datetime("2024-01-01T00:00:00")})
+CREATE (l4:Location {city: "Lagos", country: "Nigeria", latitude: 6.5244, longitude: 3.3792, createdAt: datetime("2024-01-01T00:00:00")})
+CREATE (l5:Location {city: "New York", country: "USA", latitude: 40.7128, longitude: -74.0060, createdAt: datetime("2024-01-01T00:00:00")})
 
 //
-// Create Session nodes
+// Create Session nodes (incorporating event data)
 //
-CREATE (s1:Session {id: "SESS001", status: "success"})
-CREATE (s2:Session {id: "SESS002", status: "success"})
-CREATE (s3:Session {id: "SESS003", status: "failed"})
-CREATE (s4:Session {id: "SESS004", status: "failed"})
-CREATE (s5:Session {id: "SESS005", status: "failed"})
+CREATE (s1:Session {sessionId: "SESS001", status: "success", createdAt: datetime("2024-03-01T10:00:00")})
+CREATE (s2:Session {sessionId: "SESS002", status: "success", createdAt: datetime("2024-03-01T10:05:00")})
+CREATE (s3:Session {sessionId: "SESS003", status: "failed", createdAt: datetime("2024-03-01T11:00:00")})
+CREATE (s4:Session {sessionId: "SESS004", status: "failed", createdAt: datetime("2024-03-01T11:05:00")})
+CREATE (s5:Session {sessionId: "SESS005", status: "failed", createdAt: datetime("2024-03-01T11:10:00")})
 
-//
-// Create Event nodes
-//
-CREATE (e1:Event {created: datetime("2024-03-01T10:00:00"), id: "EVT001", sessionKey: "SESS001", status: "success"})
-CREATE (e2:Event {created: datetime("2024-03-01T10:05:00"), id: "EVT002", sessionKey: "SESS002", status: "success"})
-CREATE (e3:Event {created: datetime("2024-03-01T11:00:00"), id: "EVT003", sessionKey: "SESS003", status: "failed"})
-CREATE (e4:Event {created: datetime("2024-03-01T11:05:00"), id: "EVT004", sessionKey: "SESS004", status: "failed"})
-CREATE (e5:Event {created: datetime("2024-03-01T11:10:00"), id: "EVT005", sessionKey: "SESS005", status: "failed"})
 
 //
 // Create Account nodes
@@ -191,43 +181,31 @@ CREATE (a3:Account {accountNumber: "ACC003"})
 // Create Relationships
 //
 
-// Pattern 1: Single device logging into multiple accounts
-CREATE (d3)-[:USED_BY]->(p1)
-CREATE (d3)-[:USED_BY]->(p2)
-CREATE (d3)-[:USED_BY]->(p3)
+// Pattern 1: Single device logging into multiple accounts (credential stuffing)
+CREATE (d3)-[:USED_BY {lastUsed: datetime("2024-03-01T10:00:00")}]->(c1)
+CREATE (d3)-[:USED_BY {lastUsed: datetime("2024-03-01T10:02:00")}]->(c2)
+CREATE (d3)-[:USED_BY {lastUsed: datetime("2024-03-01T10:04:00")}]->(c3)
 
-// Pattern 2: Different locations logging into single account
-CREATE (p1)-[:PARTICIPATED_IN_EVENT]->(e1)
-CREATE (e1)-[:USES_IP]->(ip1)
-CREATE (e1)-[:HAS_LOCATION]->(l1)
-CREATE (p1)-[:PARTICIPATED_IN_EVENT]->(e2)
-CREATE (e2)-[:USES_IP]->(ip3)
-CREATE (e2)-[:HAS_LOCATION]->(l3)
+// Pattern 2: Impossible travel - UK to China in 5 minutes
+CREATE (s1)-[:USES_IP]->(ip1)
+CREATE (ip1)-[:LOCATED_IN {createdAt: datetime("2024-03-01T10:00:00")}]->(l1)
+CREATE (s2)-[:USES_IP]->(ip3)
+CREATE (ip3)-[:LOCATED_IN {createdAt: datetime("2024-03-01T10:05:00")}]->(l3)
 
 // Pattern 3: Multiple failed login attempts from different IPs
-CREATE (p2)-[:PARTICIPATED_IN_EVENT]->(e3)
-CREATE (e3)-[:USES_IP]->(ip2)
-CREATE (e3)-[:HAS_LOCATION]->(l2)
-CREATE (p2)-[:PARTICIPATED_IN_EVENT]->(e4)
-CREATE (e4)-[:USES_IP]->(ip4)
-CREATE (e4)-[:HAS_LOCATION]->(l4)
-CREATE (p2)-[:PARTICIPATED_IN_EVENT]->(e5)
-CREATE (e5)-[:USES_IP]->(ip5)
-CREATE (e5)-[:HAS_LOCATION]->(l5)
+CREATE (s3)-[:USES_IP]->(ip2)
+CREATE (ip2)-[:LOCATED_IN {createdAt: datetime("2024-03-01T11:00:00")}]->(l2)
+CREATE (s4)-[:USES_IP]->(ip4)
+CREATE (ip4)-[:LOCATED_IN {createdAt: datetime("2024-03-01T11:05:00")}]->(l4)
+CREATE (s5)-[:USES_IP]->(ip5)
+CREATE (ip5)-[:LOCATED_IN {createdAt: datetime("2024-03-01T11:10:00")}]->(l5)
 
-// Additional contextual relationships
-CREATE (ip1)-[:IS_ALLOCATED_TO]->(isp1)
-CREATE (ip2)-[:IS_ALLOCATED_TO]->(isp2)
-CREATE (ip3)-[:IS_ALLOCATED_TO]->(isp4)
-CREATE (ip4)-[:IS_ALLOCATED_TO]->(isp3)
-CREATE (ip5)-[:IS_ALLOCATED_TO]->(isp3)
-
-// Connect IP to Location
-CREATE (ip1)-[:LOCATED_IN]->(l1)
-CREATE (ip2)-[:LOCATED_IN]->(l2)
-CREATE (ip3)-[:LOCATED_IN]->(l3)
-CREATE (ip4)-[:LOCATED_IN]->(l4)
-CREATE (ip5)-[:LOCATED_IN]->(l5)
+// ISP relationships
+CREATE (ip1)-[:IS_ALLOCATED_TO {createdAt: datetime("2024-01-01T00:00:00")}]->(isp1)
+CREATE (ip2)-[:IS_ALLOCATED_TO {createdAt: datetime("2024-01-01T00:00:00")}]->(isp2)
+CREATE (ip3)-[:IS_ALLOCATED_TO {createdAt: datetime("2024-01-01T00:00:00")}]->(isp4)
+CREATE (ip4)-[:IS_ALLOCATED_TO {createdAt: datetime("2024-01-01T00:00:00")}]->(isp3)
+CREATE (ip5)-[:IS_ALLOCATED_TO {createdAt: datetime("2024-01-01T00:00:00")}]->(isp3)
 
 // Session device relationships
 CREATE (s1)-[:SESSION_USES_DEVICE]->(d1)
@@ -236,17 +214,17 @@ CREATE (s3)-[:SESSION_USES_DEVICE]->(d2)
 CREATE (s4)-[:SESSION_USES_DEVICE]->(d2)
 CREATE (s5)-[:SESSION_USES_DEVICE]->(d2)
 
-// Connect Session to Event
-CREATE (s1)-[:HAS_EVENT]->(e1)
-CREATE (s2)-[:HAS_EVENT]->(e2)
-CREATE (s3)-[:HAS_EVENT]->(e3)
-CREATE (s4)-[:HAS_EVENT]->(e4)
-CREATE (s5)-[:HAS_EVENT]->(e5)
+// Customer account relationships
+CREATE (c1)-[:HAS_ACCOUNT {role: "owner", since: datetime("2024-01-01T00:00:00")}]->(a1)
+CREATE (c2)-[:HAS_ACCOUNT {role: "owner", since: datetime("2024-01-01T00:00:00")}]->(a2)
+CREATE (c3)-[:HAS_ACCOUNT {role: "owner", since: datetime("2024-01-01T00:00:00")}]->(a3)
 
-// Update Relationships
-CREATE (p1)-[:OWNS]->(a1)
-CREATE (p2)-[:OWNS]->(a2)
-CREATE (p3)-[:OWNS]->(a3)
+// Connect sessions to customers (for failed login attempts)
+CREATE (c1)-[:HAS_SESSION]->(s1)
+CREATE (c1)-[:HAS_SESSION]->(s2)
+CREATE (c2)-[:HAS_SESSION]->(s3)
+CREATE (c2)-[:HAS_SESSION]->(s4)
+CREATE (c2)-[:HAS_SESSION]->(s5)
 ```
 
 === 4.3. Neo4j Schema
@@ -259,7 +237,7 @@ CALL db.schema.visualization()
 
 You will see the following response:
 
-image::finserv/fs-account-takeover-fraud-schema.svg[]
+image::finserv/fs-account-takeover-fraud-schema.png[]
 
 == 5. Cypher Queries
 
@@ -269,28 +247,28 @@ In this query, we will identify devices that have been used to access multiple d
 View Graph:
 ```cypher
 // Show the relationships between suspicious devices and multiple accounts
-MATCH path=(d:Device)-[:USED_BY]->(p:Person)-[:OWNS]->(a:Account)
-WITH d, count(p) as accountCount
+MATCH path=(d:Device)-[:USED_BY]->(c:Customer)-[:HAS_ACCOUNT]->(a:Account)
+WITH d, count(c) as accountCount
 WHERE accountCount > 1
-MATCH path=(d)-[:USED_BY]->(p:Person)-[:OWNS]->(a:Account)
+MATCH path=(d)-[:USED_BY]->(c:Customer)-[:HAS_ACCOUNT]->(a:Account)
 RETURN path
 ```
 
 View Statistics:
 ```cypher
 // Get detailed statistics about devices accessing multiple accounts
-MATCH (d:Device)-[:USED_BY]->(p:Person)-[:OWNS]->(a:Account)
+MATCH (d:Device)-[:USED_BY]->(c:Customer)-[:HAS_ACCOUNT]->(a:Account)
 WITH d, 
-     count(p) as uniqueAccounts,
-     collect(p.email) as compromisedEmails,
+     count(c) as uniqueAccounts,
+     collect(c.customerId) as compromisedCustomers,
      d.deviceType as deviceType,
      d.userAgent as userAgent
 WHERE uniqueAccounts > 1
-RETURN d.id as DeviceID,
+RETURN d.deviceId as DeviceID,
        deviceType as DeviceType,
        userAgent as UserAgent,
        uniqueAccounts as NumberOfAccounts,
-       compromisedEmails as CompromisedAccounts
+       compromisedCustomers as CompromisedCustomerIDs
 ORDER BY uniqueAccounts DESC
 ```
 
@@ -313,18 +291,18 @@ In these queries, we analyse session patterns to identify potential account take
 View Failed Login Attempts:
 ```cypher
 // Show clusters of failed login attempts within a time window
-MATCH (p:Person)-[:PARTICIPATED_IN_EVENT]->(e:Event)
-WHERE e.status = 'failed'
-WITH p, e
-ORDER BY e.created
-WITH p,
+MATCH (c:Customer)-[:HAS_SESSION]->(s:Session)
+WHERE s.status = 'failed'
+WITH c, s
+ORDER BY s.createdAt
+WITH c,
      collect({
-         eventId: e.id,
-         eventTime: e.created,
-         status: e.status
+         sessionId: s.sessionId,
+         sessionTime: s.createdAt,
+         status: s.status
      }) as attempts
 WHERE size(attempts) >= 3
-RETURN p.email as UserEmail,
+RETURN c.customerId as CustomerID,
        attempts,
        size(attempts) as FailedAttempts
 ORDER BY FailedAttempts DESC
@@ -332,17 +310,17 @@ ORDER BY FailedAttempts DESC
 
 View Location Changes:
 ```cypher
-// Detect rapid location changes within sessions
-MATCH (p:Person)-[:PARTICIPATED_IN_EVENT]->(e:Event)-[:HAS_LOCATION]->(l:Location)
-WITH p, e, l
-ORDER BY e.created
-WITH p,
+// Detect rapid location changes within sessions (impossible travel)
+MATCH (c:Customer)-[:HAS_SESSION]->(s:Session)-[:USES_IP]->(ip:IP)-[:LOCATED_IN]->(l:Location)
+WITH c, s, l
+ORDER BY s.createdAt
+WITH c,
      collect({
          location: l.city + ', ' + l.country,
-         eventTime: e.created
+         sessionTime: s.createdAt
      }) as locations
 WHERE size(locations) > 1
-RETURN p.email as UserEmail,
+RETURN c.customerId as CustomerID,
        locations,
        size(locations) as LocationChanges
 ORDER BY LocationChanges DESC
@@ -351,19 +329,14 @@ ORDER BY LocationChanges DESC
 View Session Timeline:
 ```cypher
 // Analyse session patterns over time
-MATCH (p:Person)-[:PARTICIPATED_IN_EVENT]->(e:Event), (d:Device)<-[:SESSION_USES_DEVICE]-(s:Session)-[:HAS_EVENT]->(e:Event)
-WHERE e.sessionKey = s.id
-WITH p, d, e, s
-RETURN p.email as UserEmail,
-       d.id as DeviceID,
+MATCH (c:Customer)-[:HAS_SESSION]->(s:Session)-[:SESSION_USES_DEVICE]->(d:Device)
+WITH c, d, s
+RETURN c.customerId as CustomerID,
+       d.deviceId as DeviceID,
        d.deviceType as DeviceType,
-       e.created as EventTime,
-       s.status as SessionStatus,
-       duration.between(
-           min(e.created),
-           max(e.created)
-       ).minutes as SessionDurationMinutes
-ORDER BY e.created
+       s.createdAt as SessionTime,
+       s.status as SessionStatus
+ORDER BY s.createdAt
 ```
 
 ==== What It Does:
@@ -396,12 +369,12 @@ In these queries, we analyse patterns of failed login attempts from different IP
 View Failed Login Pattern:
 ```cypher
 // Show accounts with multiple failed login attempts from different IPs
-MATCH (p:Person)-[:PARTICIPATED_IN_EVENT]->(e:Event)-[:USES_IP]->(ip:IP)
-WHERE e.status = 'failed'
-WITH p, count(DISTINCT ip) as uniqueIPs, collect(DISTINCT ip.ip) as ipAddresses,
-     count(e) as totalFailedAttempts
+MATCH (c:Customer)-[:HAS_SESSION]->(s:Session)-[:USES_IP]->(ip:IP)
+WHERE s.status = 'failed'
+WITH c, count(DISTINCT ip) as uniqueIPs, collect(DISTINCT ip.ipAddress) as ipAddresses,
+     count(s) as totalFailedAttempts
 WHERE uniqueIPs >= 2
-RETURN p.email as TargetAccount,
+RETURN c.customerId as TargetCustomer,
        totalFailedAttempts as FailedAttempts,
        uniqueIPs as NumberOfUniqueIPs,
        ipAddresses as IPAddresses
@@ -411,38 +384,38 @@ ORDER BY totalFailedAttempts DESC
 View Detailed Timeline:
 ```cypher
 // Show detailed timeline of failed attempts with location context
-MATCH (p:Person)-[:PARTICIPATED_IN_EVENT]->(e:Event)-[:USES_IP]->(ip:IP),
-      (e)-[:HAS_LOCATION]->(l:Location),
+MATCH (c:Customer)-[:HAS_SESSION]->(s:Session)-[:USES_IP]->(ip:IP),
+      (ip)-[:LOCATED_IN]->(l:Location),
       (ip)-[:IS_ALLOCATED_TO]->(isp:ISP)
-WHERE e.status = 'failed'
-WITH p, count(DISTINCT ip) as uniqueIPs
+WHERE s.status = 'failed'
+WITH c, count(DISTINCT ip) as uniqueIPs
 WHERE uniqueIPs >= 2
-MATCH (p)-[:PARTICIPATED_IN_EVENT]->(e:Event)-[:USES_IP]->(ip:IP),
-      (e)-[:HAS_LOCATION]->(l:Location),
+MATCH (c)-[:HAS_SESSION]->(s:Session)-[:USES_IP]->(ip:IP),
+      (ip)-[:LOCATED_IN]->(l:Location),
       (ip)-[:IS_ALLOCATED_TO]->(isp:ISP)
-WHERE e.status = 'failed'
-RETURN p.email as TargetAccount,
-       e.created as AttemptTime,
-       ip.ip as IPAddress,
+WHERE s.status = 'failed'
+RETURN c.customerId as TargetCustomer,
+       s.createdAt as AttemptTime,
+       ip.ipAddress as IPAddress,
        l.city + ', ' + l.country as Location,
-       isp.isp as ISP
-ORDER BY p.email, e.created
+       isp.name as ISP
+ORDER BY c.customerId, s.createdAt
 ```
 
 View Geographic Distribution:
 ```cypher
 // Show geographic distribution of failed attempts
-MATCH (p:Person)-[:PARTICIPATED_IN_EVENT]->(e:Event)-[:HAS_LOCATION]->(l:Location)
-WHERE e.status = 'failed'
-WITH p, l, count(e) as attemptsFromLocation
-WITH p, 
+MATCH (c:Customer)-[:HAS_SESSION]->(s:Session)-[:USES_IP]->(ip:IP)-[:LOCATED_IN]->(l:Location)
+WHERE s.status = 'failed'
+WITH c, l, count(s) as attemptsFromLocation
+WITH c, 
      count(DISTINCT l) as uniqueLocations,
      collect(DISTINCT {
          location: l.city + ', ' + l.country,
          attempts: attemptsFromLocation
      }) as locationBreakdown
 WHERE uniqueLocations >= 2
-RETURN p.email as TargetAccount,
+RETURN c.customerId as TargetCustomer,
        uniqueLocations as NumberOfLocations,
        locationBreakdown as LocationBreakdown
 ORDER BY uniqueLocations DESC
