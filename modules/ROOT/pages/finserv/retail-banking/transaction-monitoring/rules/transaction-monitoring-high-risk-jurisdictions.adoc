@@ -89,7 +89,7 @@ CALL db.schema.visualization()
 
 It will provide the following response:
 
-image::finserv/fs-transaction-monitoring-high-risk-jurisdictions-schema.svg[]
+image::finserv/fs-transaction-monitoring-high-risk-jurisdictions-schema.png[]
 
 == 4. Cypher Queries
 
