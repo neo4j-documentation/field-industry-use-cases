@@ -2,6 +2,13 @@
 
 This document defines a standardised Neo4j data model for banking transactions and customer data. It serves as a technical specification for LLMs building data import scripts or validating existing graph schemas.
 
+**Important:** This model follows the Neo4j Data Model Best Practices documented at https://neo4j.com/developer/industry-use-cases/_attachments/neo4j_data_model_best_practices.txt. When creating new models or enhancing this transaction model, always consult that document for:
+- Core modeling principles and iterative design approach
+- Naming conventions (CamelCase for nodes, ALL_CAPS for relationships, camelCase for properties)
+- Node and relationship design patterns
+- Query optimization strategies
+- Data insertion best practices
+
 **Key Features for Automated Processing:**
 - Comprehensive node labels with precise property definitions and data types
 - Explicit relationship patterns with directional semantics
@@ -14,6 +21,7 @@ This document defines a standardised Neo4j data model for banking transactions a
 - Apply the constraint definitions to ensure data quality and prevent duplicates
 - Reference the demonstration code patterns for proper relationship modelling
 - Validate existing schemas against this specification for compliance
+- Consult https://neo4j.com/developer/industry-use-cases/_attachments/neo4j_data_model_best_practices.txt for general modeling guidance when extending this model
 
 ## 1. Node Labels and Properties
 

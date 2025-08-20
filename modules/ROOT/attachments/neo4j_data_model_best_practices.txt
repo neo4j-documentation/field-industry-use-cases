@@ -1,0 +1,152 @@
+# Neo4j Data Modeling Optimization Prompt
+
+When creating or optimizing Neo4j data models and data insertion strategies, follow these consolidated best practices:
+
+## Core Modeling Principles
+1. **Start with use cases**: Define specific questions the application must answer before modeling
+2. **Follow iterative approach**: Conceptualize → Query Design → Real Data Testing
+3. **Ensure node uniqueness**: Every node must have a unique identifying property or property set
+4. **Model for query efficiency**: Design based on most common/critical queries
+
+## Naming Conventions
+- **Node Labels**: CamelCase starting with uppercase (e.g., `Person`, `Company`)
+  ```cypher
+  CREATE (:Person {name: "Alice"})
+  CREATE (:Company {name: "Neo4j"})
+  ```
+- **Relationship Types**: ALL_CAPS_WITH_UNDERSCORES (e.g., `WORKS_AT`, `CONTAINS`)
+  ```cypher
+  MATCH (a:Person {name: "Alice"}), (b:Company {name: "Neo4j"})
+  CREATE (a)-[:WORKS_AT]->(b)
+  ```
+- **Properties**: camelCase starting with lowercase (e.g., `firstName`, `deptId`)
+  ```cypher
+  CREATE (:Person {firstName: "Alice", lastName: "Smith", deptId: 101})
+  ```
+
+## Node Design
+- Limit to 4 or fewer labels per node
+  ```cypher
+  // Bad: Too many labels
+  CREATE (:Person:Employee:Developer:Manager {name: "Alice"})
+  
+  // Better: Use properties instead
+  CREATE (:Person {name: "Alice", role: "Developer", department: "Engineering"})
+  ```
+- Use properties instead of excessive labels for attributes
+- Avoid semantically orthogonal labels
+- Eliminate duplicate data across nodes
+  ```cypher
+  // Bad: Duplicate company data
+  CREATE (:Person {name: "Alice", company: "Neo4j"})
+  CREATE (:Person {name: "Bob", company: "Neo4j"})
+  
+  // Better: Shared company node
+  CREATE (c:Company {name: "Neo4j"})
+  CREATE (a:Person {name: "Alice"})-[:WORKS_AT]->(c)
+  CREATE (b:Person {name: "Bob"})-[:WORKS_AT]->(c)
+  ```
+- Consider fanout carefully to avoid supernodes
+- Model list properties as separate connected nodes when needed
+  ```cypher
+  CREATE (p:Person {name: "Alice"})
+  CREATE (s1:Skill {name: "Cypher"})
+  CREATE (s2:Skill {name: "Graph Modeling"})
+  CREATE (p)-[:HAS_SKILL]->(s1)
+  CREATE (p)-[:HAS_SKILL]->(s2)
+  ```
+
+## Relationship Design
+- Use specific relationship types instead of generic ones
+  ```cypher
+  // Bad: Generic relationship
+  CREATE (:Person {name: "Alice"})-[:RELATED_TO]->(:Person {name: "Bob"})
+  
+  // Better: Specific relationship
+  CREATE (:Person {name: "Alice"})-[:FRIENDS_WITH]->(:Person {name: "Bob"})
+  ```
+- Avoid symmetric relationships
+  ```cypher
+  // Bad: Redundant symmetric relationships
+  CREATE (:Person {name: "Alice"})-[:PARENT_OF]->(:Person {name: "Bob"})
+  CREATE (:Person {name: "Bob"})-[:CHILD_OF]->(:Person {name: "Alice"})
+  
+  // Better: Single directional relationship
+  CREATE (:Person {name: "Alice"})-[:PARENT_OF]->(:Person {name: "Bob"})
+  ```
+- Choose relationship types vs. properties based on query patterns
+- Use intermediate nodes for hyperedges (3+ node relationships)
+  ```cypher
+  CREATE (a:Person {name: "Alice"})
+  CREATE (b:Person {name: "Bob"})
+  CREATE (c:Project {name: "GraphDB Project"})
+  CREATE (w:Work {role: "Contributor"})
+  CREATE (a)-[:WORKED_ON]->(w)-[:FOR_PROJECT]->(c)
+  CREATE (b)-[:WORKED_ON]->(w)
+  ```
+- Direction matters even for seemingly mutual relationships
+
+## Property Strategy
+- Properties serve two purposes: unique identification and answering queries
+- Simple/indexed properties for anchoring and traversal
+- Complex properties acceptable for output/decoration only
+- Follow data accessibility hierarchy: Anchor node data > Relationship types > Downstream data
+
+## Data Insertion Patterns
+- Create unique constraints for business keys
+  ```cypher
+  CREATE CONSTRAINT ON (p:Person) ASSERT p.email IS UNIQUE;
+  CREATE CONSTRAINT ON (e:Employee) ASSERT e.empId IS UNIQUE;
+  ```
+- Use `MERGE` for nodes with unique identifiers
+- Batch operations for large datasets
+- Clean and deduplicate data before loading
+- Add indexes for frequently queried properties
+- Convert relational foreign keys to relationships
+  ```cypher
+  // Relational: SELECT * FROM employees WHERE manager_id = 101;
+  // Graph: 
+  MATCH (e:Employee)-[:REPORTS_TO]->(m:Employee {id: 101}) RETURN e;
+  ```
+
+## Query Optimization
+- Anchor queries on indexed properties
+- Use specific relationship types in traversals
+- Minimize gather-and-inspect patterns
+- Consider data accessibility when designing traversal paths
+- Profile queries with `PROFILE` keyword
+  ```cypher
+  PROFILE MATCH (p:Person)-[:FOLLOWS]->(f) RETURN p, f;
+  ```
+- Consider aggregating frequently accessed data
+  ```cypher
+  MATCH (p:Post)-[:LIKED_BY]->(u:User)
+  RETURN p, count(u) AS likes;
+  ```
+
+## Common Structures
+- **Intermediate nodes**: For hyperedges, sharing context/data, organizing data
+- **Linked lists**: For sequences using `NEXT`/`PREVIOUS` relationships
+  ```cypher
+  CREATE (a)-[:NEXT]->(b)-[:NEXT]->(c);
+  ```
+- **Timeline trees**: For time-based anchoring and navigation
+- **Fanout patterns**: Balance between property duplication and query efficiency
+
+## Validation Checklist
+- [ ] Can the model answer all defined business questions?
+- [ ] Are nodes uniquely identifiable?
+- [ ] Are relationship types specific and meaningful?
+- [ ] Is the model optimized for the most critical queries?
+- [ ] Have you tested with representative data?
+- [ ] Are naming conventions consistent?
+- [ ] Have you avoided symmetric relationships?
+
+## Industry Reference Example
+For financial transaction and account modeling patterns, review the Neo4j transaction base model:
+- **Financial Data Model Reference**: https://neo4j.com/developer/industry-use-cases/_attachments/transactions-base-model.txt
+- Study how account hierarchies, transaction flows, and temporal relationships are modeled
+- Note patterns for handling high-volume transactional data and account relationships
+- Observe techniques for modeling financial entity relationships and transaction lineage
+
+Apply this framework iteratively, testing each iteration against real use cases and data.
