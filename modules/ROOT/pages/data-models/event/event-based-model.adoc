@@ -1,0 +1,235 @@
+= Event Data Model
+
+image::data-models/event-based-model/event-based-model.png[Event Data Model Diagram,800,align="center"]
+
+This document presents a simplified, event-oriented extension of the standard Transaction & Account Data Model. The model introduces specific event nodes to represent various types of operations.
+
+== Description
+
+This example illustrates a typical fraud scenario that can be detected by analyzing a chronological sequence of events:
+
+1. A malicious actor steals the customer's login details and gains access to their account. This event is represented by the `Connection` node.
+2. The attacker changes key account information to take control:
+    a. Changes the phone number (`ChangePhone` node)
+    b. Changes the email address (`ChangeEmail` node)
+    c. Changes the physical address (`ChangeAddress` node)
+3. The attacker adds an external account (`AddExternalAccount` node) to facilitate transferring the victim's funds.
+4. Finally, the attacker transfers money to the external account (`Transfer` node).
+
+Each event node can be linked to other nodes that provide context or details. For example, during a `ChangePhone` event, both the previous and new phone numbers are recorded.
+
+== Evolutions
+
+This data model is intentionally simple, but it can be extended to include additional event types or greater complexity to better reflect real-world scenarios:
+- ChangeDrivingLicence
+- ChangePassport
+- ContactSupport
+- etc.
+
+== Objectives
+
+The objectives of this data model are to:
+- Accelerate investigations for fraud officers
+- Simplify the identification of new fraud patterns
+- Detect weak signals or rapid sequences of suspicious events
+- Facilitate the writing of Cypher queries for pattern detection
+
+== Node Labels and Properties
+
+=== Account
+
+*Labels:*
+
+** Inherited from the standard Transaction & Account Data Model
+
+*Properties:*
+
+** Inherited from the standard Transaction & Account Data Model
+
+=== Customer
+
+*Properties:*
+
+** Inherited from the standard Transaction & Account Data Model
+
+=== Address
+
+*Properties:*
+
+** Inherited from the standard Transaction & Account Data Model
+
+=== Email
+
+*Properties:*
+
+** Inherited from the standard Transaction & Account Data Model
+
+=== Phone
+
+*Properties:*
+
+** Inherited from the standard Transaction & Account Data Model
+
+=== Session
+
+*Properties:*
+
+** Inherited from the standard Transaction & Account Data Model
+
+=== Transaction
+
+*Properties:*
+
+** Inherited from the standard Transaction & Account Data Model
+** `type` (String): Type of transaction (e.g., "SWIFT", "ACH")
+
+=== Connection
+
+*Properties:*
+
+** `createdAt` (DateTime): Date and time when the connection was established
+
+=== ChangePhone
+
+*Properties:*
+
+** `createdAt` (DateTime): Date and time when the phone number was changed
+
+=== ChangeEmail
+
+*Properties:*
+
+** `createdAt` (DateTime): Date and time when the email address was changed
+
+=== ChangeAddress
+
+*Properties:*
+
+** `createdAt` (DateTime): Date and time when the address was changed
+
+=== AddExternalAccount
+
+*Properties:*
+
+** `createdAt` (DateTime): Date and time when the external account was added
+
+=== Transfer
+
+*Properties:*
+
+** `createdAt` (DateTime): Date and time when the transfer was made
+
+== Relationship Types and Properties
+
+=== :CONNECTS
+
+* *Direction:* Customer->Connection
+* *Properties:*
+** None
+
+=== :NEXT
+* *Direction:* Event->Event
+* *Properties:*
+** None
+
+=== :OLD_PHONE
+* *Direction:* ChangePhone->Phone
+* *Properties:*
+** None
+
+=== :NEW_PHONE
+* *Direction:* ChangePhone->Phone
+* *Properties:*
+** None
+
+=== :OLD_EMAIL
+* *Direction:* ChangeEmail->Email
+* *Properties:*
+** None
+
+=== :NEW_EMAIL
+* *Direction:* ChangeEmail->Email
+* *Properties:*
+** None
+
+=== :OLD_ADDRESS
+* *Direction:* ChangeAddress->Address
+* *Properties:*
+** None
+
+=== :NEW_ADDRESS
+* *Direction:* ChangeAddress->Address
+* *Properties:*
+** None
+
+=== :HAS_CONNECTION
+* *Direction:* Session->Connection
+* *Properties:*
+** None
+
+=== :HAS_CHANGE_PHONE
+* *Direction:* Session->ChangePhone
+* *Properties:*
+** None
+
+=== :HAS_CHANGE_EMAIL
+* *Direction:* Session->ChangeEmail
+* *Properties:*
+** None
+
+=== :HAS_CHANGE_ADDRESS
+* *Direction:* Session->ChangeAddress
+* *Properties:*
+** None
+
+=== :HAS_ADD_EXTERNAL_ACCOUNT
+* *Direction:* Session->AddExternalAccount
+* *Properties:*
+** None
+
+=== :HAS_TRANSFER
+* *Direction:* Session->Transfer
+* *Properties:*
+** None
+
+=== :ADD_ACCOUNT
+* *Direction:* AddExternalAccount->Account
+* *Properties:*
+** None
+
+=== :HAS_TRANSACTION
+* *Direction:* Transfer->Transaction
+* *Properties:*
+** None
+
+=== :HAS_ADDRESS
+* *Direction:* Customer->Address
+* *Properties:*
+** Properties inherited from base model
+
+=== :HAS_EMAIL
+* *Direction:* Customer->Email
+* *Properties:*
+** Properties inherited from base model
+
+=== :HAS_PHONE
+* *Direction:* Customer->Phone
+* *Properties:*
+** Properties inherited from base model
+
+=== :HAS_ACCOUNT
+* *Direction:* Customer->Account
+* *Properties:*
+** Properties inherited from base model
+
+=== :PERFORMS
+* *Direction:* Account->Transaction
+* *Properties:*
+** None
+* *Description:* Links a source account to a transaction it initiated
+
+=== :BENEFITS_TO
+* *Direction:* Transaction->Account
+* *Properties:*
+** None
+* *Description:* Links a transaction to its beneficiary account
