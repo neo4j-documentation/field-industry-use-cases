@@ -28,4 +28,4 @@
 
 * xref:data-models/index.adoc[]
 ** xref:data-models/transactions/transactions-base-model.adoc[]
-** xref:data-models/event/event-based-model.adoc[]
+** xref:data-models/fraud-event-sequence/fraud-event-sequence-model.adoc[]
