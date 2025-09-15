@@ -1,6 +1,6 @@
-= Event-based Fraud Detection with Point-in-Time Connected Components
-:description: Master fraud detection using temporal graph modeling to compute point-in-time connected components, ensuring no future data leakage for real-time ML pipelines.
-:tags: fraud-detection, temporal-graphs, connected-components, wcc, fintech, retail-banking
+= Point-in-Time Connected Components for Fraud Detection
+:description: Master temporal fraud detection using point-in-time connected components to prevent future data leakage in real-time ML pipelines and ensure temporally consistent fraud network analysis.
+:tags: point-in-time, connected-components, temporal-graphs, fraud-detection, wcc, fintech, retail-banking
 
 == 1. Introduction
 
@@ -33,7 +33,7 @@ Graph databases excel at modeling temporal relationships and computing connected
 
 === 4.1. Data Model
 
-image::finserv/fs-event-based-fraud-detection-data-model.svg[]
+image::finserv/fs-point-in-time-fraud-components-data-model.svg[]
 
 The temporal graph model consists of three core node types connected through time-aware relationships:
 

@@ -11,7 +11,7 @@
 
   <!-- Title -->
   <text x="400" y="30" text-anchor="middle" font-family="Arial, sans-serif" font-size="18" font-weight="bold" fill="#333">
-    Event-based Fraud Detection Data Model
+    Point-in-Time Connected Components Data Model
   </text>
 
   <!-- User Node -->
