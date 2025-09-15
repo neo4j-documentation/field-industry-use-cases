@@ -4,30 +4,38 @@
 
 == 1. Introduction
 
-Financial institutions face the challenge of detecting sophisticated fraud networks that evolve over time, such as synthetic identity fraud rings and coordinated account takeover schemes. Traditional fraud detection approaches often struggle with temporal dependencies and can inadvertently introduce future data leakage, making them unsuitable for real-time machine learning applications.
+Consumer credit fraud costs the financial industry over $10 billion annually, driven by sophisticated fraud networks that evolve dynamically over time. These networks include synthetic identity fraud rings and coordinated account takeover schemes that emerge gradually through shared resources like phone numbers, IP addresses, and devices. Traditional fraud detection approaches struggle with these evolving temporal dependencies and can inadvertently introduce future data leakage, making them unsuitable for real-time machine learning applications.
 
-The core business problem is ensuring accurate fraud detection while maintaining temporal consistency - preventing models from using information that wouldn't have been available at the time of the original transaction or application. This is critical for Buy-Now-Pay-Later services, retail banking applications, and any real-time fraud prevention system where decisions must be made instantly based only on historical data.
+The core business problem is ensuring accurate fraud detection while maintaining temporal consistency - preventing models from using information that wouldn't have been available at the time of the original transaction or application. This challenge transforms fraud detection from a static snapshot approach to dynamic, time-aware network analysis that can generate ML features reflecting the precise graph state at each moment in time.
+
+This temporal approach is critical for Buy-Now-Pay-Later services, retail banking applications, and any real-time fraud prevention system where decisions must be made instantly based only on historically available data, without contamination from future information.
 
 == 2. Scenario
 
-Financial institutions encounter this challenge when building real-time fraud detection systems that require:
+Financial institutions encounter this challenge when fraud networks form and expand through a gradual process where criminals share resources across multiple identities and accounts. Traditional static detection methods fail to capture these evolving connections as fraud rings emerge through shared phone numbers, IP addresses, devices, and email addresses over time.
+
+Institutions building real-time fraud detection systems face specific requirements:
 
 * *Real-time decisioning* without access to future information that could bias models
+* *Dynamic fraud network detection* that tracks how criminal networks evolve and expand chronologically
 * *Consistent feature engineering* that respects temporal causality for machine learning pipelines
-* *Dynamic fraud network detection* that adapts as criminal networks evolve over time
-* *Regulatory compliance* requiring explainable models that don't use inappropriate temporal information
+* *Regulatory compliance* requiring explainable models with precise temporal tracking
+* *Performance optimization* to detect emerging fraud patterns faster, reduce false positive rates, and improve risk assessment accuracy
 
-This scenario is particularly relevant for fintech companies offering instant credit decisions, traditional banks processing high-volume transactions, and any institution using machine learning for fraud prevention where model accuracy and temporal consistency are both critical.
+This scenario is particularly critical when fraud networks evolve rapidly across multiple channels. For example, a fraudster might initially use a legitimate phone number for account creation, then gradually introduce synthetic identities that share the same device fingerprint, followed by coordinated account takeover attempts using shared IP addresses. Traditional systems miss these evolving patterns because they analyze static snapshots rather than the dynamic formation process.
+
+The challenge affects fintech companies offering instant credit decisions, traditional banks processing high-volume transactions, and any institution using machine learning for fraud prevention where both model accuracy and temporal consistency are essential for regulatory compliance and business success.
 
 == 3. Solution
 
-Graph databases excel at modeling temporal relationships and computing connected components while preserving chronological order. Unlike traditional approaches that use static snapshots or introduce future leakage through standard weakly connected components algorithms, a temporal graph approach ensures that fraud network analysis respects the actual timeline of events.
+Graph databases excel at modeling temporal relationships and computing connected components while preserving chronological order. Unlike traditional approaches that use static snapshots or introduce future leakage through standard weakly connected components algorithms, a temporal graph approach ensures that fraud network analysis respects the actual timeline of events and captures the dynamic formation of fraud rings.
 
 === 3.1. How Graph Databases Can Help
 
-* *Temporal Modeling:* Graph databases can model events and relationships with precise timestamps, ensuring queries only access historically available information
-* *Dynamic Connected Components:* Enable computation of fraud networks as they existed at any specific point in time, critical for consistent feature generation
+* *Temporal Modeling:* Graph databases can model events and relationships with precise timestamps, ensuring queries only access historically available information and eliminate future data leakage in ML models
+* *Dynamic Connected Components:* Enable computation of fraud networks as they existed at any specific point in time, tracking how fraud rings emerge gradually through shared resources
 * *Real-time Analysis:* Support instant querying of historical connectivity patterns without the computational overhead of rebuilding entire network snapshots
+* *Point-in-Time Feature Generation:* Generate ML features that reflect the exact graph state at the moment of each event, ensuring temporal consistency for real-time fraud detection models
 
 == 4. Modelling
 
