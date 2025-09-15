@@ -31,156 +31,220 @@ Graph databases excel at modeling temporal relationships and computing connected
 
 == 4. Modelling
 
+This section demonstrates how to structure temporal connected components for fraud detection using Neo4j. The approach uses a simple yet powerful graph schema that maintains temporal consistency while enabling real-time fraud network analysis.
+
 === 4.1. Data Model
 
-image::finserv/fs-point-in-time-fraud-components-data-model.svg[]
+The base graph schema consists of the following nodes and relationships:
 
-The temporal graph model consists of three core node types connected through time-aware relationships:
+* *Nodes*:
+  - `:User`: Represents actors (e.g., customers or fraudsters).
+  - `:Event`: Represents time-stamped actions like applications, logins, or transactions.
+  - `:Thing`: Represents shared resources such as IP addresses, phone numbers, devices, emails, bank accounts, or credit cards.
+* *Relationships*:
+  - `(:User)-[:COMMITS]->(:Event)`: Links a user to the event they triggered.
+  - `(:Event)-[:WITH]->(:Thing)`: Links an event to the shared resources used.
 
-==== 4.1.1 Required Fields
+We also introduce a relationship type to build a time-consistent spanning forest of the events and users.
 
-`User` Node:
+  - `(:Event|User)-[:SAME_CC_AS]->(:Event)`: Chronological links forming a temporal connected component forest, ensuring time-respecting connectivity.
 
-* `userId`: Unique identifier for the user/customer
+image::https://cdn-images-1.medium.com/max/1024/1*LTbw1WwV9QrInbSmxHblTQ.png[Model]
 
-`Event` Node:
-
-* `eventId`: Unique identifier for the event
-* `timestamp`: Precise timestamp when the event occurred
-* `eventType`: Type of event (application, login, transaction, etc.)
-
-`Thing` Node (shared resources):
-
-* `thingId`: Unique identifier for the shared resource
-* `thingType`: Type of resource (IP address, phone number, device, email, bank account, credit card)
-* `value`: The actual value (phone number, IP address, etc.)
+The structure forms a time-forest where leaves are users, inner nodes are events, and roots represent current connected components. This avoids cycles and preserves order.
 
 === 4.2. Demo Data
 
-The following Cypher statement creates sample data demonstrating the temporal structure:
+To demonstrate temporal connected components, use a dummy dataset. You can import it into Neo4j using the provided ZIP file from the reference repository.
+
+1. Download the dataset ZIP: https://github.com/halftermeyer/temporal-connected-components-with-neo4j/blob/main/data-importer-dummy-dataset.zip[download]
+2. Import via Neo4j Aura Console or Neo4j Desktop:
+   - Select your instance and choose "Import".
+   - Open the model with data and select the file.
+   - Run the import.
+
+Alternatively, generate sample data programmatically if needed.
+
+Set parameters for queries:
 
 [source, cypher, role=noheader]
 ----
-// Create users
-CREATE (u1:User {userId: "user_001"})
-CREATE (u2:User {userId: "user_002"})
-CREATE (u3:User {userId: "user_003"})
-
-// Create events with timestamps
-CREATE (e1:Event {eventId: "event_001", timestamp: datetime('2024-07-01T10:00:00+02:00'), eventType: "application"})
-CREATE (e2:Event {eventId: "event_002", timestamp: datetime('2024-07-01T11:30:00+02:00'), eventType: "login"})
-CREATE (e3:Event {eventId: "event_003", timestamp: datetime('2024-07-01T14:15:00+02:00'), eventType: "transaction"})
-
-// Create shared resources
-CREATE (ip:Thing {thingId: "ip_001", thingType: "ip_address", value: "192.168.1.100"})
-CREATE (phone:Thing {thingId: "phone_001", thingType: "phone", value: "+1-555-0123"})
-CREATE (device:Thing {thingId: "device_001", thingType: "device", value: "device_fingerprint_abc123"})
-
-// Create relationships
-CREATE (u1)-[:COMMITS]->(e1)
-CREATE (u2)-[:COMMITS]->(e2)
-CREATE (u3)-[:COMMITS]->(e3)
-CREATE (e1)-[:WITH]->(ip)
-CREATE (e1)-[:WITH]->(phone)
-CREATE (e2)-[:WITH]->(ip)
-CREATE (e3)-[:WITH]->(device)
+:param {
+  asOfDate: datetime('2024-07-10T20:00:00+02:00'),
+  sample_size: 200,
+  batch_min_size: 100,
+  event_id: "e2ebf91fa-8542-4545-9599-5faa0f4950ac"
+}
 ----
 
-=== 4.3. Initial Setup
-
-Create necessary indexes and initialize the temporal structure:
+Create an index on event timestamps:
 
 [source, cypher, role=noheader]
 ----
-// Create index on event timestamps for efficient temporal queries
 CREATE INDEX event_timestamp
 IF NOT EXISTS
-FOR (e:Event) ON (e.timestamp)
+FOR (e:Event) ON (e.datetime)
+----
 
-// Initialize users as connected components
+Declare initial users as initial connected components:
+
+[source, cypher, role=noheader]
+----
 MATCH (u:User)
-SET u:ConnectedComponent
+CALL (u) {
+  SET u:ConnectedComponent
+} IN TRANSACTIONS OF 1000 ROWS
+----
+
+=== 4.3. Neo4j Schema
+
+After importing the data, Neo4j interprets the graph schema. The temporal connected components model creates a time-forest structure where:
+
+* Users are leaf nodes in the forest
+* Events are inner nodes connecting users through shared resources
+* The SAME_CC_AS relationships form the temporal spanning tree
+
+[source, cypher, role=noheader]
+----
+// Show neo4j schema
+CALL db.schema.visualization()
 ----
 
 == 5. Cypher Queries
 
-=== 5.1. Build Temporal Connected Components Structure
+=== 5.1. Building the Temporal Structure
 
-Create the temporal spanning forest by processing events chronologically:
+Process events chronologically to build the `:SAME_CC_AS` relationships.
+
+image::https://cdn-images-1.medium.com/max/1024/1*RD7ibuhcco0G3Z7PEe6BRQ.png[Temporal Connected Component Forest]
+
+First, project a GDS graph for efficient WCC computation (optional for batching - see https://neo4j.com/blog/developer/wcc-to-avoid-cypher-query-crashing/[this blog] for details):
 
 [source, cypher, role=noheader]
 ----
-// Process events chronologically to build SAME_CC_AS relationships
-MATCH (e:Event)
-WHERE NOT e:ConnectedComponent
-WITH e ORDER BY e.timestamp ASC
-CALL {
+CYPHER runtime=parallel
+MATCH (thing:BankAccount|CreditCard|Device|EmailAddress|Event|IPAddress|PhoneNumber|Session|User)
+CALL (thing) {
+  MATCH (e:Event)-[:WITH|COMMITS]-(thing)
+  WITH DISTINCT e
+  WITH collect(e) AS events
+  WITH CASE size(events)
+    WHEN 1 THEN [events[0], null]
+    ELSE events END AS events
+  UNWIND range(0, size(events)-2) AS ix
+  RETURN events[ix] AS source, events[ix+1] AS target
+}
+RETURN gds.graph.project(
+  'wcc_graph', source, target, {});
+----
+
+Build the structure using GDS-driven batching:
+
+[source, cypher, role=noheader]
+----
+CALL gds.wcc.stream('wcc_graph')
+YIELD nodeId, componentId
+WITH gds.util.asNode(nodeId) AS event, componentId
+WITH componentId, collect(event) AS events
+ORDER BY rand() //mixing CCs
+CALL (events) {
+  UNWIND events AS e
   WITH e
-  // Find connected users through shared resources
-  MATCH (e)-[:WITH]->(thing:Thing)<-[:WITH]-(otherEvent:Event)<-[:COMMITS]-(connectedUser:User)
-  WHERE connectedUser:ConnectedComponent
-  WITH DISTINCT e, connectedUser
-  // Find the current root of the connected component
-  MATCH (connectedUser)-[:SAME_CC_AS*0..]->(cc:ConnectedComponent)
-  WHERE NOT EXISTS {(cc)-[:SAME_CC_AS]->()}
-  // Link this event to the connected component
+  WHERE NOT e:ConnectedComponent
+  ORDER BY e.timestamp ASC
+  CALL (e) {
+    MATCH (e)(()-[:WITH]->(entity)<-[:WITH]-(:ConnectedComponent)){0,1}()<-[:COMMITS]-(p)
+    WITH DISTINCT e, p
+    MATCH (p)-[:SAME_CC_AS]->*(cc WHERE NOT EXISTS {(cc)-[:SAME_CC_AS]->()})
+    MERGE (cc)-[:SAME_CC_AS]->(e)
+    SET e:ConnectedComponent
+  }
+} IN CONCURRENT TRANSACTIONS OF 100 ROWS
+----
+
+Alternative query for building without GDS wcc-batching method:
+
+[source, cypher, role=noheader]
+----
+CYPHER 5
+MATCH (e:Event&!ConnectedComponent)
+WITH e ORDER BY e.timestamp
+CALL (e) {
+  MATCH (e)(()-[:WITH]->(entity)<-[:WITH]-(:ConnectedComponent)){0,1}()<-[:COMMITS]-(u)
+  WITH DISTINCT e, u
+  MATCH (u)-[:SAME_CC_AS]->*(cc WHERE NOT EXISTS {(cc)-[:SAME_CC_AS]->()})
   MERGE (cc)-[:SAME_CC_AS]->(e)
   SET e:ConnectedComponent
 } IN TRANSACTIONS OF 100 ROWS
 ----
 
-=== 5.2. Query Point-in-Time Connected Components
+=== 5.2. Querying Point-in-Time Connected Components
 
-Retrieve connected components as they existed at a specific timestamp:
+Retrieve all connected components as of a given date:
 
 [source, cypher, role=noheader]
 ----
-// Get all connected component roots at a specific point in time
-MATCH (cc:ConnectedComponent)
-WHERE cc.timestamp <= datetime('2024-07-10T20:00:00+02:00') OR cc:User
-AND NOT EXISTS {
-  (cc)-[:SAME_CC_AS]->(x:Event)
-  WHERE x.timestamp <= datetime('2024-07-10T20:00:00+02:00')
-}
+CYPHER 5 runtime=parallel
+MATCH (cc:Event)
+  WHERE cc.timestamp <= $asOfDate
+  AND NOT EXISTS {
+    (cc)-[:SAME_CC_AS]->(x:Event WHERE x.timestamp <= $asOfDate)
+  }
 RETURN cc
 ----
 
-=== 5.3. Find Connected Component for Specific Event
-
-Get the full connected component history for a particular event:
+Get the connected component for a specific event ID with context:
 
 [source, cypher, role=noheader]
 ----
-// Find connected component path for a specific event
-MATCH path=(u:User)-[:SAME_CC_AS*0..]->(targetEvent:Event {eventId: "event_001"})
-WITH path, nodes(path) as pathNodes
-UNWIND pathNodes AS node
-OPTIONAL MATCH (node)-[:WITH]->(thing:Thing)
-RETURN path, collect(DISTINCT thing) AS sharedResources
+CYPHER 5
+MATCH p=(u:User)(()-[:SAME_CC_AS]->(ev))*(e:Event {event_id:$event_id})
+UNWIND ev+[e] AS event
+RETURN p, [(event)-[r:WITH]->(x)| [r, x]] AS with_things
 ----
 
-=== 5.4. Detect Non-Trivial Fraud Networks
+=== 5.3. Detecting Non-Trivial Fraud Networks
 
-Identify connected components with multiple users (potential fraud rings):
+Show non-trivial connected components:
 
 [source, cypher, role=noheader]
 ----
-// Find fraud networks with multiple connected users
-MATCH (u:User)-[:SAME_CC_AS*0..]->(cc:ConnectedComponent)
-WHERE NOT EXISTS {(cc)-[:SAME_CC_AS]->()}
-WITH cc, collect(DISTINCT u) AS connectedUsers
-WHERE size(connectedUsers) > 1
-MATCH path=(anyUser)-[:SAME_CC_AS*0..]->(cc)
-WHERE anyUser IN connectedUsers
-RETURN path, connectedUsers, size(connectedUsers) AS networkSize
-ORDER BY networkSize DESC
+MATCH (u:User)-[:SAME_CC_AS]->*(
+  cc:ConnectedComponent WHERE NOT EXISTS {(cc)-[:SAME_CC_AS]->()}
+)
+WITH DISTINCT u, cc
+WITH cc, collect(u) AS users
+WITH cc, users, size(users) AS size
+ORDER BY size DESC
+WHERE size > 1
+UNWIND users AS u
+MATCH path=(u)-[:SAME_CC_AS]->*-(cc)
+RETURN path, users, size
+----
+
+=== 5.4. Sample Dataset Generation
+
+For generating a sample dataset without future leakage:
+
+[source, cypher, role=noheader]
+----
+CYPHER 5
+MATCH (e:Event)
+WITH e, rand() AS r
+ORDER BY r LIMIT $sample_size
+WITH collect(e) AS events
+UNWIND events AS e
+WITH e ORDER BY e.timestamp ASC
+MATCH (e)-[:COMMITS]-(u:User)
+WITH e, u
+// Additional logic for sampling without leakage
 ----
 
 == 6. Graph Data Science (GDS)
 
-=== 6.1. Weakly Connected Components with Temporal Constraints
+=== 6.1. Temporal Weakly Connected Components
 
-For large-scale analysis, use GDS to efficiently compute connected components while respecting temporal boundaries:
+The temporal connected components approach can be enhanced using GDS algorithms for large-scale analysis while maintaining temporal consistency:
 
 [source, cypher, role=noheader]
 ----
@@ -194,7 +258,7 @@ CALL gds.graph.project(
     SAME_CC_AS: {orientation: 'NATURAL'}
   },
   {
-    nodeProperties: ['timestamp', 'eventType'],
+    nodeProperties: ['timestamp', 'event_id'],
     relationshipProperties: []
   }
 )
@@ -206,29 +270,35 @@ Compute and stream connected components for real-time fraud scoring:
 
 [source, cypher, role=noheader]
 ----
-// Stream WCC results for fraud network analysis
+// Stream WCC results for temporal fraud network analysis
 CALL gds.wcc.stream('temporalFraudGraph')
 YIELD nodeId, componentId
 WITH gds.util.asNode(nodeId) AS node, componentId
 WHERE node:User OR node:Event
-RETURN node.userId AS userId, node.eventId AS eventId, componentId
+RETURN node.event_id AS eventId, componentId, labels(node) AS nodeType
 ORDER BY componentId
 ----
 
-=== 6.3. Advanced Temporal Analysis
+=== 6.3. Temporal PageRank Analysis
 
-Use additional GDS algorithms to enhance fraud detection:
+Identify central nodes in temporal fraud networks:
 
 [source, cypher, role=noheader]
 ----
-// Apply PageRank to identify central nodes in fraud networks
+// Apply PageRank to identify central nodes in temporal fraud networks
 CALL gds.pageRank.stream('temporalFraudGraph')
 YIELD nodeId, score
 WITH gds.util.asNode(nodeId) AS node, score
 WHERE node:User
-RETURN node.userId, score
+RETURN node AS userId, score
 ORDER BY score DESC
 LIMIT 20
 ----
 
-This temporal approach ensures that fraud detection systems maintain complete temporal consistency while enabling sophisticated network analysis for real-time fraud prevention.
+This approach enables accurate, temporal-aware fraud ring detection in Neo4j, ideal for point-in-time WCC queries in fintech. It ensures ML features are computed without future leakage, improving fraud detection in real time.
+
+References:
+
+- https://neo4j.com/blog/developer/mastering-fraud-detection-temporal-graph/[original blog]
+- https://github.com/halftermeyer/temporal-connected-components-with-neo4j/[code and toy dataset]
+- https://neo4j.com/blog/developer/wcc-to-avoid-cypher-query-crashing/[wcc-batching blog]
