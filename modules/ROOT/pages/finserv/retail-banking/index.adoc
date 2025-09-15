@@ -18,6 +18,7 @@ All these use cases use the same base data model, which you can find xref:data-m
 
 * xref:finserv/retail-banking/account-takeover-fraud.adoc[]
 * xref:finserv/retail-banking/automated-facial-recognition.adoc[]
+* xref:finserv/retail-banking/event-based-fraud-detection.adoc[]
 * xref:finserv/retail-banking/synthetic-identity-fraud.adoc[]
 * xref:finserv/retail-banking/transaction-ring.adoc[]
 * xref:finserv/retail-banking/transaction-monitoring/transaction-monitoring-introduction.adoc[]

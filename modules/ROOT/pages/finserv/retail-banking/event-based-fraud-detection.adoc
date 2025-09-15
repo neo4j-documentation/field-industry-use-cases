@@ -1,0 +1,234 @@
+= Event-based Fraud Detection with Point-in-Time Connected Components
+:description: Master fraud detection using temporal graph modeling to compute point-in-time connected components, ensuring no future data leakage for real-time ML pipelines.
+:tags: fraud-detection, temporal-graphs, connected-components, wcc, fintech, retail-banking
+
+== 1. Introduction
+
+Financial institutions face the challenge of detecting sophisticated fraud networks that evolve over time, such as synthetic identity fraud rings and coordinated account takeover schemes. Traditional fraud detection approaches often struggle with temporal dependencies and can inadvertently introduce future data leakage, making them unsuitable for real-time machine learning applications.
+
+The core business problem is ensuring accurate fraud detection while maintaining temporal consistency - preventing models from using information that wouldn't have been available at the time of the original transaction or application. This is critical for Buy-Now-Pay-Later services, retail banking applications, and any real-time fraud prevention system where decisions must be made instantly based only on historical data.
+
+== 2. Scenario
+
+Financial institutions encounter this challenge when building real-time fraud detection systems that require:
+
+* *Real-time decisioning* without access to future information that could bias models
+* *Consistent feature engineering* that respects temporal causality for machine learning pipelines
+* *Dynamic fraud network detection* that adapts as criminal networks evolve over time
+* *Regulatory compliance* requiring explainable models that don't use inappropriate temporal information
+
+This scenario is particularly relevant for fintech companies offering instant credit decisions, traditional banks processing high-volume transactions, and any institution using machine learning for fraud prevention where model accuracy and temporal consistency are both critical.
+
+== 3. Solution
+
+Graph databases excel at modeling temporal relationships and computing connected components while preserving chronological order. Unlike traditional approaches that use static snapshots or introduce future leakage through standard weakly connected components algorithms, a temporal graph approach ensures that fraud network analysis respects the actual timeline of events.
+
+=== 3.1. How Graph Databases Can Help
+
+* *Temporal Modeling:* Graph databases can model events and relationships with precise timestamps, ensuring queries only access historically available information
+* *Dynamic Connected Components:* Enable computation of fraud networks as they existed at any specific point in time, critical for consistent feature generation
+* *Real-time Analysis:* Support instant querying of historical connectivity patterns without the computational overhead of rebuilding entire network snapshots
+
+== 4. Modelling
+
+=== 4.1. Data Model
+
+image::finserv/fs-event-based-fraud-detection-data-model.svg[]
+
+The temporal graph model consists of three core node types connected through time-aware relationships:
+
+==== 4.1.1 Required Fields
+
+`User` Node:
+
+* `userId`: Unique identifier for the user/customer
+
+`Event` Node:
+
+* `eventId`: Unique identifier for the event
+* `timestamp`: Precise timestamp when the event occurred
+* `eventType`: Type of event (application, login, transaction, etc.)
+
+`Thing` Node (shared resources):
+
+* `thingId`: Unique identifier for the shared resource
+* `thingType`: Type of resource (IP address, phone number, device, email, bank account, credit card)
+* `value`: The actual value (phone number, IP address, etc.)
+
+=== 4.2. Demo Data
+
+The following Cypher statement creates sample data demonstrating the temporal structure:
+
+[source, cypher, role=noheader]
+----
+// Create users
+CREATE (u1:User {userId: "user_001"})
+CREATE (u2:User {userId: "user_002"})
+CREATE (u3:User {userId: "user_003"})
+
+// Create events with timestamps
+CREATE (e1:Event {eventId: "event_001", timestamp: datetime('2024-07-01T10:00:00+02:00'), eventType: "application"})
+CREATE (e2:Event {eventId: "event_002", timestamp: datetime('2024-07-01T11:30:00+02:00'), eventType: "login"})
+CREATE (e3:Event {eventId: "event_003", timestamp: datetime('2024-07-01T14:15:00+02:00'), eventType: "transaction"})
+
+// Create shared resources
+CREATE (ip:Thing {thingId: "ip_001", thingType: "ip_address", value: "192.168.1.100"})
+CREATE (phone:Thing {thingId: "phone_001", thingType: "phone", value: "+1-555-0123"})
+CREATE (device:Thing {thingId: "device_001", thingType: "device", value: "device_fingerprint_abc123"})
+
+// Create relationships
+CREATE (u1)-[:COMMITS]->(e1)
+CREATE (u2)-[:COMMITS]->(e2)
+CREATE (u3)-[:COMMITS]->(e3)
+CREATE (e1)-[:WITH]->(ip)
+CREATE (e1)-[:WITH]->(phone)
+CREATE (e2)-[:WITH]->(ip)
+CREATE (e3)-[:WITH]->(device)
+----
+
+=== 4.3. Initial Setup
+
+Create necessary indexes and initialize the temporal structure:
+
+[source, cypher, role=noheader]
+----
+// Create index on event timestamps for efficient temporal queries
+CREATE INDEX event_timestamp
+IF NOT EXISTS
+FOR (e:Event) ON (e.timestamp)
+
+// Initialize users as connected components
+MATCH (u:User)
+SET u:ConnectedComponent
+----
+
+== 5. Cypher Queries
+
+=== 5.1. Build Temporal Connected Components Structure
+
+Create the temporal spanning forest by processing events chronologically:
+
+[source, cypher, role=noheader]
+----
+// Process events chronologically to build SAME_CC_AS relationships
+MATCH (e:Event)
+WHERE NOT e:ConnectedComponent
+WITH e ORDER BY e.timestamp ASC
+CALL {
+  WITH e
+  // Find connected users through shared resources
+  MATCH (e)-[:WITH]->(thing:Thing)<-[:WITH]-(otherEvent:Event)<-[:COMMITS]-(connectedUser:User)
+  WHERE connectedUser:ConnectedComponent
+  WITH DISTINCT e, connectedUser
+  // Find the current root of the connected component
+  MATCH (connectedUser)-[:SAME_CC_AS*0..]->(cc:ConnectedComponent)
+  WHERE NOT EXISTS {(cc)-[:SAME_CC_AS]->()}
+  // Link this event to the connected component
+  MERGE (cc)-[:SAME_CC_AS]->(e)
+  SET e:ConnectedComponent
+} IN TRANSACTIONS OF 100 ROWS
+----
+
+=== 5.2. Query Point-in-Time Connected Components
+
+Retrieve connected components as they existed at a specific timestamp:
+
+[source, cypher, role=noheader]
+----
+// Get all connected component roots at a specific point in time
+MATCH (cc:ConnectedComponent)
+WHERE cc.timestamp <= datetime('2024-07-10T20:00:00+02:00') OR cc:User
+AND NOT EXISTS {
+  (cc)-[:SAME_CC_AS]->(x:Event)
+  WHERE x.timestamp <= datetime('2024-07-10T20:00:00+02:00')
+}
+RETURN cc
+----
+
+=== 5.3. Find Connected Component for Specific Event
+
+Get the full connected component history for a particular event:
+
+[source, cypher, role=noheader]
+----
+// Find connected component path for a specific event
+MATCH path=(u:User)-[:SAME_CC_AS*0..]->(targetEvent:Event {eventId: "event_001"})
+WITH path, nodes(path) as pathNodes
+UNWIND pathNodes AS node
+OPTIONAL MATCH (node)-[:WITH]->(thing:Thing)
+RETURN path, collect(DISTINCT thing) AS sharedResources
+----
+
+=== 5.4. Detect Non-Trivial Fraud Networks
+
+Identify connected components with multiple users (potential fraud rings):
+
+[source, cypher, role=noheader]
+----
+// Find fraud networks with multiple connected users
+MATCH (u:User)-[:SAME_CC_AS*0..]->(cc:ConnectedComponent)
+WHERE NOT EXISTS {(cc)-[:SAME_CC_AS]->()}
+WITH cc, collect(DISTINCT u) AS connectedUsers
+WHERE size(connectedUsers) > 1
+MATCH path=(anyUser)-[:SAME_CC_AS*0..]->(cc)
+WHERE anyUser IN connectedUsers
+RETURN path, connectedUsers, size(connectedUsers) AS networkSize
+ORDER BY networkSize DESC
+----
+
+== 6. Graph Data Science (GDS)
+
+=== 6.1. Weakly Connected Components with Temporal Constraints
+
+For large-scale analysis, use GDS to efficiently compute connected components while respecting temporal boundaries:
+
+[source, cypher, role=noheader]
+----
+// Project temporal graph for GDS analysis
+CALL gds.graph.project(
+  'temporalFraudGraph',
+  ['User', 'Event', 'Thing'],
+  {
+    COMMITS: {orientation: 'NATURAL'},
+    WITH: {orientation: 'NATURAL'},
+    SAME_CC_AS: {orientation: 'NATURAL'}
+  },
+  {
+    nodeProperties: ['timestamp', 'eventType'],
+    relationshipProperties: []
+  }
+)
+----
+
+=== 6.2. Streaming Connected Components
+
+Compute and stream connected components for real-time fraud scoring:
+
+[source, cypher, role=noheader]
+----
+// Stream WCC results for fraud network analysis
+CALL gds.wcc.stream('temporalFraudGraph')
+YIELD nodeId, componentId
+WITH gds.util.asNode(nodeId) AS node, componentId
+WHERE node:User OR node:Event
+RETURN node.userId AS userId, node.eventId AS eventId, componentId
+ORDER BY componentId
+----
+
+=== 6.3. Advanced Temporal Analysis
+
+Use additional GDS algorithms to enhance fraud detection:
+
+[source, cypher, role=noheader]
+----
+// Apply PageRank to identify central nodes in fraud networks
+CALL gds.pageRank.stream('temporalFraudGraph')
+YIELD nodeId, score
+WITH gds.util.asNode(nodeId) AS node, score
+WHERE node:User
+RETURN node.userId, score
+ORDER BY score DESC
+LIMIT 20
+----
+
+This temporal approach ensures that fraud detection systems maintain complete temporal consistency while enabling sophisticated network analysis for real-time fraud prevention.

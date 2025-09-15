@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600" viewBox="0 0 800 600">
+  <defs>
+    <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#333"/>
+    </marker>
+  </defs>
+
+  <!-- Background -->
+  <rect width="800" height="600" fill="#f8f9fa"/>
+
+  <!-- Title -->
+  <text x="400" y="30" text-anchor="middle" font-family="Arial, sans-serif" font-size="18" font-weight="bold" fill="#333">
+    Event-based Fraud Detection Data Model
+  </text>
+
+  <!-- User Node -->
+  <circle cx="150" cy="150" r="50" fill="#e3f2fd" stroke="#1976d2" stroke-width="2"/>
+  <text x="150" y="145" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#1976d2">
+    User
+  </text>
+  <text x="150" y="160" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#1976d2">
+    userId
+  </text>
+
+  <!-- Event Node -->
+  <rect x="350" y="100" width="100" height="100" rx="10" fill="#fff3e0" stroke="#f57c00" stroke-width="2"/>
+  <text x="400" y="140" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#f57c00">
+    Event
+  </text>
+  <text x="400" y="155" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" fill="#f57c00">
+    eventId
+  </text>
+  <text x="400" y="170" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" fill="#f57c00">
+    timestamp
+  </text>
+  <text x="400" y="185" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" fill="#f57c00">
+    eventType
+  </text>
+
+  <!-- Thing Node -->
+  <rect x="550" y="100" width="100" height="100" rx="10" fill="#e8f5e8" stroke="#388e3c" stroke-width="2"/>
+  <text x="600" y="135" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#388e3c">
+    Thing
+  </text>
+  <text x="600" y="150" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" fill="#388e3c">
+    thingId
+  </text>
+  <text x="600" y="165" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" fill="#388e3c">
+    thingType
+  </text>
+  <text x="600" y="180" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" fill="#388e3c">
+    value
+  </text>
+
+  <!-- Another Event Node (for temporal relationship) -->
+  <rect x="350" y="350" width="100" height="100" rx="10" fill="#fff3e0" stroke="#f57c00" stroke-width="2"/>
+  <text x="400" y="390" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#f57c00">
+    Event
+  </text>
+  <text x="400" y="405" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" fill="#f57c00">
+    eventId
+  </text>
+  <text x="400" y="420" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" fill="#f57c00">
+    timestamp
+  </text>
+  <text x="400" y="435" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" fill="#f57c00">
+    eventType
+  </text>
+
+  <!-- COMMITS relationship -->
+  <line x1="200" y1="150" x2="350" y2="150" stroke="#333" stroke-width="2" marker-end="url(#arrowhead)"/>
+  <text x="275" y="140" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" font-weight="bold" fill="#333">
+    COMMITS
+  </text>
+
+  <!-- WITH relationship -->
+  <line x1="450" y1="150" x2="550" y2="150" stroke="#333" stroke-width="2" marker-end="url(#arrowhead)"/>
+  <text x="500" y="140" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" font-weight="bold" fill="#333">
+    WITH
+  </text>
+
+  <!-- SAME_CC_AS relationship (temporal) -->
+  <line x1="400" y1="200" x2="400" y2="350" stroke="#9c27b0" stroke-width="3" marker-end="url(#arrowhead)"/>
+  <text x="420" y="275" text-anchor="start" font-family="Arial, sans-serif" font-size="11" font-weight="bold" fill="#9c27b0">
+    SAME_CC_AS
+  </text>
+  <text x="420" y="290" text-anchor="start" font-family="Arial, sans-serif" font-size="9" fill="#9c27b0">
+    (temporal)
+  </text>
+
+  <!-- Legend -->
+  <rect x="50" y="450" width="700" height="120" fill="#ffffff" stroke="#ccc" stroke-width="1" rx="5"/>
+  <text x="60" y="470" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="#333">
+    Relationship Types:
+  </text>
+
+  <text x="60" y="490" font-family="Arial, sans-serif" font-size="11" font-weight="bold" fill="#333">
+    COMMITS:
+  </text>
+  <text x="130" y="490" font-family="Arial, sans-serif" font-size="10" fill="#666">
+    Links a User to the Event they triggered
+  </text>
+
+  <text x="60" y="510" font-family="Arial, sans-serif" font-size="11" font-weight="bold" fill="#333">
+    WITH:
+  </text>
+  <text x="100" y="510" font-family="Arial, sans-serif" font-size="10" fill="#666">
+    Links an Event to shared resources (IP addresses, phones, devices, etc.)
+  </text>
+
+  <text x="60" y="530" font-family="Arial, sans-serif" font-size="11" font-weight="bold" fill="#9c27b0">
+    SAME_CC_AS:
+  </text>
+  <text x="150" y="530" font-family="Arial, sans-serif" font-size="10" fill="#666">
+    Chronological links forming temporal connected component forest
+  </text>
+
+  <text x="60" y="550" font-family="Arial, sans-serif" font-size="10" font-style="italic" fill="#666">
+    The temporal structure forms a time-forest where leaves are users, inner nodes are events,
+  </text>
+  <text x="60" y="565" font-family="Arial, sans-serif" font-size="10" font-style="italic" fill="#666">
+    and roots represent current connected components, avoiding cycles and preserving order.
+  </text>
+</svg>
