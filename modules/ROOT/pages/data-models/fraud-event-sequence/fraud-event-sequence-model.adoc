@@ -47,6 +47,8 @@ Newly Added Nodes
 
 *Properties:*
 
+** `method` (String): Connection method used (eg: "email", "phone_number")
+** `status` (String): Status of the connection attempt (eg: "success", "failed")
 ** `createdAt` (DateTime): Date and time when the connection was established
 
 === ChangePhone
@@ -272,6 +274,8 @@ MATCH (us:Country {code: "US"})
 // Event 1: Fraudulent connection (attacker gains access using existing session)
 WITH c, s, a, originalPhone, originalEmail, originalAddr, uk, us
 CREATE (e1:Connection {
+    method: "email",
+    status: "success",
     createdAt: datetime("2024-03-01T14:30:00")
 })
 
