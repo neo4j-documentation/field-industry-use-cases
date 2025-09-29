@@ -271,7 +271,7 @@ MATCH (us:Country {code: "US"})
 //--------------------
 // Create event-based extensions: Fraud Event Sequence
 //--------------------
-// Event 1: Fraudulent Authentication (attacker gains access using existing session)
+// Event 1: Fraudulent Authentication (attacker gains access to customer account)
 WITH c, s, a, originalPhone, originalEmail, originalAddr, uk, us
 CREATE (e1:Authentication {
     method: "email",
