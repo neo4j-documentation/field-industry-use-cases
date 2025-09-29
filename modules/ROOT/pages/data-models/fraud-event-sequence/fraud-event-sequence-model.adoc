@@ -8,7 +8,7 @@ This document presents a simplified, event-oriented extension of the standard Tr
 
 This example illustrates a typical fraud scenario that can be detected by analyzing a chronological sequence of events:
 
-1. A malicious actor steals the customer's login details and gains access to their account. This event is represented by the `Connection` node.
+1. A malicious actor steals the customer's login details and gains access to their account. This event is represented by the `Authentication` node.
 2. The attacker changes key account information to take control:
     a. Changes the phone number (`ChangePhone` node)
     b. Changes the email address (`ChangeEmail` node)
@@ -43,13 +43,13 @@ The objectives of this data model are to:
 Newly Added Nodes
 ====
 
-=== Connection
+=== Authentication
 
 *Properties:*
 
-** `method` (String): Connection method used (eg: "email", "phone_number")
-** `status` (String): Status of the connection attempt (eg: "success", "failed")
-** `createdAt` (DateTime): Date and time when the connection was established
+** `method` (String): Authentication method used (eg: "email", "phone_number")
+** `status` (String): Status of the authentication attempt (eg: "success", "failed")
+** `createdAt` (DateTime): Date and time when the authentication was established
 
 === ChangePhone
 
@@ -141,7 +141,7 @@ New Relationships
 
 === :CONNECTS
 
-* *Direction:* Customer->Connection
+* *Direction:* Customer->Authentication
 * *Properties:*
 ** None
 
@@ -180,8 +180,8 @@ New Relationships
 * *Properties:*
 ** None
 
-=== :HAS_CONNECTION
-* *Direction:* Session->Connection
+=== :HAS_AUTHENTICATION
+* *Direction:* Session->Authentication
 * *Properties:*
 ** None
 
@@ -271,9 +271,9 @@ MATCH (us:Country {code: "US"})
 //--------------------
 // Create event-based extensions: Fraud Event Sequence
 //--------------------
-// Event 1: Fraudulent connection (attacker gains access using existing session)
+// Event 1: Fraudulent Authentication (attacker gains access using existing session)
 WITH c, s, a, originalPhone, originalEmail, originalAddr, uk, us
-CREATE (e1:Connection {
+CREATE (e1:Authentication {
     method: "email",
     status: "success",
     createdAt: datetime("2024-03-01T14:30:00")
@@ -370,7 +370,7 @@ CREATE (fraudTransaction:Transaction {
 // Chain events chronologically and create all remaining relationships
 WITH c, s, a, originalPhone, originalEmail, originalAddr, uk, us, e1, e2, e3, e4, e5, e6, newPhone, newEmail, newAddr, fraudAccount, fraudTransaction
 CREATE (e1)-[:NEXT]->(e2)-[:NEXT]->(e3)-[:NEXT]->(e4)-[:NEXT]->(e5)-[:NEXT]->(e6)
-CREATE (s)-[:HAS_CONNECTION]->(e1)
+CREATE (s)-[:HAS_AUTHENTICATION]->(e1)
 CREATE (s)-[:HAS_CHANGE_PHONE]->(e2)
 CREATE (s)-[:HAS_CHANGE_EMAIL]->(e3)
 CREATE (s)-[:HAS_CHANGE_ADDRESS]->(e4)
