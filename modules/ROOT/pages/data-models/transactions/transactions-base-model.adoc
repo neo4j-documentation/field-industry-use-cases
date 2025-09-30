@@ -412,14 +412,16 @@ CREATE FULLTEXT INDEX customer_name_idx IF NOT EXISTS FOR (c:Customer) ON EACH [
 While reviewing this data model, we identified an opportunity to improve location accuracy for fraud detection scenarios. Currently, the model derives location data from IP addresses, but mobile device GPS coordinates provide significantly higher precision when available.
 
 **Proposed Enhancement:**
-- Establish a direct `LOCATED_IN` relationship from `Session` nodes to `Location` nodes
-- Add a `source` property to the relationship indicating data origin (e.g., "IP", "Device_GPS", "WiFi_Network")
-- This would allow the system to prioritize more accurate location data while maintaining fallback options
+
+* Establish a direct `LOCATED_IN` relationship from `Session` nodes to `Location` nodes
+* Add a `source` property to the relationship indicating data origin (e.g., "IP", "Device_GPS", "WiFi_Network")
+* This would allow the system to prioritize more accurate location data while maintaining fallback options
 
 **Benefits:**
-- Enhanced fraud detection through precise geolocation
-- Flexible data source hierarchy (GPS > WiFi > IP)
-- Maintains backward compatibility with IP-based location data
+
+* Enhanced fraud detection through precise geolocation
+* Flexible data source hierarchy (GPS > WiFi > IP)
+* Maintains backward compatibility with IP-based location data
 
 == 5. Minimal Demo Code
 
