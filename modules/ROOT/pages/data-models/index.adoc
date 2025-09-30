@@ -31,10 +31,8 @@ image::data-models/transaction-base-model/transactions-base-model.png[Transactio
 
 *Supported Use Cases:*
 
-* Account takeover fraud detection
 * Transaction monitoring and AML compliance
 * Entity resolution across customer touchpoints
-* Deposit analysis and money laundering detection
 * Synthetic identity fraud prevention
 
 ===== Extensions
@@ -52,8 +50,8 @@ image::data-models/fraud-event-sequence/fraud-event-sequence-model.png[Fraud Eve
 
 *Key Features:*
 
-* Adds event nodes (Connection, ChangePhone, ChangeEmail, ChangeAddress, AddExternalAccount, Transfer)
-* Chronological event sequencing with :NEXT relationships
+* Adds event nodes (`Connection`, `ChangePhone`, `ChangeEmail`, `ChangeAddress`, `AddExternalAccount`, `Transfer`)
+* Chronological event sequencing with `:NEXT` relationships
 * Tracks old and new values during account takeover scenarios
 * Links events to existing Session nodes from base model
 * Maintains full compatibility with base model queries
