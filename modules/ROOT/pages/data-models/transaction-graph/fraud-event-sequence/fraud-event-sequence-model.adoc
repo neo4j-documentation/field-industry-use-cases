@@ -1,4 +1,5 @@
 = Fraud Event Sequence Data Model
+:aliases: data-models/fraud-event-sequence/fraud-event-sequence-model.adoc
 
 image::data-models/fraud-event-sequence/fraud-event-sequence-model.png[Fraud Event Sequence Data Model Diagram,800,align="center"]
 
@@ -94,47 +95,47 @@ Existing Nodes
 
 *Labels:*
 
-** xref:data-models/transactions/transactions-base-model.adoc#_account[Inherited from the standard Transaction & Account Data Model]
+** xref:data-models/transaction-graph/transaction/transaction-base-model.adoc#_account[Inherited from the standard Transaction & Account Data Model]
 
 *Properties:*
 
-** xref:data-models/transactions/transactions-base-model.adoc#_account[Inherited from the standard Transaction & Account Data Model]
+** xref:data-models/transaction-graph/transaction/transaction-base-model.adoc#_account[Inherited from the standard Transaction & Account Data Model]
 
 === Customer
 
 *Properties:*
 
-** xref:data-models/transactions/transactions-base-model.adoc#_customer[Inherited from the standard Transaction & Account Data Model]
+** xref:data-models/transaction-graph/transaction/transaction-base-model.adoc#_customer[Inherited from the standard Transaction & Account Data Model]
 
 === Address
 
 *Properties:*
 
-** xref:data-models/transactions/transactions-base-model.adoc#_address[Inherited from the standard Transaction & Account Data Model]
+** xref:data-models/transaction-graph/transaction/transaction-base-model.adoc#_address[Inherited from the standard Transaction & Account Data Model]
 
 === Email
 
 *Properties:*
 
-** xref:data-models/transactions/transactions-base-model.adoc#_email[Inherited from the standard Transaction & Account Data Model]
+** xref:data-models/transaction-graph/transaction/transaction-base-model.adoc#_email[Inherited from the standard Transaction & Account Data Model]
 
 === Phone
 
 *Properties:*
 
-** xref:data-models/transactions/transactions-base-model.adoc#_phone[Inherited from the standard Transaction & Account Data Model]
+** xref:data-models/transaction-graph/transaction/transaction-base-model.adoc#_phone[Inherited from the standard Transaction & Account Data Model]
 
 === Session
 
 *Properties:*
 
-** xref:data-models/transactions/transactions-base-model.adoc#_session[Inherited from the standard Transaction & Account Data Model]
+** xref:data-models/transaction-graph/transaction/transaction-base-model.adoc#_session[Inherited from the standard Transaction & Account Data Model]
 
 === Transaction
 
 *Properties:*
 
-** xref:data-models/transactions/transactions-base-model.adoc#_transaction[Inherited from the standard Transaction & Account Data Model]
+** xref:data-models/transaction-graph/transaction/transaction-base-model.adoc#_transaction[Inherited from the standard Transaction & Account Data Model]
 
 == 5. Relationship Types and Properties
 
@@ -231,27 +232,27 @@ Existing Relationships
 
 === :HAS_ADDRESS
 * *Direction:* Customer->Address
-* xref:data-models/transactions/transactions-base-model.adoc#_has_address[Properties inherited from base model]
+* xref:data-models/transaction-graph/transaction/transaction-base-model.adoc#_has_address[Properties inherited from base model]
 
 === :HAS_EMAIL
 * *Direction:* Customer->Email
-* xref:data-models/transactions/transactions-base-model.adoc#_has_address[Properties inherited from base model]
+* xref:data-models/transaction-graph/transaction/transaction-base-model.adoc#_has_address[Properties inherited from base model]
 
 === :HAS_PHONE
 * *Direction:* Customer->Phone
-* xref:data-models/transactions/transactions-base-model.adoc#_has_address[Properties inherited from base model]
+* xref:data-models/transaction-graph/transaction/transaction-base-model.adoc#_has_address[Properties inherited from base model]
 
 === :HAS_ACCOUNT
 * *Direction:* Customer->Account
-* xref:data-models/transactions/transactions-base-model.adoc#_has_address[Properties inherited from base model]
+* xref:data-models/transaction-graph/transaction/transaction-base-model.adoc#_has_address[Properties inherited from base model]
 
 === :PERFORMS
 * *Direction:* Account->Transaction
-* xref:data-models/transactions/transactions-base-model.adoc#_has_address[Properties inherited from base model]
+* xref:data-models/transaction-graph/transaction/transaction-base-model.adoc#_has_address[Properties inherited from base model]
 
 === :BENEFITS_TO
 * *Direction:* Transaction->Account
-* xref:data-models/transactions/transactions-base-model.adoc#_has_address[Properties inherited from base model]
+* xref:data-models/transaction-graph/transaction/transaction-base-model.adoc#_has_address[Properties inherited from base model]
 
 == 6. Customer enhancements
 
@@ -291,7 +292,7 @@ The current model focuses on successful events but should capture failed attempt
 
 The following Cypher code extends the standard Transaction & Account Data Model with event-based fraud detection capabilities. This code demonstrates how a typical account takeover fraud unfolds through a chronological sequence of events.
 
-**Prerequisites:** Run the xref:data-models/transactions/transactions-base-model.adoc#_4_minimal_demo_code[Transaction & Account Data Model demo code] first to create the base customer, accounts, and session data.
+**Prerequisites:** Run the xref:data-models/transaction-graph/transaction/transaction-base-model.adoc#_4_minimal_demo_code[Transaction & Account Data Model demo code] first to create the base customer, accounts, and session data.
 
 ```cypher
 //--------------------

@@ -15,63 +15,7 @@ These models serve as technical specifications for building robust graph solutio
 
 == Available Data Models
 
-=== Financial Services
+=== xref:data-models/transaction-graph/index.adoc[]
 
-==== xref:data-models/transactions/transactions-base-model.adoc[Transaction and Account Data Model]
-
-image::data-models/transaction-base-model/transactions-base-model.png[Transaction and Account Data Model Diagram,300,align="center"]
-
-*Key Features:*
-
-* Complete customer identity modelling (documents, biometrics, contact information)
-* Transaction flows with movement decomposition for complex payment scenarios
-* Digital access patterns (devices, IP addresses, sessions)
-* Account relationships and counterparty management
-* Comprehensive constraint definitions ensuring data integrity
-
-*Supported Use Cases:*
-
-* Transaction monitoring and AML compliance
-* Entity resolution across customer touchpoints
-* Synthetic identity fraud prevention
-
-===== Extensions
-
-====== xref:data-models/fraud-event-sequence/fraud-event-sequence-model.adoc[Fraud Event Sequence Data Model]
-
-[NOTE]
-====
-*Extension of Transaction and Account Data Model*
-
-This model extends the base Transaction and Account Data Model above with event-specific nodes and relationships. You must implement the base model first before using this extension.
-====
-
-image::data-models/fraud-event-sequence/fraud-event-sequence-model.png[Fraud Event Sequence Data Model Diagram,300,align="center"]
-
-*Key Features:*
-
-* Adds event nodes (`Connection`, `ChangePhone`, `ChangeEmail`, `ChangeAddress`, `AddExternalAccount`, `Transfer`)
-* Chronological event sequencing with `:NEXT` relationships
-* Tracks old and new values during account takeover scenarios
-* Links events to existing Session nodes from base model
-* Maintains full compatibility with base model queries
-
-*Supported Use Cases:*
-
-* Real-time fraud pattern detection through event sequences
-* Account takeover investigation acceleration
-* Weak signal detection in rapid event sequences
-* Suspicious activity timeline reconstruction
-* Event-driven alert generation
-
-== Using These Models
-
-Each data model includes:
-
-1. *Node and relationship definitions* with complete property specifications
-2. *Constraint and index recommendations* for performance and data quality
-3. *Executable demonstration code* for testing and validation
-4. *Integration guidance* for connecting to existing systems
-5. *Query patterns* for common business scenarios
-
-These models can be implemented directly or adapted to fit your specific data sources and business requirements.
+*** xref:data-models/transaction-graph/transaction/transaction-base-model.adoc[Base Model]
+*** xref:data-models/transaction-graph/fraud-event-sequence/fraud-event-sequence-model.adoc[Ext. Fraud Event Sequence]

@@ -8,7 +8,7 @@ Neo4j's graph database model is inherently well-suited for representing complex 
 
 === Transactions Graph
 
-All these use cases use the same base data model, which you can find xref:data-models/transactions/transactions-base-model.adoc[]
+All these use cases use the same base data model, which you can find xref:data-models/transaction-graph/transaction/transaction-base-model.adoc[]
 
 ==== Transactional Analytics
 

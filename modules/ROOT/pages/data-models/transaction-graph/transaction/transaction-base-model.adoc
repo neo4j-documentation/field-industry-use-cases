@@ -1,4 +1,5 @@
 = Transaction and Account Data Model
+:aliases: data-models/transactions/transactions-base-model.adoc, data-models/transaction-graph/transactions/transactions-base-model.adoc, data-models/transaction-graph/transaction/transactions-base-model.adoc
 
 image::data-models/transaction-base-model/transactions-base-model.png[Transaction and Account Data Model Diagram,800,align="center"]
 
@@ -6,7 +7,7 @@ This document defines a standardised Neo4j data model for banking transactions a
 
 *LLM Version of Data Model:*
 
-link:{attachmentsdir}/llm-transactions-base-model.txt[RAW Text File,window=_blank]
+link:{attachmentsdir}/llm-transaction-base-model.txt[RAW Text File,window=_blank]
 
 == 1. Node Labels and Properties
 

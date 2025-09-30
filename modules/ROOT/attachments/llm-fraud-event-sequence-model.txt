@@ -2,7 +2,7 @@
 
 This document defines an event-oriented extension to the Neo4j Transaction & Account Data Model for detecting account takeover fraud through sequential event analysis. It serves as a technical specification for LLMs building fraud detection systems or enhancing existing banking graph schemas.
 
-**Important:** This model extends the Transaction & Account Data Model documented at https://neo4j.com/developer/industry-use-cases/_attachments/llm-transactions-base-model.txt. It follows the Neo4j Data Model Best Practices documented at https://neo4j.com/developer/industry-use-cases/_attachments/neo4j_data_model_best_practices.txt. When implementing or extending this fraud detection model, always consult those documents for:
+**Important:** This model extends the Transaction & Account Data Model documented at https://neo4j.com/developer/industry-use-cases/_attachments/llm-transaction-base-model.txt. It follows the Neo4j Data Model Best Practices documented at https://neo4j.com/developer/industry-use-cases/_attachments/neo4j_data_model_best_practices.txt. When implementing or extending this fraud detection model, always consult those documents for:
 - Base customer, account, and transaction entities
 - Core modeling principles and iterative design approach
 - Naming conventions (CamelCase for nodes, ALL_CAPS for relationships, camelCase for properties)
