@@ -249,7 +249,37 @@ Existing Relationships
 * *Direction:* Transaction->Account
 * xref:data-models/transactions/transactions-base-model.adoc#_has_address[Properties inherited from base model]
 
-== 6. Minimal Demo Code
+== 6. Customer Feedback & Enhancement Suggestions
+
+**Velocity Tracking Enhancement:**
+
+A significant improvement opportunity exists in tracking the speed of account changes, which is a critical fraud indicator. Rapid successive changes often signal automated attacks or coordinated fraud attempts.
+
+**Proposed Enhancement:**
+- Add temporal properties to `:NEXT` relationships between consecutive events
+- Include `timeDelta` (duration between events)
+- Track cumulative change velocity over rolling time windows
+
+**Benefits:**
+- Detect automated attack patterns through abnormally fast event sequences
+- Identify human vs. bot behavior based on realistic timing patterns
+- Enable real-time velocity-based fraud scoring and blocking
+
+**Failed Attempts Tracking Enhancement:**
+
+The current model focuses on successful events but should capture failed attempts, which are often stronger fraud indicators than successful ones.
+
+**Proposed Enhancement:**
+- Create dedicated nodes for failed authentication attempts before successful login
+- Track rejected change requests and their failure reasons
+- Maintain audit trails of all attempt types, not just successful ones
+
+**Benefits:**
+- Failed login attempts followed by successful access often indicate credential stuffing
+- Multiple rejected change requests may signal social engineering attempts
+- Pattern analysis of failed attempts can reveal attack methodologies
+
+== 7. Minimal Demo Code
 
 The following Cypher code extends the standard Transaction & Account Data Model with event-based fraud detection capabilities. This code demonstrates how a typical account takeover fraud unfolds through a chronological sequence of events.
 
