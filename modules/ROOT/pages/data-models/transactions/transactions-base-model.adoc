@@ -4,17 +4,9 @@ image::data-models/transaction-base-model/transactions-base-model.png[Transactio
 
 This document defines a standardised Neo4j data model for banking transactions and customer data.
 
-*Key Features for Automated Processing:*
+*LLM Version of Data Model:*
 
-* Comprehensive node labels with precise property definitions and data types
-* Explicit relationship patterns with directional semantics
-* Complete constraint definitions ensuring data integrity
-* Executable demonstration code for validation and testing
-* Standard naming conventions following Neo4j best practices
-
-*Raw Text Version of Data Model:*
-
-link:{attachmentsdir}/transactions-base-model.txt[RAW Text File,window=_blank]
+link:{attachmentsdir}/llm-transactions-base-model.txt[RAW Text File,window=_blank]
 
 == 1. Node Labels and Properties
 

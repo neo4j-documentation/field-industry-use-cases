@@ -1,14 +1,34 @@
-= Fraud Event Sequence Data Model
+# Fraud Event Sequence Data Model
 
-image::data-models/fraud-event-sequence/fraud-event-sequence-model.png[Fraud Event Sequence Data Model Diagram,800,align="center"]
+This document defines an event-oriented extension to the Neo4j Transaction & Account Data Model for detecting account takeover fraud through sequential event analysis. It serves as a technical specification for LLMs building fraud detection systems or enhancing existing banking graph schemas.
 
-This document presents a simplified, event-oriented extension of the standard Transaction & Account Data Model. The model introduces specific event nodes to represent various types of operations.
+**Important:** This model extends the Transaction & Account Data Model documented at https://neo4j.com/developer/industry-use-cases/_attachments/llm-transactions-base-model.txt. It follows the Neo4j Data Model Best Practices documented at https://neo4j.com/developer/industry-use-cases/_attachments/neo4j_data_model_best_practices.txt. When implementing or extending this fraud detection model, always consult those documents for:
+- Base customer, account, and transaction entities
+- Core modeling principles and iterative design approach
+- Naming conventions (CamelCase for nodes, ALL_CAPS for relationships, camelCase for properties)
+- Node and relationship design patterns
+- Query optimization strategies
+- Data insertion best practices
 
-*LLM Version of Data Model:*
+**Key Features for Automated Processing:**
+- Event-based node definitions capturing fraud scenarios
+- Chronological event chaining through `:NEXT` relationships
+- Complete integration with base Transaction & Account Data Model
+- Executable demonstration code showing account takeover patterns
+- Standard naming conventions following Neo4j best practices
 
-link:{attachmentsdir}/llm-fraud-event-sequence-model.txt[RAW Text File,window=_blank]
+**Usage for LLMs:**
+- Extend existing Transaction & Account graphs with event tracking capabilities
+- Use event node definitions to capture authentication and account modification events
+- Apply chronological relationship patterns for fraud sequence detection
+- Reference the demonstration code for typical account takeover scenarios
+- Build Cypher queries to detect suspicious event velocities and patterns
 
-== 1. Business Scenario
+![Fraud Event Sequence Data Model Diagram](data-models/fraud-event-sequence/fraud-event-sequence-model.png)
+
+This model presents a simplified, event-oriented extension of the standard Transaction & Account Data Model. It introduces specific event nodes to represent various types of operations that occur during account takeover fraud.
+
+## 1. Business Scenario
 
 This example illustrates a typical fraud scenario that can be detected by analyzing a chronological sequence of events:
 
@@ -22,7 +42,7 @@ This example illustrates a typical fraud scenario that can be detected by analyz
 
 Each event node can be linked to other nodes that provide context or details. For example, during a `ChangePhone` event, both the previous and new phone numbers are recorded.
 
-== 2. Evolutions
+## 2. Evolutions
 
 This data model is intentionally simple, but it can be extended to include additional event types or greater complexity to better reflect real-world scenarios:
 
@@ -31,7 +51,7 @@ This data model is intentionally simple, but it can be extended to include addit
 - ContactSupport
 - etc.
 
-== 3. Objectives
+## 3. Objectives
 
 The objectives of this data model are to:
 
@@ -40,220 +60,208 @@ The objectives of this data model are to:
 - Detect weak signals or rapid sequences of suspicious events
 - Facilitate the writing of Cypher queries for pattern detection
 
-== 4. Node Labels and Properties
+## 4. Node Labels and Properties
 
-[NOTE]
-====
-Newly Added Nodes
-====
+> **Note:** Newly Added Nodes
 
-=== Authentication
+### Authentication
 
-*Properties:*
+**Properties:**
 
-** `method` (String): Authentication method used (eg: "email", "phone_number")
-** `status` (String): Status of the authentication attempt (eg: "success", "failed")
-** `createdAt` (DateTime): Date and time when the authentication was established
+* `method` (String): Authentication method used (eg: "email", "phone_number")
+* `status` (String): Status of the authentication attempt (eg: "success", "failed")
+* `createdAt` (DateTime): Date and time when the authentication was established
 
-=== ChangePhone
+### ChangePhone
 
-*Properties:*
+**Properties:**
 
-** `createdAt` (DateTime): Date and time when the phone number was changed
+* `createdAt` (DateTime): Date and time when the phone number was changed
 
-=== ChangeEmail
+### ChangeEmail
 
-*Properties:*
+**Properties:**
 
-** `createdAt` (DateTime): Date and time when the email address was changed
+* `createdAt` (DateTime): Date and time when the email address was changed
 
-=== ChangeAddress
+### ChangeAddress
 
-*Properties:*
+**Properties:**
 
-** `createdAt` (DateTime): Date and time when the address was changed
+* `createdAt` (DateTime): Date and time when the address was changed
 
-=== AddExternalAccount
+### AddExternalAccount
 
-*Properties:*
+**Properties:**
 
-** `createdAt` (DateTime): Date and time when the external account was added
+* `createdAt` (DateTime): Date and time when the external account was added
 
-=== Transfer
+### Transfer
 
-*Properties:*
+**Properties:**
 
-** `createdAt` (DateTime): Date and time when the transfer was made
+* `createdAt` (DateTime): Date and time when the transfer was made
 
-[NOTE]
-====
-Existing Nodes
-====
+> **Note:** Existing Nodes
 
-=== Account
+### Account
 
-*Labels:*
+**Labels:**
 
-** xref:data-models/transactions/transactions-base-model.adoc#_account[Inherited from the standard Transaction & Account Data Model]
+* [Inherited from the standard Transaction & Account Data Model](data-models/transactions/transactions-base-model.md#account)
 
-*Properties:*
+**Properties:**
 
-** xref:data-models/transactions/transactions-base-model.adoc#_account[Inherited from the standard Transaction & Account Data Model]
+* [Inherited from the standard Transaction & Account Data Model](data-models/transactions/transactions-base-model.md#account)
 
-=== Customer
+### Customer
 
-*Properties:*
+**Properties:**
 
-** xref:data-models/transactions/transactions-base-model.adoc#_customer[Inherited from the standard Transaction & Account Data Model]
+* [Inherited from the standard Transaction & Account Data Model](data-models/transactions/transactions-base-model.md#customer)
 
-=== Address
+### Address
 
-*Properties:*
+**Properties:**
 
-** xref:data-models/transactions/transactions-base-model.adoc#_address[Inherited from the standard Transaction & Account Data Model]
+* [Inherited from the standard Transaction & Account Data Model](data-models/transactions/transactions-base-model.md#address)
 
-=== Email
+### Email
 
-*Properties:*
+**Properties:**
 
-** xref:data-models/transactions/transactions-base-model.adoc#_email[Inherited from the standard Transaction & Account Data Model]
+* [Inherited from the standard Transaction & Account Data Model](data-models/transactions/transactions-base-model.md#email)
 
-=== Phone
+### Phone
 
-*Properties:*
+**Properties:**
 
-** xref:data-models/transactions/transactions-base-model.adoc#_phone[Inherited from the standard Transaction & Account Data Model]
+* [Inherited from the standard Transaction & Account Data Model](data-models/transactions/transactions-base-model.md#phone)
 
-=== Session
+### Session
 
-*Properties:*
+**Properties:**
 
-** xref:data-models/transactions/transactions-base-model.adoc#_session[Inherited from the standard Transaction & Account Data Model]
+* [Inherited from the standard Transaction & Account Data Model](data-models/transactions/transactions-base-model.md#session)
 
-=== Transaction
+### Transaction
 
-*Properties:*
+**Properties:**
 
-** xref:data-models/transactions/transactions-base-model.adoc#_transaction[Inherited from the standard Transaction & Account Data Model]
+* [Inherited from the standard Transaction & Account Data Model](data-models/transactions/transactions-base-model.md#transaction)
 
-== 5. Relationship Types and Properties
+## 5. Relationship Types and Properties
 
-[NOTE]
-====
-New Relationships
-====
-
-=== :CONNECTS
-
-* *Direction:* Customer->Authentication
-* *Properties:*
-** None
-
-=== :NEXT
-* *Direction:* Event->Event
-* *Properties:*
-** None
-
-=== :OLD_PHONE
-* *Direction:* ChangePhone->Phone
-* *Properties:*
-** None
-
-=== :NEW_PHONE
-* *Direction:* ChangePhone->Phone
-* *Properties:*
-** None
-
-=== :OLD_EMAIL
-* *Direction:* ChangeEmail->Email
-* *Properties:*
-** None
-
-=== :NEW_EMAIL
-* *Direction:* ChangeEmail->Email
-* *Properties:*
-** None
-
-=== :OLD_ADDRESS
-* *Direction:* ChangeAddress->Address
-* *Properties:*
-** None
-
-=== :NEW_ADDRESS
-* *Direction:* ChangeAddress->Address
-* *Properties:*
-** None
-
-=== :HAS_AUTHENTICATION
-* *Direction:* Session->Authentication
-* *Properties:*
-** None
-
-=== :HAS_CHANGE_PHONE
-* *Direction:* Session->ChangePhone
-* *Properties:*
-** None
-
-=== :HAS_CHANGE_EMAIL
-* *Direction:* Session->ChangeEmail
-* *Properties:*
-** None
-
-=== :HAS_CHANGE_ADDRESS
-* *Direction:* Session->ChangeAddress
-* *Properties:*
-** None
-
-=== :HAS_ADD_EXTERNAL_ACCOUNT
-* *Direction:* Session->AddExternalAccount
-* *Properties:*
-** None
-
-=== :HAS_TRANSFER
-* *Direction:* Session->Transfer
-* *Properties:*
-** None
-
-=== :ADD_ACCOUNT
-* *Direction:* AddExternalAccount->Account
-* *Properties:*
-** None
-
-=== :HAS_TRANSACTION
-* *Direction:* Transfer->Transaction
-* *Properties:*
-** None
-
-[NOTE]
-====
-Existing Relationships
-====
-
-=== :HAS_ADDRESS
-* *Direction:* Customer->Address
-* xref:data-models/transactions/transactions-base-model.adoc#_has_address[Properties inherited from base model]
-
-=== :HAS_EMAIL
-* *Direction:* Customer->Email
-* xref:data-models/transactions/transactions-base-model.adoc#_has_address[Properties inherited from base model]
-
-=== :HAS_PHONE
-* *Direction:* Customer->Phone
-* xref:data-models/transactions/transactions-base-model.adoc#_has_address[Properties inherited from base model]
-
-=== :HAS_ACCOUNT
-* *Direction:* Customer->Account
-* xref:data-models/transactions/transactions-base-model.adoc#_has_address[Properties inherited from base model]
-
-=== :PERFORMS
-* *Direction:* Account->Transaction
-* xref:data-models/transactions/transactions-base-model.adoc#_has_address[Properties inherited from base model]
-
-=== :BENEFITS_TO
-* *Direction:* Transaction->Account
-* xref:data-models/transactions/transactions-base-model.adoc#_has_address[Properties inherited from base model]
-
-== 6. Customer enhancements
+> **Note:** New Relationships
+
+### :CONNECTS
+
+* **Direction:** Customer->Authentication
+* **Properties:**
+  * None
+
+### :NEXT
+* **Direction:** Event->Event
+* **Properties:**
+  * None
+
+### :OLD_PHONE
+* **Direction:** ChangePhone->Phone
+* **Properties:**
+  * None
+
+### :NEW_PHONE
+* **Direction:** ChangePhone->Phone
+* **Properties:**
+  * None
+
+### :OLD_EMAIL
+* **Direction:** ChangeEmail->Email
+* **Properties:**
+  * None
+
+### :NEW_EMAIL
+* **Direction:** ChangeEmail->Email
+* **Properties:**
+  * None
+
+### :OLD_ADDRESS
+* **Direction:** ChangeAddress->Address
+* **Properties:**
+  * None
+
+### :NEW_ADDRESS
+* **Direction:** ChangeAddress->Address
+* **Properties:**
+  * None
+
+### :HAS_AUTHENTICATION
+* **Direction:** Session->Authentication
+* **Properties:**
+  * None
+
+### :HAS_CHANGE_PHONE
+* **Direction:** Session->ChangePhone
+* **Properties:**
+  * None
+
+### :HAS_CHANGE_EMAIL
+* **Direction:** Session->ChangeEmail
+* **Properties:**
+  * None
+
+### :HAS_CHANGE_ADDRESS
+* **Direction:** Session->ChangeAddress
+* **Properties:**
+  * None
+
+### :HAS_ADD_EXTERNAL_ACCOUNT
+* **Direction:** Session->AddExternalAccount
+* **Properties:**
+  * None
+
+### :HAS_TRANSFER
+* **Direction:** Session->Transfer
+* **Properties:**
+  * None
+
+### :ADD_ACCOUNT
+* **Direction:** AddExternalAccount->Account
+* **Properties:**
+  * None
+
+### :HAS_TRANSACTION
+* **Direction:** Transfer->Transaction
+* **Properties:**
+  * None
+
+> **Note:** Existing Relationships
+
+### :HAS_ADDRESS
+* **Direction:** Customer->Address
+* [Properties inherited from base model](data-models/transactions/transactions-base-model.md#has_address)
+
+### :HAS_EMAIL
+* **Direction:** Customer->Email
+* [Properties inherited from base model](data-models/transactions/transactions-base-model.md#has_address)
+
+### :HAS_PHONE
+* **Direction:** Customer->Phone
+* [Properties inherited from base model](data-models/transactions/transactions-base-model.md#has_address)
+
+### :HAS_ACCOUNT
+* **Direction:** Customer->Account
+* [Properties inherited from base model](data-models/transactions/transactions-base-model.md#has_address)
+
+### :PERFORMS
+* **Direction:** Account->Transaction
+* [Properties inherited from base model](data-models/transactions/transactions-base-model.md#has_address)
+
+### :BENEFITS_TO
+* **Direction:** Transaction->Account
+* [Properties inherited from base model](data-models/transactions/transactions-base-model.md#has_address)
+
+## 6. Customer enhancements
 
 **Velocity Tracking Enhancement:**
 
@@ -287,11 +295,11 @@ The current model focuses on successful events but should capture failed attempt
 * Multiple rejected change requests may signal social engineering attempts
 * Pattern analysis of failed attempts can reveal attack methodologies
 
-== 7. Minimal Demo Code
+## 7. Minimal Demo Code
 
 The following Cypher code extends the standard Transaction & Account Data Model with event-based fraud detection capabilities. This code demonstrates how a typical account takeover fraud unfolds through a chronological sequence of events.
 
-**Prerequisites:** Run the xref:data-models/transactions/transactions-base-model.adoc#_4_minimal_demo_code[Transaction & Account Data Model demo code] first to create the base customer, accounts, and session data.
+**Prerequisites:** Run the [Transaction & Account Data Model demo code](data-models/transactions/transactions-base-model.md#4-minimal-demo-code) first to create the base customer, accounts, and session data.
 
 ```cypher
 //--------------------
