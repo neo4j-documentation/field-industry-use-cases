@@ -20,7 +20,7 @@ image::data-models/transaction-base-model/transactions-base-model.png[Transactio
 
 == Extensions
 
-=== xref:data-models/fraud-event-sequence/fraud-event-sequence-model.adoc[Fraud Event Sequence Data Model]
+=== xref:data-models/transaction-graph/fraud-event-sequence/fraud-event-sequence-model.adoc[Fraud Event Sequence Data Model]
 
 [NOTE]
 ====
