@@ -1,0 +1,436 @@
+# Fraud Event Sequence Data Model
+
+This document defines an event-oriented extension to the Neo4j Transaction & Account Data Model for detecting account takeover fraud through sequential event analysis. It serves as a technical specification for LLMs building fraud detection systems or enhancing existing banking graph schemas.
+
+**Important:** This model extends the Transaction & Account Data Model documented at https://neo4j.com/developer/industry-use-cases/_attachments/llm-transaction-base-model.txt. It follows the Neo4j Data Model Best Practices documented at https://neo4j.com/developer/industry-use-cases/_attachments/neo4j_data_model_best_practices.txt. When implementing or extending this fraud detection model, always consult those documents for:
+- Base customer, account, and transaction entities
+- Core modeling principles and iterative design approach
+- Naming conventions (CamelCase for nodes, ALL_CAPS for relationships, camelCase for properties)
+- Node and relationship design patterns
+- Query optimization strategies
+- Data insertion best practices
+
+**Key Features for Automated Processing:**
+- Event-based node definitions capturing fraud scenarios
+- Chronological event chaining through `:NEXT` relationships
+- Complete integration with base Transaction & Account Data Model
+- Executable demonstration code showing account takeover patterns
+- Standard naming conventions following Neo4j best practices
+
+**Usage for LLMs:**
+- Extend existing Transaction & Account graphs with event tracking capabilities
+- Use event node definitions to capture authentication and account modification events
+- Apply chronological relationship patterns for fraud sequence detection
+- Reference the demonstration code for typical account takeover scenarios
+- Build Cypher queries to detect suspicious event velocities and patterns
+
+![Fraud Event Sequence Data Model Diagram](data-models/fraud-event-sequence/fraud-event-sequence-model.png)
+
+This model presents a simplified, event-oriented extension of the standard Transaction & Account Data Model. It introduces specific event nodes to represent various types of operations that occur during account takeover fraud.
+
+## 1. Business Scenario
+
+This example illustrates a typical fraud scenario that can be detected by analyzing a chronological sequence of events:
+
+1. A malicious actor steals the customer's login details and gains access to their account. This event is represented by the `Authentication` node.
+2. The attacker changes key account information to take control:
+    a. Changes the phone number (`ChangePhone` node)
+    b. Changes the email address (`ChangeEmail` node)
+    c. Changes the physical address (`ChangeAddress` node)
+3. The attacker adds an external account (`AddExternalAccount` node) to facilitate transferring the victim's funds.
+4. Finally, the attacker transfers money to the external account (`Transfer` node).
+
+Each event node can be linked to other nodes that provide context or details. For example, during a `ChangePhone` event, both the previous and new phone numbers are recorded.
+
+## 2. Evolutions
+
+This data model is intentionally simple, but it can be extended to include additional event types or greater complexity to better reflect real-world scenarios:
+
+- ChangeDrivingLicence
+- ChangePassport
+- ContactSupport
+- etc.
+
+## 3. Objectives
+
+The objectives of this data model are to:
+
+- Accelerate investigations for fraud officers
+- Simplify the identification of new fraud patterns
+- Detect weak signals or rapid sequences of suspicious events
+- Facilitate the writing of Cypher queries for pattern detection
+
+## 4. Node Labels and Properties
+
+> **Note:** Newly Added Nodes
+
+### Authentication
+
+**Properties:**
+
+* `method` (String): Authentication method used (eg: "email", "phone_number")
+* `status` (String): Status of the authentication attempt (eg: "success", "failed")
+* `createdAt` (DateTime): Date and time when the authentication was established
+
+### ChangePhone
+
+**Properties:**
+
+* `createdAt` (DateTime): Date and time when the phone number was changed
+
+### ChangeEmail
+
+**Properties:**
+
+* `createdAt` (DateTime): Date and time when the email address was changed
+
+### ChangeAddress
+
+**Properties:**
+
+* `createdAt` (DateTime): Date and time when the address was changed
+
+### AddExternalAccount
+
+**Properties:**
+
+* `createdAt` (DateTime): Date and time when the external account was added
+
+### Transfer
+
+**Properties:**
+
+* `createdAt` (DateTime): Date and time when the transfer was made
+
+> **Note:** Existing Nodes
+
+### Account
+
+**Labels:**
+
+* [Inherited from the standard Transaction & Account Data Model](data-models/transactions/transactions-base-model.md#account)
+
+**Properties:**
+
+* [Inherited from the standard Transaction & Account Data Model](data-models/transactions/transactions-base-model.md#account)
+
+### Customer
+
+**Properties:**
+
+* [Inherited from the standard Transaction & Account Data Model](data-models/transactions/transactions-base-model.md#customer)
+
+### Address
+
+**Properties:**
+
+* [Inherited from the standard Transaction & Account Data Model](data-models/transactions/transactions-base-model.md#address)
+
+### Email
+
+**Properties:**
+
+* [Inherited from the standard Transaction & Account Data Model](data-models/transactions/transactions-base-model.md#email)
+
+### Phone
+
+**Properties:**
+
+* [Inherited from the standard Transaction & Account Data Model](data-models/transactions/transactions-base-model.md#phone)
+
+### Session
+
+**Properties:**
+
+* [Inherited from the standard Transaction & Account Data Model](data-models/transactions/transactions-base-model.md#session)
+
+### Transaction
+
+**Properties:**
+
+* [Inherited from the standard Transaction & Account Data Model](data-models/transactions/transactions-base-model.md#transaction)
+
+## 5. Relationship Types and Properties
+
+> **Note:** New Relationships
+
+### :CONNECTS
+
+* **Direction:** Customer->Authentication
+* **Properties:**
+  * None
+
+### :NEXT
+* **Direction:** Event->Event
+* **Properties:**
+  * None
+
+### :OLD_PHONE
+* **Direction:** ChangePhone->Phone
+* **Properties:**
+  * None
+
+### :NEW_PHONE
+* **Direction:** ChangePhone->Phone
+* **Properties:**
+  * None
+
+### :OLD_EMAIL
+* **Direction:** ChangeEmail->Email
+* **Properties:**
+  * None
+
+### :NEW_EMAIL
+* **Direction:** ChangeEmail->Email
+* **Properties:**
+  * None
+
+### :OLD_ADDRESS
+* **Direction:** ChangeAddress->Address
+* **Properties:**
+  * None
+
+### :NEW_ADDRESS
+* **Direction:** ChangeAddress->Address
+* **Properties:**
+  * None
+
+### :HAS_AUTHENTICATION
+* **Direction:** Session->Authentication
+* **Properties:**
+  * None
+
+### :HAS_CHANGE_PHONE
+* **Direction:** Session->ChangePhone
+* **Properties:**
+  * None
+
+### :HAS_CHANGE_EMAIL
+* **Direction:** Session->ChangeEmail
+* **Properties:**
+  * None
+
+### :HAS_CHANGE_ADDRESS
+* **Direction:** Session->ChangeAddress
+* **Properties:**
+  * None
+
+### :HAS_ADD_EXTERNAL_ACCOUNT
+* **Direction:** Session->AddExternalAccount
+* **Properties:**
+  * None
+
+### :HAS_TRANSFER
+* **Direction:** Session->Transfer
+* **Properties:**
+  * None
+
+### :ADD_ACCOUNT
+* **Direction:** AddExternalAccount->Account
+* **Properties:**
+  * None
+
+### :HAS_TRANSACTION
+* **Direction:** Transfer->Transaction
+* **Properties:**
+  * None
+
+> **Note:** Existing Relationships
+
+### :HAS_ADDRESS
+* **Direction:** Customer->Address
+* [Properties inherited from base model](data-models/transactions/transactions-base-model.md#has_address)
+
+### :HAS_EMAIL
+* **Direction:** Customer->Email
+* [Properties inherited from base model](data-models/transactions/transactions-base-model.md#has_address)
+
+### :HAS_PHONE
+* **Direction:** Customer->Phone
+* [Properties inherited from base model](data-models/transactions/transactions-base-model.md#has_address)
+
+### :HAS_ACCOUNT
+* **Direction:** Customer->Account
+* [Properties inherited from base model](data-models/transactions/transactions-base-model.md#has_address)
+
+### :PERFORMS
+* **Direction:** Account->Transaction
+* [Properties inherited from base model](data-models/transactions/transactions-base-model.md#has_address)
+
+### :BENEFITS_TO
+* **Direction:** Transaction->Account
+* [Properties inherited from base model](data-models/transactions/transactions-base-model.md#has_address)
+
+## 6. Customer enhancements
+
+**Velocity Tracking Enhancement:**
+
+A significant improvement opportunity exists in tracking the speed of account changes, which is a critical fraud indicator. Rapid successive changes often signal automated attacks or coordinated fraud attempts.
+
+**Proposed Enhancement:**
+
+* Add temporal properties to `:NEXT` relationships between consecutive events
+* Include `timeDelta` (duration between events)
+* Track cumulative change velocity over rolling time windows
+
+**Benefits:**
+
+* Detect automated attack patterns through abnormally fast event sequences
+* Identify human vs. bot behavior based on realistic timing patterns
+* Enable real-time velocity-based fraud scoring and blocking
+
+**Failed Attempts Tracking Enhancement:**
+
+The current model focuses on successful events but should capture failed attempts, which are often stronger fraud indicators than successful ones.
+
+**Proposed Enhancement:**
+
+* Create dedicated nodes for failed authentication attempts before successful login
+* Track rejected change requests and their failure reasons
+* Maintain audit trails of all attempt types, not just successful ones
+
+**Benefits:**
+
+* Failed login attempts followed by successful access often indicate credential stuffing
+* Multiple rejected change requests may signal social engineering attempts
+* Pattern analysis of failed attempts can reveal attack methodologies
+
+## 7. Minimal Demo Code
+
+The following Cypher code extends the standard Transaction & Account Data Model with event-based fraud detection capabilities. This code demonstrates how a typical account takeover fraud unfolds through a chronological sequence of events.
+
+**Prerequisites:** Run the [Transaction & Account Data Model demo code](data-models/transactions/transactions-base-model.md#4-minimal-demo-code) first to create the base customer, accounts, and session data.
+
+```cypher
+//--------------------
+// Match existing base model entities (created by Transaction & Account Data Model demo)
+//--------------------
+MATCH (c:Customer {customerId: "CUS001"})
+MATCH (s:Session {sessionId: "SESS001"})
+MATCH (a:Account:Internal {accountNumber: "ACC001"})
+MATCH (originalPhone:Phone {number: "447971020304"})
+MATCH (originalEmail:Email {address: "john@example.com"})
+MATCH (originalAddr:Address {addressLine1: "123 High Street"})
+MATCH (uk:Country {code: "GB"})
+MATCH (us:Country {code: "US"})
+
+//--------------------
+// Create event-based extensions: Fraud Event Sequence
+//--------------------
+// Event 1: Fraudulent Authentication (attacker gains access to customer account)
+WITH c, s, a, originalPhone, originalEmail, originalAddr, uk, us
+CREATE (e1:Authentication {
+    method: "email",
+    status: "success",
+    createdAt: datetime("2024-03-01T14:30:00")
+})
+
+// Event 2: Change phone number (5 minutes later)
+WITH c, s, a, originalPhone, originalEmail, originalAddr, uk, us, e1
+CREATE (e2:ChangePhone {
+    createdAt: datetime("2024-03-01T14:35:00")
+})
+CREATE (newPhone:Phone {
+    number: "447800123456",
+    countryCode: "+44",
+    createdAt: datetime("2024-03-01T14:35:00")
+})
+
+// Replace customer's phone relationship (simulate successful account takeover)
+WITH c, s, a, originalPhone, originalEmail, originalAddr, uk, us, e1, e2, newPhone
+MATCH (c)-[r:HAS_PHONE]->(originalPhone) DELETE r
+CREATE (c)-[:HAS_PHONE {since: datetime("2024-03-01T14:35:00")}]->(newPhone)
+
+// Event 3: Change email address (2 minutes later)
+WITH c, s, a, originalPhone, originalEmail, originalAddr, uk, us, e1, e2, newPhone
+CREATE (e3:ChangeEmail {
+    createdAt: datetime("2024-03-01T14:37:00")
+})
+CREATE (newEmail:Email {
+    address: "attacker.new@protonmail.com",
+    domain: "protonmail.com",
+    createdAt: datetime("2024-03-01T14:37:00")
+})
+
+// Replace customer's email relationship (simulate successful account takeover)
+WITH c, s, a, originalPhone, originalEmail, originalAddr, uk, us, e1, e2, e3, newPhone, newEmail
+MATCH (c)-[r:HAS_EMAIL]->(originalEmail) DELETE r
+CREATE (c)-[:HAS_EMAIL {since: datetime("2024-03-01T14:37:00")}]->(newEmail)
+
+// Event 4: Change address (3 minutes later)
+WITH c, s, a, originalPhone, originalEmail, originalAddr, uk, us, e1, e2, e3, newPhone, newEmail
+CREATE (e4:ChangeAddress {
+    createdAt: datetime("2024-03-01T14:40:00")
+})
+CREATE (newAddr:Address {
+    addressLine1: "999 Fraud Street",
+    addressLine2: "Unit 13",
+    postTown: "London",
+    postCode: "E1 6XX",
+    region: "Greater London",
+    latitude: 51.5171,
+    longitude: -0.0574,
+    createdAt: datetime("2024-03-01T14:40:00")
+})
+
+// Update customer's address relationships (simulate successful account takeover)
+WITH c, s, a, originalPhone, originalEmail, originalAddr, uk, us, e1, e2, e3, e4, newPhone, newEmail, newAddr
+MATCH (c)-[r:HAS_ADDRESS]->(originalAddr) SET r.isCurrent = false, r.lastChangedAt = datetime("2024-03-01T14:40:00") DELETE r
+CREATE (c)-[:HAS_ADDRESS {
+    addedAt: datetime("2024-03-01T14:40:00"),
+    lastChangedAt: datetime("2024-03-01T14:40:00"),
+    isCurrent: true
+}]->(newAddr)
+CREATE (newAddr)-[:LOCATED_IN]->(uk)
+
+// Event 5: Add external account (10 minutes later)
+WITH c, s, a, originalPhone, originalEmail, originalAddr, uk, us, e1, e2, e3, e4, newPhone, newEmail, newAddr
+CREATE (e5:AddExternalAccount {
+    createdAt: datetime("2024-03-01T14:50:00")
+})
+CREATE (fraudAccount:Account:External:HighRiskJurisdiction {
+    accountNumber: "FRAUD123456789",
+    accountType: null,
+    openDate: null,
+    closedDate: null,
+    suspendedDate: null
+})
+
+// Event 6: Transfer money to external account (5 minutes later)
+WITH c, s, a, originalPhone, originalEmail, originalAddr, uk, us, e1, e2, e3, e4, e5, newPhone, newEmail, newAddr, fraudAccount
+CREATE (e6:Transfer {
+    createdAt: datetime("2024-03-01T14:55:00")
+})
+CREATE (fraudTransaction:Transaction {
+    transactionId: "TXN_FRAUD_001",
+    amount: 15000.00,
+    currency: "GBP",
+    date: datetime("2024-03-01T14:55:00"),
+    message: "Emergency transfer",
+    type: "SWIFT"
+})
+
+//--------------------
+// Create event-based relationships
+//--------------------
+// Chain events chronologically and create all remaining relationships
+WITH c, s, a, originalPhone, originalEmail, originalAddr, uk, us, e1, e2, e3, e4, e5, e6, newPhone, newEmail, newAddr, fraudAccount, fraudTransaction
+CREATE (e1)-[:NEXT]->(e2)-[:NEXT]->(e3)-[:NEXT]->(e4)-[:NEXT]->(e5)-[:NEXT]->(e6)
+CREATE (s)-[:HAS_AUTHENTICATION]->(e1)
+CREATE (s)-[:HAS_CHANGE_PHONE]->(e2)
+CREATE (s)-[:HAS_CHANGE_EMAIL]->(e3)
+CREATE (s)-[:HAS_CHANGE_ADDRESS]->(e4)
+CREATE (s)-[:HAS_ADD_EXTERNAL_ACCOUNT]->(e5)
+CREATE (s)-[:HAS_TRANSFER]->(e6)
+CREATE (e2)-[:OLD_PHONE]->(originalPhone)
+CREATE (e2)-[:NEW_PHONE]->(newPhone)
+CREATE (e3)-[:OLD_EMAIL]->(originalEmail)
+CREATE (e3)-[:NEW_EMAIL]->(newEmail)
+CREATE (e4)-[:OLD_ADDRESS]->(originalAddr)
+CREATE (e4)-[:NEW_ADDRESS]->(newAddr)
+CREATE (fraudAccount)-[:IS_HOSTED]->(us)
+CREATE (e5)-[:ADD_ACCOUNT]->(fraudAccount)
+CREATE (e6)-[:HAS_TRANSACTION]->(fraudTransaction)
+CREATE (a)-[:PERFORMS]->(fraudTransaction)-[:BENEFITS_TO]->(fraudAccount)
+CREATE (c)-[:CONNECTS]->(e1)
+```

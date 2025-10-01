@@ -15,36 +15,7 @@ These models serve as technical specifications for building robust graph solutio
 
 == Available Data Models
 
-=== Financial Services
+=== xref:data-models/transaction-graph/index.adoc[]
 
-==== xref:data-models/transactions/transactions-base-model.adoc[Transaction and Account Data Model]
-
-image::data-models/transaction-base-model/transactions-base-model.png[Transaction and Account Data Model Diagram,800,align="center"]
-
-*Key Features:*
-
-* Complete customer identity modelling (documents, biometrics, contact information)
-* Transaction flows with movement decomposition for complex payment scenarios
-* Digital access patterns (devices, IP addresses, sessions)
-* Account relationships and counterparty management
-* Comprehensive constraint definitions ensuring data integrity
-
-*Supported Use Cases:*
-
-* Account takeover fraud detection
-* Transaction monitoring and AML compliance
-* Entity resolution across customer touchpoints
-* Deposit analysis and money laundering detection
-* Synthetic identity fraud prevention
-
-== Using These Models
-
-Each data model includes:
-
-1. *Node and relationship definitions* with complete property specifications
-2. *Constraint and index recommendations* for performance and data quality
-3. *Executable demonstration code* for testing and validation
-4. *Integration guidance* for connecting to existing systems
-5. *Query patterns* for common business scenarios
-
-These models can be implemented directly or adapted to fit your specific data sources and business requirements.
+*** xref:data-models/transaction-graph/transaction/transaction-base-model.adoc[Base Model]
+*** xref:data-models/transaction-graph/fraud-event-sequence/fraud-event-sequence-model.adoc[Ext. Fraud Event Sequence]

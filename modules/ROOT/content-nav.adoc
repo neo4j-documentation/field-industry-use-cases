@@ -27,4 +27,6 @@
 ** xref:agnostic/it-service-graph/it-service-graph.adoc[]
 
 * xref:data-models/index.adoc[]
-** xref:data-models/transactions/transactions-base-model.adoc[]
+** xref:data-models/transaction-graph/index.adoc[]
+*** xref:data-models/transaction-graph/transaction/transaction-base-model.adoc[Base Model]
+*** xref:data-models/transaction-graph/fraud-event-sequence/fraud-event-sequence-model.adoc[Ext. Fraud Event Sequence]

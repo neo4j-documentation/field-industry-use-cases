@@ -1,0 +1,570 @@
+{
+  "style": {
+    "font-family": "sans-serif",
+    "background-color": "#ffffff",
+    "background-image": "",
+    "background-size": "100%",
+    "node-color": "#ffffff",
+    "border-width": 4,
+    "border-color": "#000000",
+    "radius": 50,
+    "node-padding": 5,
+    "node-margin": 2,
+    "outside-position": "auto",
+    "node-icon-image": "",
+    "node-background-image": "",
+    "icon-position": "inside",
+    "icon-size": 64,
+    "caption-position": "inside",
+    "caption-max-width": 200,
+    "caption-color": "#000000",
+    "caption-font-size": 50,
+    "caption-font-weight": "normal",
+    "label-position": "inside",
+    "label-display": "pill",
+    "label-color": "#000000",
+    "label-background-color": "#ffffff",
+    "label-border-color": "#000000",
+    "label-border-width": 4,
+    "label-font-size": 40,
+    "label-padding": 5,
+    "label-margin": 4,
+    "directionality": "directed",
+    "detail-position": "inline",
+    "detail-orientation": "parallel",
+    "arrow-width": 5,
+    "arrow-color": "#000000",
+    "margin-start": 5,
+    "margin-end": 5,
+    "margin-peer": 20,
+    "attachment-start": "normal",
+    "attachment-end": "normal",
+    "relationship-icon-image": "",
+    "type-color": "#000000",
+    "type-background-color": "#ffffff",
+    "type-border-color": "#000000",
+    "type-border-width": 0,
+    "type-font-size": 16,
+    "type-padding": 5,
+    "property-position": "outside",
+    "property-alignment": "colon",
+    "property-color": "#000000",
+    "property-font-size": 16,
+    "property-font-weight": "normal"
+  },
+  "nodes": [
+    {
+      "id": "n0",
+      "position": {
+        "x": 20.592540289393124,
+        "y": 728.8266980381296
+      },
+      "caption": "",
+      "labels": [
+        "Session"
+      ],
+      "properties": {},
+      "style": {}
+    },
+    {
+      "id": "n1",
+      "position": {
+        "x": 422.7445518581319,
+        "y": 50
+      },
+      "caption": "",
+      "labels": [
+        "Authentication"
+      ],
+      "properties": {},
+      "style": {}
+    },
+    {
+      "id": "n2",
+      "position": {
+        "x": 422.7445518581319,
+        "y": 478.4834118911504
+      },
+      "caption": "",
+      "labels": [
+        "ChangePhone"
+      ],
+      "properties": {},
+      "style": {}
+    },
+    {
+      "id": "n3",
+      "position": {
+        "x": 832.5372970796209,
+        "y": 478.4834118911504
+      },
+      "caption": "",
+      "labels": [
+        "Phone"
+      ],
+      "properties": {},
+      "style": {}
+    },
+    {
+      "id": "n4",
+      "position": {
+        "x": 832.5372970796209,
+        "y": 603.65505496464
+      },
+      "caption": "",
+      "labels": [
+        "Phone"
+      ],
+      "properties": {},
+      "style": {}
+    },
+    {
+      "id": "n5",
+      "position": {
+        "x": 422.7445518581319,
+        "y": 728.8266980381297
+      },
+      "caption": "",
+      "labels": [
+        "ChangeEmail"
+      ],
+      "properties": {},
+      "style": {}
+    },
+    {
+      "id": "n6",
+      "position": {
+        "x": 832.5372970796209,
+        "y": 728.8266980381297
+      },
+      "caption": "",
+      "labels": [
+        "Email"
+      ],
+      "properties": {},
+      "style": {}
+    },
+    {
+      "id": "n7",
+      "position": {
+        "x": 832.5372970796209,
+        "y": 853.9983411116193
+      },
+      "caption": "",
+      "labels": [
+        "Email"
+      ],
+      "properties": {},
+      "style": {}
+    },
+    {
+      "id": "n8",
+      "position": {
+        "x": 422.7445518581319,
+        "y": 979.1699841851089
+      },
+      "caption": "",
+      "labels": [
+        "ChangeAddress"
+      ],
+      "properties": {},
+      "style": {}
+    },
+    {
+      "id": "n9",
+      "position": {
+        "x": 832.5372970796209,
+        "y": 979.1699841851089
+      },
+      "caption": "",
+      "labels": [
+        "Address"
+      ],
+      "properties": {},
+      "style": {}
+    },
+    {
+      "id": "n10",
+      "position": {
+        "x": 832.5372970796209,
+        "y": 1104.3416272585987
+      },
+      "caption": "",
+      "labels": [
+        "Address"
+      ],
+      "properties": {},
+      "style": {}
+    },
+    {
+      "id": "n11",
+      "position": {
+        "x": 422.7445518581319,
+        "y": 1244.7180197808862
+      },
+      "caption": "",
+      "labels": [
+        "AddExternalAccount"
+      ],
+      "properties": {},
+      "style": {}
+    },
+    {
+      "id": "n12",
+      "position": {
+        "x": 832.5372970796209,
+        "y": 1246.0626906269072
+      },
+      "caption": "",
+      "labels": [
+        "Account"
+      ],
+      "properties": {},
+      "style": {}
+    },
+    {
+      "id": "n13",
+      "position": {
+        "x": 422.7445518581319,
+        "y": 1539.695040366257
+      },
+      "caption": "",
+      "labels": [
+        "Transfer"
+      ],
+      "properties": {},
+      "style": {}
+    },
+    {
+      "id": "n14",
+      "position": {
+        "x": 832.5372970796209,
+        "y": 1539.695040366257
+      },
+      "caption": "",
+      "labels": [
+        "Transaction"
+      ],
+      "properties": {},
+      "style": {}
+    },
+    {
+      "id": "n15",
+      "position": {
+        "x": 1040.1667227560552,
+        "y": 1332.0656146898227
+      },
+      "caption": "",
+      "labels": [
+        "Account"
+      ],
+      "properties": {},
+      "style": {}
+    },
+    {
+      "id": "n16",
+      "position": {
+        "x": 1756.273361512084,
+        "y": 1112.6163374060081
+      },
+      "caption": "",
+      "labels": [
+        "Customer"
+      ],
+      "properties": {},
+      "style": {}
+    },
+    {
+      "id": "n17",
+      "position": {
+        "x": 422.7445518581319,
+        "y": 1882.5295546318391
+      },
+      "caption": "",
+      "labels": [
+        "Authentication"
+      ],
+      "properties": {},
+      "style": {}
+    },
+    {
+      "id": "n18",
+      "position": {
+        "x": 20.592540289393124,
+        "y": 1882.5295546318391
+      },
+      "caption": "",
+      "labels": [
+        "Session"
+      ],
+      "properties": {},
+      "style": {}
+    }
+  ],
+  "relationships": [
+    {
+      "id": "n0",
+      "fromId": "n2",
+      "toId": "n3",
+      "type": "OLD_PHONE",
+      "properties": {},
+      "style": {}
+    },
+    {
+      "id": "n1",
+      "fromId": "n2",
+      "toId": "n4",
+      "type": "NEW_PHONE",
+      "properties": {},
+      "style": {}
+    },
+    {
+      "id": "n2",
+      "fromId": "n2",
+      "toId": "n5",
+      "type": "NEXT",
+      "properties": {},
+      "style": {}
+    },
+    {
+      "id": "n3",
+      "fromId": "n5",
+      "toId": "n6",
+      "type": "OLD_EMAIL",
+      "properties": {},
+      "style": {}
+    },
+    {
+      "id": "n4",
+      "fromId": "n5",
+      "toId": "n7",
+      "type": "NEW_EMAIL",
+      "properties": {},
+      "style": {}
+    },
+    {
+      "id": "n5",
+      "fromId": "n5",
+      "toId": "n8",
+      "type": "NEXT",
+      "properties": {},
+      "style": {}
+    },
+    {
+      "id": "n6",
+      "fromId": "n8",
+      "toId": "n9",
+      "type": "OLD_ADDRESS",
+      "properties": {},
+      "style": {}
+    },
+    {
+      "id": "n7",
+      "fromId": "n8",
+      "toId": "n10",
+      "type": "NEW_ADDRESS",
+      "properties": {},
+      "style": {}
+    },
+    {
+      "id": "n8",
+      "fromId": "n8",
+      "toId": "n11",
+      "type": "NEXT",
+      "properties": {},
+      "style": {}
+    },
+    {
+      "id": "n9",
+      "fromId": "n11",
+      "toId": "n12",
+      "type": "ADD_ACCOUNT",
+      "properties": {},
+      "style": {}
+    },
+    {
+      "id": "n10",
+      "fromId": "n11",
+      "toId": "n13",
+      "type": "NEXT",
+      "properties": {},
+      "style": {}
+    },
+    {
+      "id": "n11",
+      "fromId": "n13",
+      "toId": "n14",
+      "type": "HAS_TRANSACTION",
+      "properties": {},
+      "style": {}
+    },
+    {
+      "id": "n12",
+      "fromId": "n15",
+      "toId": "n14",
+      "type": "PERFORMS",
+      "properties": {},
+      "style": {}
+    },
+    {
+      "id": "n13",
+      "fromId": "n16",
+      "toId": "n4",
+      "type": "HAS_PHONE",
+      "properties": {},
+      "style": {}
+    },
+    {
+      "id": "n14",
+      "fromId": "n16",
+      "toId": "n7",
+      "type": "HAS_EMAIL",
+      "properties": {},
+      "style": {}
+    },
+    {
+      "id": "n15",
+      "fromId": "n16",
+      "toId": "n10",
+      "type": "HAS_ADDRESS",
+      "properties": {},
+      "style": {}
+    },
+    {
+      "id": "n16",
+      "fromId": "n16",
+      "toId": "n12",
+      "type": "HAS_ACCOUNT",
+      "properties": {},
+      "style": {}
+    },
+    {
+      "id": "n17",
+      "fromId": "n13",
+      "toId": "n17",
+      "type": "NEXT",
+      "properties": {},
+      "style": {}
+    },
+    {
+      "id": "n18",
+      "fromId": "n1",
+      "toId": "n2",
+      "type": "NEXT",
+      "properties": {},
+      "style": {}
+    },
+    {
+      "id": "n19",
+      "fromId": "n14",
+      "toId": "n12",
+      "type": "BENEFITS_TO",
+      "properties": {},
+      "style": {}
+    },
+    {
+      "id": "n20",
+      "fromId": "n16",
+      "toId": "n15",
+      "type": "HAS_ACCOUNT",
+      "properties": {},
+      "style": {}
+    },
+    {
+      "id": "n21",
+      "fromId": "n16",
+      "toId": "n1",
+      "type": "CONNECTS",
+      "properties": {},
+      "style": {}
+    },
+    {
+      "id": "n22",
+      "fromId": "n16",
+      "toId": "n17",
+      "type": "CONNECTS",
+      "properties": {},
+      "style": {}
+    },
+    {
+      "id": "n23",
+      "type": "HAS_AUTHENTICATION",
+      "style": {},
+      "properties": {},
+      "fromId": "n0",
+      "toId": "n1"
+    },
+    {
+      "id": "n24",
+      "fromId": "n0",
+      "toId": "n2",
+      "type": "HAS_CHANGE_PHONE",
+      "properties": {},
+      "style": {}
+    },
+    {
+      "id": "n25",
+      "fromId": "n0",
+      "toId": "n5",
+      "type": "HAS_CHANGE_EMAIL",
+      "properties": {},
+      "style": {}
+    },
+    {
+      "id": "n26",
+      "fromId": "n0",
+      "toId": "n8",
+      "type": "HAS_CHANGE_ADDRESS",
+      "properties": {},
+      "style": {}
+    },
+    {
+      "id": "n27",
+      "fromId": "n0",
+      "toId": "n11",
+      "type": "HAS_ADD_EXTERNAL_ACCOUNT",
+      "properties": {},
+      "style": {}
+    },
+    {
+      "id": "n28",
+      "fromId": "n0",
+      "toId": "n13",
+      "type": "HAS_TRANSFER",
+      "properties": {},
+      "style": {}
+    },
+    {
+      "id": "n29",
+      "type": "HAS_AUTHENTICATION",
+      "style": {},
+      "properties": {},
+      "fromId": "n18",
+      "toId": "n17"
+    },
+    {
+      "id": "n30",
+      "type": "HAS_PHONE",
+      "style": {},
+      "properties": {},
+      "fromId": "n16",
+      "toId": "n3"
+    },
+    {
+      "id": "n31",
+      "type": "HAS_EMAIL",
+      "style": {},
+      "properties": {},
+      "fromId": "n16",
+      "toId": "n6"
+    },
+    {
+      "id": "n32",
+      "type": "HAS_ADDRESS",
+      "style": {},
+      "properties": {},
+      "fromId": "n16",
+      "toId": "n9"
+    }
+  ]
+}
