@@ -1,0 +1,9 @@
+= Fraud Whitepapers
+
+Fraud detection and prevention represent critical challenges for financial institutions worldwide. The sophistication of fraudulent activities continues to evolve, requiring advanced analytical approaches and real-time detection capabilities. This section provides in-depth whitepapers that dig into really important fraud-based use cases, exploring how graph technology and advanced algorithms can identify and mitigate fraudulent behaviour.
+
+These whitepapers examine specific fraud scenarios, offering detailed technical guidance on implementing graph-based solutions for fraud detection. Each whitepaper combines practical implementations with strategic insights, helping organisations build robust fraud prevention systems that adapt to emerging threats whilst minimising false positives and maintaining operational efficiency.
+
+== Use Cases
+
+* xref:whitepapers/finserv/fraud/mule-account-mitigation.adoc[Mule Account Mitigation]

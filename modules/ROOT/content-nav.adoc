@@ -21,6 +21,10 @@
 ** xref:insurance/claims-fraud.adoc[]
 ** xref:insurance/quote-fraud.adoc[]
 
+* xref:whitepapers/index.adoc[Whitepapers]
+** xref:whitepapers/finserv/index.adoc[Financial Services]
+*** xref:whitepapers/finserv/fraud/index.adoc[Fraud]
+**** xref:whitepapers/finserv/fraud/mule-account-mitigation.adoc[Mule Account Mitigation]
 
 * xref:agnostic/index.adoc[]
 ** xref:agnostic/entity-resolution.adoc[Entity Resolution]

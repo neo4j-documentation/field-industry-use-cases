@@ -1,0 +1,11 @@
+= Financial Services Whitepapers
+
+Financial services organisations face increasingly complex challenges in fraud detection, risk management, and regulatory compliance. This section contains whitepapers that provide in-depth analysis and practical guidance on key topics within the financial services industry.
+
+These whitepapers combine theoretical frameworks with practical implementations, demonstrating how graph technology can address critical business challenges. Each whitepaper explores specific use cases, providing technical insights and strategic recommendations for financial institutions looking to enhance their capabilities.
+
+== Fraud
+
+Explore comprehensive whitepapers focused on fraud detection and prevention strategies:
+
+* xref:whitepapers/finserv/fraud/index.adoc[]

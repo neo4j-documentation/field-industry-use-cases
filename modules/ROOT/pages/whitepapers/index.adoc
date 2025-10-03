@@ -1,0 +1,9 @@
+= Whitepapers
+
+This section contains industry-specific whitepapers that provide in-depth analysis and practical guidance on critical business challenges. These whitepapers combine theoretical frameworks with practical implementations, demonstrating how graph technology can address complex problems across various industries.
+
+Each whitepaper explores specific use cases, providing technical insights and strategic recommendations for organisations looking to enhance their capabilities through graph-based solutions.
+
+== Financial Services
+
+* xref:whitepapers/finserv/index.adoc[]

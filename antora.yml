@@ -1,6 +1,6 @@
 name: industry-use-cases
 title: Neo4j Industry Use Cases
-version: ~
+version: '1.0'
 start_page: ROOT:index.adoc
 nav:
 - modules/ROOT/content-nav.adoc
