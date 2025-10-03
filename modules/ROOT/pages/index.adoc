@@ -8,6 +8,11 @@ Explore the potential of Neo4j's graph database with our industry-specific use c
 * xref:insurance/index.adoc[]
 * xref:agnostic/index.adoc[]
 
-== 2. Data Models
+== 2. Whitepapers
+
+=== Financial Services
+*** xref:whitepapers/finserv/fraud/mule-account-mitigation.adoc[Mule Account Mitigation]
+
+== 3. Data Models
 
 * xref:data-models/index.adoc[]
