@@ -28,7 +28,7 @@
 *** xref:manufacturing/product-design-and-engineering/configurable-bom.adoc[Configurable B.O.M.]
 * xref:manufacturing/product-design-and-engineering/engineering-traceability.adoc[Engineering Traceability]   
 ** xref:manufacturing/production-planning-and-optimization/index.adoc[]
-*** xref:manufacturing/production-planning-and-optimization/process-monitoring-and-cpa.adoc[]
+*** xref:manufacturing/production-planning-and-optimization/process-monitoring-and-cpa.adoc[Process Monitoring and CPA]
 
 * xref:agnostic/index.adoc[]
 ** xref:agnostic/entity-resolution.adoc[Entity Resolution]

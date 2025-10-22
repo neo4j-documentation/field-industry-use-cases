@@ -1,4 +1,4 @@
-= Product design and Engineering
+= Product Design and Engineering
 
 == Bill of Material
 
