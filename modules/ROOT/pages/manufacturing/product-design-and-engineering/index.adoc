@@ -1,0 +1,5 @@
+= Product design and Engineering
+
+== Bill of Material
+
+* xref:manufacturing/product-design-and-engineering/configurable-bom.adoc[]

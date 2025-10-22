@@ -1,0 +1,7 @@
+= Manufacturing
+
+Neo4j is good for manufacturing (todo)
+
+== Supply Chain and Logistics Management
+
+* xref:manufacturing/supply-chain-management/ev-route-planning.adoc[]
