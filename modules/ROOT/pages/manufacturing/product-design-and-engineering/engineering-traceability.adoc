@@ -2,7 +2,7 @@
 
 == 1. Introduction
 
-In the competitive landscape of telecommunications manufacturing, ensuring end-to-end traceability from customer requirements to final product quality is critical for compliance, efficiency, and innovation. This use case demonstrates a traceability platform for 5G routers, integrating data from Salesforce (SFDC), DOORS (requirements management), Pront (design specs), and Quality Centres. Powered by Neo4j, it connects siloed data to trace requirements, designs, test cases, and quality issues in real time. This enables manufacturers to identify bottlenecks, perform root cause analysis, and assess impacts, reducing time-to-market and improving product reliability.
+In the competitive landscape of manufacturing, ensuring end-to-end traceability from customer requirements to final product quality is critical for compliance, efficiency, and innovation. This use case demonstrates a traceability platform for 5G routers, integrating data from Salesforce (SFDC), DOORS (requirements management), Pront (design specs), and Quality Centres. Powered by Neo4j, it connects siloed data to trace requirements, designs, test cases, and quality issues in real time. This enables manufacturers to identify bottlenecks, perform root cause analysis, and assess impacts, reducing time-to-market and improving product reliability.
 
 == 2. Scenario
 
