@@ -25,6 +25,9 @@ To grasp the importance of the Configurable Bill of Materials use case, consider
 
 These scenarios highlight the need for an advanced solution like Neo4j's Configurable Bill of Materials with Cypher 25, which leverages graph technology to model, resolve, and visualize product variants, delivering essential insights for business and technical users in manufacturing.
 
+.Gemini-generated Mountain Bike CBOM Example
+image::manufacturing/cbom-bike-gemini.png[]
+
 == 3. Solution
 
 Advanced graph databases like Neo4j are essential for navigating the complexities of interconnected product data in manufacturing. They excel at representing hierarchical structures, dependencies, and configurable options, making it easy to resolve variants declaratively. By modeling data as graphs, organizations can apply constraints, score options, and prune paths—improving decision-making, customization efficiency, and manufacturing agility.
