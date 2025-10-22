@@ -47,7 +47,7 @@ This section demonstrates Cypher queries on an example graph. The goal is to sho
 
 === 4.1. Data Model
 
-image::manufacturing/traceability-model.png[]
+image::manufacturing/engineering-traceability-model.png[]
 
 ==== 4.1.1 Required Data Fields
 
@@ -84,9 +84,6 @@ Below are the fields required to get started:
 * `IMPLEMENTED_BY` Relationship: From Requirement to Design
 * `DEPENDS_ON` Relationship: Between Designs
 * `TESTED_BY` Relationship: From Design to TestCase
-
-.Data Model
-image::manufacturing/engineering-traceability-model.png[]
 
 ==== 4.1.2 Required Parameters
 
