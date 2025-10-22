@@ -202,18 +202,8 @@ SET r.hourly_expected_speed_kph =
 
 == 5. Cypher Queries
 
-=== 5.1. Match a Simple Path Without Constraints
-To find a basic path from source to target without stateful constraints, use this query:
-[source, cypher, role=noheader]
-----
-// Match a simple path from Paris to Marseille
-MATCH p = (a:Geo {name: "Paris"})-[:ROAD*]->(b:Geo {name: "Marseille"})
-RETURN p
-LIMIT 1
-----
-
-=== 5.2. Apply Spatial Pre-Pruning to Avoid Detours
-This query incorporates spatial filtering to limit paths to reasonable detours:
+=== 5.1. Apply Spatial Pre-Pruning to Pattern to Avoid Detours
+This pattern incorporates spatial filtering to limit paths to reasonable detours:
 [source, cypher, role=noheader]
 ----
 MATCH REPEATABLE ELEMENTS p = (a:Geo {name: $source_geo_name})
@@ -225,7 +215,7 @@ MATCH REPEATABLE ELEMENTS p = (a:Geo {name: $source_geo_name})
   (b:Geo {name: $target_geo_name})
 ----
 
-=== 5.3. Full Stateful Route Planning with Cypher 25
+=== 5.2. Full Stateful Route Planning with Cypher 25
 Using Cypher 25 for declarative, state-aware traversal with pruning to generate all valid paths:
 [source, cypher, role=noheader]
 ----
@@ -275,7 +265,7 @@ WHERE allReduce(
 RETURN c, p
 ----
 
-=== 5.4. Compute Time and Energy Consumption to Select the Best Path
+=== 5.3. Compute Time and Energy Consumption to Select the Best Path
 This query is chained to the previous one with `NEXT` and calculates total duration and energy use for a given path:
 [source, cypher, role=noheader]
 ----
@@ -303,3 +293,5 @@ ORDER BY final_values.time_in_min ASC,
          size(relationships(p)) ASC
 LIMIT 1
 ----
+.Optimal Route from Le Havre to Nice with Car2
+image::manufacturing/ev-routing-path.png[]

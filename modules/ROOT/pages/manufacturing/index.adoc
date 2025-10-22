@@ -9,6 +9,7 @@ With its scalability and adaptability, Neo4j efficiently handles vast datasets w
 
 == Product Design and Engineering
 * xref:manufacturing/product-design-and-engineering/configurable-bom.adoc[]
+* xref:manufacturing/product-design-and-engineering/engineering-traceability.adoc[]
 
 == Production Planning and Optimization
 * xref:manufacturing/production-planning-and-optimization/process-monitoring-and-cpa.adoc[]

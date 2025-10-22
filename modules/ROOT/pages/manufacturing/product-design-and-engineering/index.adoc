@@ -3,3 +3,7 @@
 == Bill of Material
 
 * xref:manufacturing/product-design-and-engineering/configurable-bom.adoc[]
+
+== Traceability
+
+* xref:manufacturing/product-design-and-engineering/engineering-traceability.adoc[]
