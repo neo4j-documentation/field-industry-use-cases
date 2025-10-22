@@ -5,3 +5,11 @@ Neo4j is good for manufacturing (todo)
 == Supply Chain and Logistics Management
 
 * xref:manufacturing/supply-chain-management/ev-route-planning.adoc[]
+
+== Product Design and Engineering
+
+* xref:manufacturing/product-design-and-engineering/configurable-bom.adoc[]
+
+== Production Planning and Optimization
+
+* xref:manufacturing/production-planning-and-optimization/process-monitoring-and-cpa.adoc[]
