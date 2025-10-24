@@ -2,7 +2,7 @@
 
 == 1. Introduction
 
-In the dynamic world of manufacturing and product design, managing configurable bill of materials (CBOMs, often referred to as 150% BOMs) is crucial for handling product variants, customization, and supply chain efficiency. The Configurable Bill of Materials use case addresses a core business challenge: declaratively resolving optimal product configurations from a superset of components while respecting constraints, scoring criteria, and dependencies. By utilizing Neo4j's Cypher 25, organizations can model complex graph structures to traverse and prune variant options, ensuring cost-effective, lightweight, and compliant product builds. These capabilities enable better inventory management, faster time-to-market for customized products, and reduced operational risks in manufacturing environments.
+In the dynamic world of manufacturing and product design, managing configurable bill of materials (CBOMs, often referred to as https://plmphilosophy483489853.wordpress.com/2019/07/07/what-is-mean-by-100-120-and-150-bom/[150% BOMs]) is crucial for handling product variants, customization, and supply chain efficiency. The Configurable Bill of Materials use case addresses a core business challenge: declaratively resolving optimal product configurations from a superset of components while respecting constraints, scoring criteria, and dependencies. By utilizing Neo4j's Cypher 25, organizations can model complex graph structures to traverse and prune variant options, ensuring cost-effective, lightweight, and compliant product builds. These capabilities enable better inventory management, faster time-to-market for customized products, and reduced operational risks in manufacturing environments.
 
 == 2. Scenario
 
@@ -19,18 +19,25 @@ To grasp the importance of the Configurable Bill of Materials use case, consider
    * Traditional systems struggle with dynamic constraints, complicating the minimization of supply chain risks.
 
 3. *Compliance and Quality Assurance:*
-   * Regulatory requirements mandate traceable configurations for safety and environmental standards.
+   * Regulatory requirements from the following list mandate traceable configurations for safety and environmental standards that can hardly be met without a highly-efficient configurable BOM management system:
+    ** https://eur-lex.europa.eu/eli/dir/2011/65/oj/eng[RoHS]
+    ** https://eur-lex.europa.eu/eli/reg/2006/1907/oj/eng[REACH]
+    ** https://eur-lex.europa.eu/eli/dir/2006/42/oj/eng[Machinery Directive]
+    ** https://eur-lex.europa.eu/eli/reg/2023/1230/oj/eng[EU Machinery Regulation]
+    ** https://eur-lex.europa.eu/eli/dir/2012/19/oj/eng[WEEE]
+    ** https://eur-lex.europa.eu/eli/reg/2024/2847/oj/eng[Cyber Resilience Act]
+    ** https://eur-lex.europa.eu/eli/reg/2019/1021/oj/eng[POPs]).
    * Without unified tools, ensuring all variants meet constraints is time-consuming and error-prone.
    * Organizations face penalties and reputational damage if they cannot validate optimized, constraint-satisfying BOMs.
 
-These scenarios highlight the need for an advanced solution like Neo4j's Configurable Bill of Materials with Cypher 25, which leverages graph technology to model, resolve, and visualize product variants, delivering essential insights for business and technical users in manufacturing.
+These scenarios highlight the need for an advanced solution like *Neo4j's Configurable Bill of Materials with Cypher 25*, which leverages graph technology to model, resolve, and visualize product variants, delivering essential insights for business and technical users in manufacturing.
 
 .Gemini-generated Mountain Bike CBOM Example
 image::manufacturing/cbom-bike-gemini.png[]
 
 == 3. Solution
 
-Advanced graph databases like Neo4j are essential for navigating the complexities of interconnected product data in manufacturing. They excel at representing hierarchical structures, dependencies, and configurable options, making it easy to resolve variants declaratively. By modeling data as graphs, organizations can apply constraints, score options, and prune paths—improving decision-making, customization efficiency, and manufacturing agility.
+Advanced graph databases like Neo4j are essential for navigating the complexities of interconnected product data in manufacturing. They excel at representing hierarchical structures, dependencies, and configurable options, making it easy to resolve variants declaratively, which means you can ask the database to resolve configuration variants (like valid product combinations or dependencies) by simply describing the relationships and constraints, instead of writing complex procedural code. By modeling data as graphs, organizations can apply constraints, score options, and prune paths, which improves decision-making, customization efficiency, and manufacturing agility.
 
 === 3.1. How Graph Databases Can Help?
 
@@ -50,7 +57,7 @@ These features position graph databases as key to gaining insights and addressin
 
 == 4. Modelling
 
-This section demonstrates Cypher queries on an example graph. The goal is to show query structures and guide data modeling in production. We'll use a small graph with several nodes, based on the data model below:
+This section describes an example graph data model and provides the data ingestion script. The goal is to guide data modeling in production and set up a small graph with several nodes, which will be used to demonstrate Cypher query structures in the following section.
 
 === 4.1. Data Model
 
@@ -179,7 +186,7 @@ These Cypher queries are compatible with Neo4j Version 2025.06+ and Cypher 25.
 
 === 5.1. Get Variant
 
-This query resolves the variant by creating resolved links based on constraints:
+This query resolves the variant by creating resolved links based on constraints. It traverses the BOM from the Product to Parts, applying allow/deny list constraints at each `ConfigGroup` level to filter options. The resulting valid paths are then used to create `RESOLVED_LINK` relationships, capturing the selected components for the specified variant.
 
 [source, cypher, role=noheader]
 ----
@@ -227,7 +234,18 @@ image::manufacturing/cbom-unpruned-loose-bom.png[]
 
 === 5.3. Prune Not Optimal Branches
 
-This query prunes suboptimal branches using scoring, converging in iterations (useful for loose constraints):
+This query, ideal for handling loose constraints, recursively prunes unresolved branches from the bottom up using a scoring mechanism. It evaluates options based on a provided scoring strategy parameter:
+
+* For each unresolved `ConfigGroup`, it calculates the cumulative cost and weight across each option branch.
+* It then applies the scoring strategy to rank the options.
+  ** Scoring relies on weighted factors (e.g., cost, weight).
+  ** The strategy consists of a list of pairs, each with a weight property name and a multiplication factor.
+  ** A negative factor favors lower values (e.g., for cost or weight),
+  ** while a positive factor favors higher values (e.g., for performance).
+  ** The absolute value of the factor reflects the relative importance of that field in the score.
+  ** Higher overall scores signify superior options.
+  ** Only the top-scoring option is kept.
+* Ultimately, it preserves the highest-scoring option and removes the rest.
 
 [source, cypher, role=noheader]
 ----
