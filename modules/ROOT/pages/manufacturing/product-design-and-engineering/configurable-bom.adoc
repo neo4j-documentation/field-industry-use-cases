@@ -163,7 +163,7 @@ Three parameter sets are used to demonstrate different constraint scenarios:
                     type: "string",
                     description: "frame material",
                     deny_list: [
-                        "Carbon Fiber"
+                        "Carbon Fiber", "Steel"
                     ]
                 }
             ]
