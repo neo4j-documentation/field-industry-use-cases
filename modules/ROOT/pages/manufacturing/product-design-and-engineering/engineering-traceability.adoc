@@ -320,6 +320,11 @@ CREATE (des31)-[:DEPENDS_ON]->(des28)
 
 == 5. Cypher Queries
 
+[NOTE]
+====
+These Cypher queries are compatible with Neo4j Version 5.9+ and Cypher 5 or 25.
+====
+
 === 5.1. Show Graph Model
 
 This query visualizes the schema:

@@ -101,7 +101,7 @@ Below are the fields required to get started:
 Three parameter sets are used to demonstrate different constraint scenarios:
 
 * Well-Constrained Variant (leads to a perfectly resolved BOM):
-[source, cypher, role=noheader]
+[source, json]
 ----
 :params {
     id_variant: "awesome_bike_well_constrained", 
@@ -238,7 +238,7 @@ Three parameter sets are used to demonstrate different constraint scenarios:
 ----
 
 * Loose Constraints Variant (concurrent branches resolved through scoring-led pruning):
-[source, cypher, role=noheader]
+[source, json]
 ----
 :params {
     id_variant: "awesome_bike_loose_constraints", 
@@ -375,7 +375,7 @@ Three parameter sets are used to demonstrate different constraint scenarios:
 ----
 
 * Too-Constrained Variant (some requirements not satisfied, e.g., no color):
-[source, cypher, role=noheader]
+[source, json]
 ----
 :params {
     id_variant: "awesome_bike_no_color", 
@@ -569,6 +569,11 @@ CREATE (start)-[r:HAS_OPTION]->(end) SET r += row.properties;
 ----
 
 == 5. Cypher Queries
+
+[NOTE]
+====
+These Cypher queries are compatible with Neo4j Version 2025.06+ and Cypher 25.
+====
 
 === 5.1. Get Variant
 

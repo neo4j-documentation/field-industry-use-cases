@@ -202,6 +202,11 @@ SET r.hourly_expected_speed_kph =
 
 == 5. Cypher Queries
 
+[NOTE]
+====
+These Cypher queries are compatible with Neo4j Version 2025.08+ and Cypher 25.
+====
+
 === 5.1. Apply Spatial Pre-Pruning to Pattern to Avoid Detours
 This pattern incorporates spatial filtering to limit paths to reasonable detours:
 [source, cypher, role=noheader]

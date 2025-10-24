@@ -138,6 +138,11 @@ CREATE (t9)-[:WAITS]->(t4), (t13)-[:WAITS]->(t9), (t14)-[:WAITS]->(t13);
 
 == 5. Cypher Queries
 
+[NOTE]
+====
+These Cypher queries are compatible with Neo4j Version 5.9+ and Cypher 5 or 25.
+====
+
 === 5.1. Show the Graph Model
 This query visualizes the overall schema:
 [source, cypher, role=noheader]
