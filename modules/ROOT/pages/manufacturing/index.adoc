@@ -1,0 +1,15 @@
+= Manufacturing
+
+Manufacturers can significantly benefit from Neo4j's graph database, which excels at handling complex scenarios and resolving operational challenges. It enables the discovery of detailed links in manufacturing data, providing key insights to streamline supply chains, advance predictive maintenance, and strengthen quality control.
+
+Thanks to its scalable and flexible design, Neo4j manages large datasets effectively and promotes agile operations. By linking varied data elements, it helps manufacturers achieve a comprehensive understanding of their workflows, increase productivity, and support informed choices that meet sector standards and output objectives.
+
+== Supply Chain and Logistics Management
+* xref:manufacturing/supply-chain-management/ev-route-planning.adoc[]
+
+== Product Design and Engineering
+* xref:manufacturing/product-design-and-engineering/configurable-bom.adoc[]
+* xref:manufacturing/product-design-and-engineering/engineering-traceability.adoc[]
+
+== Production Planning and Optimization
+* xref:manufacturing/production-planning-and-optimization/process-monitoring-and-cpa.adoc[]

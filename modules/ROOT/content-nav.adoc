@@ -21,6 +21,15 @@
 ** xref:insurance/claims-fraud.adoc[]
 ** xref:insurance/quote-fraud.adoc[]
 
+* xref:manufacturing/index.adoc[]
+** xref:manufacturing/supply-chain-management/index.adoc[]
+*** xref:manufacturing/supply-chain-management/ev-route-planning.adoc[E.V. Route Planning]
+** xref:manufacturing/product-design-and-engineering/index.adoc[]
+*** xref:manufacturing/product-design-and-engineering/configurable-bom.adoc[Configurable B.O.M.]
+*** xref:manufacturing/product-design-and-engineering/engineering-traceability.adoc[Engineering Traceability]   
+** xref:manufacturing/production-planning-and-optimization/index.adoc[]
+*** xref:manufacturing/production-planning-and-optimization/process-monitoring-and-cpa.adoc[Process Monitoring and CPA]
+
 * xref:agnostic/index.adoc[]
 ** xref:agnostic/entity-resolution.adoc[Entity Resolution]
 ** xref:agnostic/it-service-graph/it-service-graph.adoc[]
