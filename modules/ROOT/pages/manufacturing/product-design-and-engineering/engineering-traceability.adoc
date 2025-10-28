@@ -1,0 +1,456 @@
+= Traceability in Manufacturing
+
+== 1. Introduction
+
+In the competitive landscape of manufacturing, ensuring end-to-end traceability from customer requirements to final product quality is critical for compliance, efficiency, and innovation. This use case demonstrates a traceability platform for 5G routers, integrating data from Salesforce (SFDC), DOORS (requirements management), Pront (design specs), and Quality Centres. Powered by Neo4j, it connects siloed data to trace requirements, designs, test cases, and quality issues in real time. This enables manufacturers to identify bottlenecks, perform root cause analysis, and assess impacts, reducing time-to-market and improving product reliability.
+
+== 2. Scenario
+
+To appreciate the value of traceability in manufacturing, consider challenges in producing complex products like 5G routers, where data silos lead to inefficiencies and risks. The following three key areas illustrate these issues:
+
+1. *Data Silo Integration:*
+   * Customer requests in SFDC are disconnected from engineering requirements in DOORS, causing misalignments.
+   * Design specs in Pront and test results in Quality Centres are isolated, leading to overlooked dependencies.
+   * Without unified tracing, identifying how a customer need translates to a tested feature is time-consuming.
+
+2. *Root Cause and Impact Analysis:*
+   * Failed tests (e.g., band-switching issues) are hard to link back to requirements or designs.
+   * Changes in one area (e.g., a design update) can have unknown downstream effects on quality.
+   * Traditional tools struggle with complex dependencies, delaying issue resolution and increasing costs.
+
+3. *Compliance and Quality Assurance:*
+   * Regulations demand full traceability for audits and quality control.
+   * Manual processes are error-prone and inefficient for demonstrating compliance.
+   * Manufacturers risk recalls, penalties, or reputational damage without proactive visibility into issues.
+
+These scenarios highlight the need for a graph-based solution like Neo4j's traceability platform, which federates data and enables real-time queries for better decision-making in manufacturing.
+
+== 3. Solution
+
+Advanced graph databases like Neo4j are essential for managing interconnected data in manufacturing traceability. They excel at modeling relationships across systems, making it easy to trace lineages and analyze impacts. By representing requirements, designs, and tests as graphs, organizations can federate siloed data, uncover hidden issues, and ensure compliance—enhancing agility and quality in production.
+
+=== 3.1. How Graph Databases Can Help?
+
+Graph databases provide a robust solution to traceability challenges in manufacturing. Here are five key reasons why a graph database is indispensable:
+
+1. *Relationship Mapping:* Graphs naturally connect customer requests to requirements, designs, and tests, overcoming data silos.
+2. *Real-Time Tracing:* They enable efficient upstream/downstream queries for root cause and impact analysis.
+3. *Scalable Federation:* Graphs integrate data from multiple sources without replication, handling complex dependencies.
+4. *Visualization and Exploration:* Tools like Bloom offer intuitive views for exploring lineages and spotting anomalies.
+5. *Compliance Support:* Graphs simplify auditing by providing traceable paths, ensuring regulatory adherence.
+
+These features make graph databases key to solving traceability issues in manufacturing.
+
+== 4. Modelling
+
+This section demonstrates Cypher queries on an example graph. The goal is to show query structures and guide data modeling in production. We'll use a small graph with nodes representing customer requests, requirements, designs, and test cases, based on the data model below:
+
+=== 4.1. Data Model
+
+image::manufacturing/engineering-traceability-model.png[]
+
+==== 4.1.1 Required Data Fields
+
+Below are the fields required to get started:
+
+* `CustomerRequest`` Node:
+  ** `id``: Unique identifier (e.g., "CR001")
+  ** `description``: Description of the request
+  ** `status`: Status (e.g., "Approved")
+  ** `source``: Source system (e.g., "SFDC")
+
+* `Requirement` Node:
+  ** `id`: Unique identifier (e.g., "REQ001")
+  ** `title`: Title of the requirement
+  ** `description`: Description
+  ** `status`: Status (e.g., "Active")
+  ** `source`: Source system (e.g., "Doors")
+
+* Design Node:
+  ** `id`: Unique identifier (e.g., "DES001")
+  ** `name`: Name of the design
+  ** `description`: Description
+  ** `status`: Status (e.g., "In Progress")
+  ** `source`: Source system (e.g., "Pront")
+
+* `TestCase`` Node:
+  ** `id`: Unique identifier (e.g., "TC001")
+  ** `title`: Title of the test case
+  ** `description`: Description
+  ** `status`: Status (e.g., "Passed")
+  ** `source`: Source system (e.g., "Quality Centres")
+
+* `SATISFIES` Relationship: From CustomerRequest to Requirement
+* `IMPLEMENTED_BY` Relationship: From Requirement to Design
+* `DEPENDS_ON` Relationship: Between Designs
+* `TESTED_BY` Relationship: From Design to TestCase
+
+==== 4.1.2 Required Parameters
+
+This use case does not require specific parameters, as queries operate on node properties like ids.
+
+=== 4.2. Demo Data
+
+The following Cypher statement will create the example graph in the Neo4j database:
+
+[source, cypher, role=noheader]
+----
+// Existing 70 Nodes (unchanged from previous, for reference)
+CREATE (cr1:CustomerRequest {id: "CR001", description: "Customer needs 5G router with 10Gbps throughput", status: "Approved", source: "SFDC"})
+CREATE (cr2:CustomerRequest {id: "CR002", description: "Customer requests low power consumption", status: "Approved", source: "SFDC"})
+CREATE (cr3:CustomerRequest {id: "CR003", description: "Customer needs 4G/5G seamless handover", status: "Pending", source: "SFDC"})
+CREATE (cr4:CustomerRequest {id: "CR004", description: "Customer wants remote diagnostics", status: "Approved", source: "SFDC"})
+CREATE (cr5:CustomerRequest {id: "CR005", description: "Customer requires 1ms latency", status: "Approved", source: "SFDC"})
+CREATE (cr6:CustomerRequest {id: "CR006", description: "Customer needs ruggedized design", status: "Approved", source: "SFDC"})
+CREATE (cr7:CustomerRequest {id: "CR007", description: "Customer requests multi-band support", status: "Pending", source: "SFDC"})
+CREATE (cr8:CustomerRequest {id: "CR008", description: "Customer wants easy firmware updates", status: "Approved", source: "SFDC"})
+CREATE (cr9:CustomerRequest {id: "CR009", description: "Customer needs high availability", status: "Approved", source: "SFDC"})
+CREATE (cr10:CustomerRequest {id: "CR010", description: "Customer requests cost-effective design", status: "Approved", source: "SFDC"})
+
+CREATE (req1:Requirement {id: "REQ001", title: "10Gbps Throughput", description: "Router must support 10Gbps", status: "Active", source: "Doors"})
+CREATE (req2:Requirement {id: "REQ002", title: "4G Compatibility", description: "Support existing 4G networks", status: "Active", source: "Doors"})
+CREATE (req3:Requirement {id: "REQ003", title: "Low Power", description: "Max 50W consumption", status: "Active", source: "Doors"})
+CREATE (req4:Requirement {id: "REQ004", title: "Power Efficiency", description: "Optimize for energy saving", status: "Active", source: "Doors"})
+CREATE (req5:Requirement {id: "REQ005", title: "Remote Diagnostics", description: "Enable remote monitoring", status: "Active", source: "Doors"})
+CREATE (req6:Requirement {id: "REQ006", title: "Diagnostics UI", description: "User-friendly diagnostics interface", status: "Active", source: "Doors"})
+CREATE (req7:Requirement {id: "REQ007", title: "1ms Latency", description: "Achieve 1ms latency", status: "Active", source: "Doors"})
+CREATE (req8:Requirement {id: "REQ008", title: "Latency Stability", description: "Consistent 1ms under load", status: "Active", source: "Doors"})
+CREATE (req9:Requirement {id: "REQ009", title: "Rugged Design", description: "Withstand extreme conditions", status: "Active", source: "Doors"})
+CREATE (req10:Requirement {id: "REQ010", title: "Durability", description: "Pass drop test", status: "Active", source: "Doors"})
+CREATE (req11:Requirement {id: "REQ011", title: "Multi-Band", description: "Support multiple frequency bands", status: "Active", source: "Doors"})
+CREATE (req12:Requirement {id: "REQ012", title: "Band Switching", description: "Seamless band transitions", status: "Active", source: "Doors"})
+CREATE (req13:Requirement {id: "REQ013", title: "Firmware Updates", description: "Support OTA updates", status: "Active", source: "Doors"})
+CREATE (req14:Requirement {id: "REQ014", title: "Update Security", description: "Secure firmware updates", status: "Active", source: "Doors"})
+CREATE (req15:Requirement {id: "REQ015", title: "High Availability", description: "99.9% uptime", status: "Active", source: "Doors"})
+CREATE (req16:Requirement {id: "REQ016", title: "Failover", description: "Automatic failover mechanism", status: "Active", source: "Doors"})
+CREATE (req17:Requirement {id: "REQ017", title: "Cost Reduction", description: "Reduce BOM cost by 10%", status: "Active", source: "Doors"})
+CREATE (req18:Requirement {id: "REQ018", title: "Material Cost", description: "Use cost-effective materials", status: "Active", source: "Doors"})
+CREATE (req19:Requirement {id: "REQ019", title: "Throughput Backup", description: "Fallback to 5Gbps if needed", status: "Active", source: "Doors"})
+CREATE (req20:Requirement {id: "REQ020", title: "Diagnostics Logging", description: "Log diagnostics data", status: "Active", source: "Doors"})
+
+CREATE (des1:Design {id: "DES001", name: "Throughput Module", description: "10Gbps hardware", status: "In Progress", source: "Pront"})
+CREATE (des2:Design {id: "DES002", name: "Compatibility Layer", description: "4G/5G software", status: "Delayed", source: "Pront"})
+CREATE (des3:Design {id: "DES003", name: "Power Unit", description: "Low-power hardware", status: "In Progress", source: "Pront"})
+CREATE (des4:Design {id: "DES004", name: "Power Optimizer", description: "Energy-saving software", status: "Complete", source: "Pront"})
+CREATE (des5:Design {id: "DES005", name: "Diagnostics Core", description: "Remote diagnostics engine", status: "In Progress", source: "Pront"})
+CREATE (des6:Design {id: "DES006", name: "Diagnostics UI", description: "Diagnostics interface", status: "Delayed", source: "Pront"})
+CREATE (des7:Design {id: "DES007", name: "Latency Processor", description: "1ms latency hardware", status: "In Progress", source: "Pront"})
+CREATE (des8:Design {id: "DES008", name: "Latency Stabilizer", description: "Latency control software", status: "In Progress", source: "Pront"})
+CREATE (des9:Design {id: "DES009", name: "Rugged Chassis", description: "Durable casing", status: "Complete", source: "Pront"})
+CREATE (des10:Design {id: "DES010", name: "Shock Absorber", description: "Drop protection", status: "In Progress", source: "Pront"})
+CREATE (des11:Design {id: "DES011", name: "Multi-Band Antenna", description: "Multi-frequency support", status: "In Progress", source: "Pront"})
+CREATE (des12:Design {id: "DES012", name: "Band Switcher", description: "Band transition software", status: "Delayed", source: "Pront"})
+CREATE (des13:Design {id: "DES013", name: "Firmware Module", description: "OTA update system", status: "In Progress", source: "Pront"})
+CREATE (des14:Design {id: "DES014", name: "Security Layer", description: "Firmware security", status: "Complete", source: "Pront"})
+CREATE (des15:Design {id: "DES015", name: "HA Controller", description: "High availability system", status: "In Progress", source: "Pront"})
+CREATE (des16:Design {id: "DES016", name: "Failover Logic", description: "Failover software", status: "In Progress", source: "Pront"})
+CREATE (des17:Design {id: "DES017", name: "Cost Analyzer", description: "BOM cost reduction tool", status: "In Progress", source: "Pront"})
+CREATE (des18:Design {id: "DES018", name: "Material Selector", description: "Cost-effective materials", status: "Complete", source: "Pront"})
+CREATE (des19:Design {id: "DES019", name: "Backup Throughput", description: "5Gbps fallback", status: "In Progress", source: "Pront"})
+CREATE (des20:Design {id: "DES020", name: "Diagnostics Logger", description: "Diagnostics logging", status: "Delayed", source: "Pront"})
+
+CREATE (tc1:TestCase {id: "TC001", title: "Throughput Stress", description: "Test 10Gbps load", status: "Passed", source: "Quality Centres"})
+CREATE (tc2:TestCase {id: "TC002", title: "4G Compatibility", description: "Test 4G/5G handover", status: "Failed", source: "Quality Centres"})
+CREATE (tc3:TestCase {id: "TC003", title: "Power Consumption", description: "Measure under 50W", status: "Passed", source: "Quality Centres"})
+CREATE (tc4:TestCase {id: "TC004", title: "Power Efficiency", description: "Test energy saving", status: "Passed", source: "Quality Centres"})
+CREATE (tc5:TestCase {id: "TC005", title: "Diagnostics Check", description: "Verify remote access", status: "In Progress", source: "Quality Centres"})
+CREATE (tc6:TestCase {id: "TC006", title: "UI Usability", description: "Test diagnostics UI", status: "Failed", source: "Quality Centres"})
+CREATE (tc7:TestCase {id: "TC007", title: "Latency Test", description: "Measure 1ms latency", status: "Passed", source: "Quality Centres"})
+CREATE (tc8:TestCase {id: "TC008", title: "Latency Load", description: "Test 1ms under load", status: "In Progress", source: "Quality Centres"})
+CREATE (tc9:TestCase {id: "TC009", title: "Ruggedness Test", description: "Test extreme conditions", status: "Passed", source: "Quality Centres"})
+CREATE (tc10:TestCase {id: "TC010", title: "Drop Test", description: "Test drop resistance", status: "Passed", source: "Quality Centres"})
+CREATE (tc11:TestCase {id: "TC011", title: "Band Support", description: "Test multi-band", status: "In Progress", source: "Quality Centres"})
+CREATE (tc12:TestCase {id: "TC012", title: "Band Switch", description: "Test band switching", status: "Failed", source: "Quality Centres"})
+CREATE (tc13:TestCase {id: "TC013", title: "Firmware Update", description: "Test OTA update", status: "Passed", source: "Quality Centres"})
+CREATE (tc14:TestCase {id: "TC014", title: "Security Test", description: "Test update security", status: "Passed", source: "Quality Centres"})
+CREATE (tc15:TestCase {id: "TC015", title: "Uptime Test", description: "Test 99.9% uptime", status: "In Progress", source: "Quality Centres"})
+CREATE (tc16:TestCase {id: "TC016", title: "Failover Test", description: "Test failover", status: "Passed", source: "Quality Centres"})
+CREATE (tc17:TestCase {id: "TC017", title: "Cost Validation", description: "Verify 10% cost reduction", status: "In Progress", source: "Quality Centres"})
+CREATE (tc18:TestCase {id: "TC018", title: "Material Test", description: "Test material durability", status: "Passed", source: "Quality Centres"})
+CREATE (tc19:TestCase {id: "TC019", title: "Backup Throughput", description: "Test 5Gbps fallback", status: "Passed", source: "Quality Centres"})
+CREATE (tc20:TestCase {id: "TC020", title: "Log Verification", description: "Test diagnostics logging", status: "Failed", source: "Quality Centres"})
+
+// New "Mostly Ok" Data (~30 additional nodes)
+// New Requirements (15 nodes, tied to CR001 and others)
+CREATE (req21:Requirement {id: "REQ021", title: "Signal Strength", description: "Maintain 90% signal", status: "Active", source: "Doors"})
+CREATE (req22:Requirement {id: "REQ022", title: "Noise Reduction", description: "Reduce noise by 20dB", status: "Active", source: "Doors"})
+CREATE (req23:Requirement {id: "REQ023", title: "Heat Dissipation", description: "Max temp 50C", status: "Active", source: "Doors"})
+CREATE (req24:Requirement {id: "REQ024", title: "Fan Control", description: "Dynamic fan speed", status: "Active", source: "Doors"})
+CREATE (req25:Requirement {id: "REQ025", title: "Port Density", description: "Support 8 ports", status: "Active", source: "Doors"})
+CREATE (req26:Requirement {id: "REQ026", title: "Port Speed", description: "Each port at 1Gbps", status: "Active", source: "Doors"})
+CREATE (req27:Requirement {id: "REQ027", title: "LED Indicators", description: "Status LEDs per port", status: "Active", source: "Doors"})
+CREATE (req28:Requirement {id: "REQ028", title: "Config UI", description: "Web-based config", status: "Active", source: "Doors"})
+CREATE (req29:Requirement {id: "REQ029", title: "Backup Power", description: "Battery backup 1hr", status: "Active", source: "Doors"})
+CREATE (req30:Requirement {id: "REQ030", title: "Surge Protection", description: "Protect against surges", status: "Active", source: "Doors"})
+CREATE (req31:Requirement {id: "REQ031", title: "Throughput Monitor", description: "Real-time throughput display", status: "Active", source: "Doors"})
+CREATE (req32:Requirement {id: "REQ032", title: "Error Logging", description: "Log errors for analysis", status: "Active", source: "Doors"})
+CREATE (req33:Requirement {id: "REQ033", title: "QoS Support", description: "Quality of Service features", status: "Active", source: "Doors"})
+CREATE (req34:Requirement {id: "REQ034", title: "VLAN Support", description: "Support VLAN tagging", status: "Active", source: "Doors"})
+CREATE (req35:Requirement {id: "REQ035", title: "Encryption", description: "AES-256 encryption", status: "Active", source: "Doors"})
+
+// New Designs (15 nodes, mostly "Complete")
+CREATE (des21:Design {id: "DES021", name: "Signal Amplifier", description: "Boost signal strength", status: "Complete", source: "Pront"})
+CREATE (des22:Design {id: "DES022", name: "Noise Filter", description: "Reduce interference", status: "Complete", source: "Pront"})
+CREATE (des23:Design {id: "DES023", name: "Cooling System", description: "Heat dissipation unit", status: "Complete", source: "Pront"})
+CREATE (des24:Design {id: "DES024", name: "Fan Controller", description: "Dynamic fan control", status: "Complete", source: "Pront"})
+CREATE (des25:Design {id: "DES025", name: "Port Hub", description: "8-port hardware", status: "Complete", source: "Pront"})
+CREATE (des26:Design {id: "DES026", name: "Port Driver", description: "1Gbps port software", status: "Complete", source: "Pront"})
+CREATE (des27:Design {id: "DES027", name: "LED Module", description: "Port status LEDs", status: "Complete", source: "Pront"})
+CREATE (des28:Design {id: "DES028", name: "Config Interface", description: "Web config UI", status: "Complete", source: "Pront"})
+CREATE (des29:Design {id: "DES029", name: "Battery Unit", description: "1hr backup power", status: "Complete", source: "Pront"})
+CREATE (des30:Design {id: "DES030", name: "Surge Protector", description: "Surge protection circuit", status: "Complete", source: "Pront"})
+CREATE (des31:Design {id: "DES031", name: "Throughput Display", description: "Real-time monitor", status: "Complete", source: "Pront"})
+CREATE (des32:Design {id: "DES032", name: "Error Logger", description: "Error logging system", status: "In Progress", source: "Pront"}) // Rare issue
+CREATE (des33:Design {id: "DES033", name: "QoS Engine", description: "Quality of Service logic", status: "Complete", source: "Pront"})
+CREATE (des34:Design {id: "DES034", name: "VLAN Module", description: "VLAN tagging support", status: "Complete", source: "Pront"})
+CREATE (des35:Design {id: "DES035", name: "Encryption Core", description: "AES-256 implementation", status: "Complete", source: "Pront"})
+
+// New Test Cases (15 nodes, mostly "Passed")
+CREATE (tc21:TestCase {id: "TC021", title: "Signal Test", description: "Verify 90% signal", status: "Passed", source: "Quality Centres"})
+CREATE (tc22:TestCase {id: "TC022", title: "Noise Test", description: "Measure 20dB reduction", status: "Passed", source: "Quality Centres"})
+CREATE (tc23:TestCase {id: "TC023", title: "Heat Test", description: "Max temp 50C", status: "Passed", source: "Quality Centres"})
+CREATE (tc24:TestCase {id: "TC024", title: "Fan Test", description: "Test dynamic fan", status: "Passed", source: "Quality Centres"})
+CREATE (tc25:TestCase {id: "TC025", title: "Port Count", description: "Verify 8 ports", status: "Passed", source: "Quality Centres"})
+CREATE (tc2610:TestCase {id: "TC026", title: "Port Speed", description: "Test 1Gbps per port", status: "Passed", source: "Quality Centres"})
+CREATE (tc27:TestCase {id: "TC027", title: "LED Test", description: "Verify LED function", status: "Passed", source: "Quality Centres"})
+CREATE (tc28:TestCase {id: "TC028", title: "Config Test", description: "Test web UI", status: "Passed", source: "Quality Centres"})
+CREATE (tc29:TestCase {id: "TC029", title: "Battery Test", description: "Verify 1hr backup", status: "Passed", source: "Quality Centres"})
+CREATE (tc30:TestCase {id: "TC030", title: "Surge Test", description: "Test surge protection", status: "Passed", source: "Quality Centres"})
+CREATE (tc31:TestCase {id: "TC031", title: "Throughput Display", description: "Test real-time display", status: "Passed", source: "Quality Centres"})
+CREATE (tc32:TestCase {id: "TC032", title: "Error Log Test", description: "Verify error logging", status: "Failed", source: "Quality Centres"}) // Rare issue
+CREATE (tc33:TestCase {id: "TC033", title: "QoS Test", description: "Test QoS features", status: "Passed", source: "Quality Centres"})
+CREATE (tc34:TestCase {id: "TC034", title: "VLAN Test", description: "Test VLAN tagging", status: "Passed", source: "Quality Centres"})
+CREATE (tc35:TestCase {id: "TC035", title: "Encryption Test", description: "Test AES-256", status: "Passed", source: "Quality Centres"})
+
+// Existing Relationships (unchanged, abbreviated for brevity)
+CREATE (cr1)-[:SATISFIES]->(req1) CREATE (cr1)-[:SATISFIES]->(req19)
+CREATE (cr2)-[:SATISFIES]->(req3) CREATE (cr2)-[:SATISFIES]->(req4)
+CREATE (cr3)-[:SATISFIES]->(req2) CREATE (cr4)-[:SATISFIES]->(req5)
+CREATE (cr4)-[:SATISFIES]->(req6) CREATE (cr4)-[:SATISFIES]->(req20)
+CREATE (cr5)-[:SATISFIES]->(req7) CREATE (cr5)-[:SATISFIES]->(req8)
+CREATE (cr6)-[:SATISFIES]->(req9) CREATE (cr6)-[:SATISFIES]->(req10)
+CREATE (cr7)-[:SATISFIES]->(req11) CREATE (cr7)-[:SATISFIES]->(req12)
+CREATE (cr8)-[:SATISFIES]->(req13) CREATE (cr8)-[:SATISFIES]->(req14)
+CREATE (cr9)-[:SATISFIES]->(req15) CREATE (cr9)-[:SATISFIES]->(req16)
+CREATE (cr10)-[:SATISFIES]->(req17) CREATE (cr10)-[:SATISFIES]->(req18)
+
+CREATE (req1)-[:IMPLEMENTED_BY]->(des1) CREATE (req19)-[:IMPLEMENTED_BY]->(des1)
+CREATE (req2)-[:IMPLEMENTED_BY]->(des2) CREATE (req3)-[:IMPLEMENTED_BY]->(des3)
+CREATE (req4)-[:IMPLEMENTED_BY]->(des4) CREATE (req5)-[:IMPLEMENTED_BY]->(des5)
+CREATE (req6)-[:IMPLEMENTED_BY]->(des6) CREATE (req20)-[:IMPLEMENTED_BY]->(des6)
+CREATE (req7)-[:IMPLEMENTED_BY]->(des7) CREATE (req8)-[:IMPLEMENTED_BY]->(des8)
+CREATE (req9)-[:IMPLEMENTED_BY]->(des9) CREATE (req10)-[:IMPLEMENTED_BY]->(des10)
+CREATE (req11)-[:IMPLEMENTED_BY]->(des11) CREATE (req12)-[:IMPLEMENTED_BY]->(des12)
+CREATE (req13)-[:IMPLEMENTED_BY]->(des13) CREATE (req14)-[:IMPLEMENTED_BY]->(des14)
+CREATE (req15)-[:IMPLEMENTED_BY]->(des15) CREATE (req16)-[:IMPLEMENTED_BY]->(des16)
+CREATE (req17)-[:IMPLEMENTED_BY]->(des17) CREATE (req18)-[:IMPLEMENTED_BY]->(des18)
+CREATE (req19)-[:IMPLEMENTED_BY]->(des19)
+
+CREATE (des1)-[:TESTED_BY]->(tc1) CREATE (des1)-[:TESTED_BY]->(tc19)
+CREATE (des2)-[:TESTED_BY]->(tc2) CREATE (des3)-[:TESTED_BY]->(tc3)
+CREATE (des4)-[:TESTED_BY]->(tc4) CREATE (des5)-[:TESTED_BY]->(tc5)
+CREATE (des6)-[:TESTED_BY]->(tc6) CREATE (des6)-[:TESTED_BY]->(tc20)
+CREATE (des7)-[:TESTED_BY]->(tc7) CREATE (des8)-[:TESTED_BY]->(tc8)
+CREATE (des9)-[:TESTED_BY]->(tc9) CREATE (des10)-[:TESTED_BY]->(tc10)
+CREATE (des11)-[:TESTED_BY]->(tc11) CREATE (des12)-[:TESTED_BY]->(tc12)
+CREATE (des13)-[:TESTED_BY]->(tc13) CREATE (des14)-[:TESTED_BY]->(tc14)
+CREATE (des15)-[:TESTED_BY]->(tc15) CREATE (des16)-[:TESTED_BY]->(tc16)
+CREATE (des17)-[:TESTED_BY]->(tc17) CREATE (des18)-[:TESTED_BY]->(tc18)
+
+CREATE (des1)-[:DEPENDS_ON]->(des2) CREATE (des1)-[:DEPENDS_ON]->(des7)
+CREATE (des2)-[:DEPENDS_ON]->(des11) CREATE (des5)-[:DEPENDS_ON]->(des6)
+CREATE (des7)-[:DEPENDS_ON]->(des8) CREATE (des11)-[:DEPENDS_ON]->(des12)
+CREATE (des13)-[:DEPENDS_ON]->(des14) CREATE (des15)-[:DEPENDS_ON]->(des16)
+
+// New Relationships (mostly "Complete" and "Passed")
+CREATE (cr1)-[:SATISFIES]->(req21)  // Tie some new reqs to CR001 for density
+CREATE (cr1)-[:SATISFIES]->(req22)
+CREATE (cr1)-[:SATISFIES]->(req31)
+CREATE (cr2)-[:SATISFIES]->(req23)
+CREATE (cr2)-[:SATISFIES]->(req24)
+CREATE (cr3)-[:SATISFIES]->(req25)
+CREATE (cr3)-[:SATISFIES]->(req26)
+CREATE (cr4)-[:SATISFIES]->(req27)
+CREATE (cr5)-[:SATISFIES]->(req28)
+CREATE (cr6)-[:SATISFIES]->(req29)
+CREATE (cr7)-[:SATISFIES]->(req30)
+CREATE (cr8)-[:SATISFIES]->(req32)
+CREATE (cr9)-[:SATISFIES]->(req33)
+CREATE (cr10)-[:SATISFIES]->(req34)
+CREATE (cr10)-[:SATISFIES]->(req35)
+
+CREATE (req21)-[:IMPLEMENTED_BY]->(des21)
+CREATE (req22)-[:IMPLEMENTED_BY]->(des22)
+CREATE (req23)-[:IMPLEMENTED_BY]->(des23)
+CREATE (req24)-[:IMPLEMENTED_BY]->(des24)
+CREATE (req25)-[:IMPLEMENTED_BY]->(des25)
+CREATE (req26)-[:IMPLEMENTED_BY]->(des26)
+CREATE (req27)-[:IMPLEMENTED_BY]->(des27)
+CREATE (req28)-[:IMPLEMENTED_BY]->(des28)
+CREATE (req29)-[:IMPLEMENTED_BY]->(des29)
+CREATE (req30)-[:IMPLEMENTED_BY]->(des30)
+CREATE (req31)-[:IMPLEMENTED_BY]->(des31)
+CREATE (req32)-[:IMPLEMENTED_BY]->(des32)
+CREATE (req33)-[:IMPLEMENTED_BY]->(des33)
+CREATE (req34)-[:IMPLEMENTED_BY]->(des34)
+CREATE (req35)-[:IMPLEMENTED_BY]->(des35)
+
+CREATE (des21)-[:TESTED_BY]->(tc21)
+CREATE (des22)-[:TESTED_BY]->(tc22)
+CREATE (des23)-[:TESTED_BY]->(tc23)
+CREATE (des24)-[:TESTED_BY]->(tc24)
+CREATE (des25)-[:TESTED_BY]->(tc25)
+CREATE (des26)-[:TESTED_BY]->(tc26)
+CREATE (des27)-[:TESTED_BY]->(tc27)
+CREATE (des28)-[:TESTED_BY]->(tc28)
+CREATE (des29)-[:TESTED_BY]->(tc29)
+CREATE (des30)-[:TESTED_BY]->(tc30)
+CREATE (des31)-[:TESTED_BY]->(tc31)
+CREATE (des32)-[:TESTED_BY]->(tc32)
+CREATE (des33)-[:TESTED_BY]->(tc33)
+CREATE (des34)-[:TESTED_BY]->(tc34)
+CREATE (des35)-[:TESTED_BY]->(tc35)
+CREATE (des1)-[:DEPENDS_ON]->(des21)
+CREATE (des2)-[:DEPENDS_ON]->(des25)
+CREATE (des21)-[:DEPENDS_ON]->(des22)
+CREATE (des23)-[:DEPENDS_ON]->(des24)
+CREATE (des25)-[:DEPENDS_ON]->(des26)
+CREATE (des31)-[:DEPENDS_ON]->(des28)
+----
+
+== 5. Cypher Queries
+
+[NOTE]
+====
+These Cypher queries are compatible with Neo4j Version 5.9+ and Cypher 5 or 25.
+====
+
+=== 5.1. Show Graph Model
+
+This query visualizes the schema:
+
+[source, cypher, role=noheader]
+----
+CALL db.schema.visualization()
+----
+
+=== 5.2. Show a Customer Request
+
+This query retrieves a specific customer request:
+
+[source, cypher, role=noheader]
+----
+MATCH (x:CustomerRequest {id:"CR001"})
+RETURN x
+----
+
+=== 5.3. Upstream Dependencies from Customer Request
+
+This query traces upstream from a customer request:
+
+[source, cypher, role=noheader]
+----
+MATCH path = (x:CustomerRequest {id:"CR001"})-[:SATISFIES]->{0,1}(y:Requirement)
+OPTIONAL MATCH opt1_path=(y)
+  (()-[:IMPLEMENTED_BY|DEPENDS_ON]->(d:Design))*
+  ()-[:TESTED_BY]->{0,1}(t)
+RETURN path, opt1_path
+----
+
+=== 5.4. Root Cause Analysis from Customer Request
+
+This query performs root cause analysis:
+
+[source, cypher, role=noheader]
+----
+MATCH path = (x:CustomerRequest {id:"CR001"})-[:SATISFIES]->{0,1}(y:Requirement)
+(()-[:IMPLEMENTED_BY|DEPENDS_ON]->(ds:Design WHERE ds.status <> "Complete"))*(d)
+OPTIONAL MATCH opt = (d)-[:TESTED_BY]->{0,1}(t:TestCase WHERE t.status <> "Passed")
+RETURN path, opt
+----
+
+=== 5.6. Impact Analysis from Test Case
+
+This query assesses impact from a test case:
+
+[source, cypher, role=noheader]
+----
+MATCH path = (tc:TestCase {id: "TC012"})<-[:TESTED_BY]-(d:Design)
+<-[:DEPENDS_ON]-*(:Design)
+<-[:IMPLEMENTED_BY]-(requirement)<-[:SATISFIES]-(request)
+RETURN path
+----
+
+=== 5.7. Easter Egg: Long Dependency Chain
+
+To demonstrate scalability, add a long chain (ingestion script for easter egg):
+
+[source, cypher, role=noheader]
+----
+// Easter Egg: 20-Hop Dependency Chain
+MATCH (cr1:CustomerRequest {id:"CR001"} )
+// New Requirement tied to CR001
+CREATE (req36:Requirement {id: "REQ036", title: "Quantum Stability", description: "Ensure quantum flux stability for 10Gbps", status: "Active", source: "Doors"})
+
+// 20 Design Nodes in a Linear Chain
+CREATE (des36:Design {id: "DES036", name: "Quantum Initiator", description: "Starts quantum flux", status: "Delayed", source: "Pront"})
+CREATE (des37:Design {id: "DES037", name: "Flux Modulator", description: "Modulates flux waves", status: "Delayed", source: "Pront"})
+CREATE (des38:Design {id: "DES038", name: "Phase Aligner", description: "Aligns quantum phases", status: "Delayed", source: "Pront"})
+CREATE (des39:Design {id: "DES039", name: "Wave Synchronizer", description: "Syncs wave patterns", status: "Delayed", source: "Pront"})
+CREATE (des40:Design {id: "DES040", name: "Entanglement Core", description: "Manages entanglement", status: "Delayed", source: "Pront"})
+CREATE (des41:Design {id: "DES041", name: "Spin Regulator", description: "Regulates particle spin", status: "Delayed", source: "Pront"})
+CREATE (des42:Design {id: "DES042", name: "Coherence Filter", description: "Filters coherence noise", status: "Delayed", source: "Pront"})
+CREATE (des43:Design {id: "DES043", name: "Pulse Amplifier", description: "Amplifies quantum pulses", status: "Delayed", source: "Pront"})
+CREATE (des44:Design {id: "DES044", name: "Resonance Tuner", description: "Tunes resonance freq", status: "Delayed", source: "Pront"})
+CREATE (des45:Design {id: "DES045", name: "Beam Splitter", description: "Splits quantum beams", status: "Delayed", source: "Pront"})
+CREATE (des46:Design {id: "DES046", name: "Photon Gate", description: "Gates photon flow", status: "Delayed", source: "Pront"})
+CREATE (des47:Design {id: "DES047", name: "Waveguide", description: "Guides quantum waves", status: "Delayed", source: "Pront"})
+CREATE (des48:Design {id: "DES048", name: "Interference Shield", description: "Shields interference", status: "Delayed", source: "Pront"})
+CREATE (des49:Design {id: "DES049", name: "Flux Capacitor", description: "Stores quantum flux", status: "Delayed", source: "Pront"}) // Back to the Future nod
+CREATE (des50:Design {id: "DES050", name: "Temporal Adjuster", description: "Adjusts time dilation", status: "In Progress", source: "Pront"})
+CREATE (des51:Design {id: "DES051", name: "Gravity Compensator", description: "Compensates gravity", status: "Complete", source: "Pront"})
+CREATE (des52:Design {id: "DES052", name: "Energy Converter", description: "Converts flux energy", status: "Complete", source: "Pront"})
+CREATE (des53:Design {id: "DES053", name: "Signal Booster", description: "Boosts final signal", status: "Complete", source: "Pront"})
+CREATE (des54:Design {id: "DES054", name: "Stability Monitor", description: "Monitors stability", status: "Complete", source: "Pront"})
+CREATE (des55:Design {id: "DES055", name: "Quantum Terminator", description: "Terminates flux chain", status: "Complete", source: "Pront"}) // The twist!
+
+// Relationships for the Chain
+CREATE (cr1)-[:SATISFIES]->(req36)
+CREATE (req36)-[:IMPLEMENTED_BY]->(des36)
+CREATE (des36)-[:DEPENDS_ON]->(des37)
+CREATE (des37)-[:DEPENDS_ON]->(des38)
+CREATE (des38)-[:DEPENDS_ON]->(des39)
+CREATE (des39)-[:DEPENDS_ON]->(des40)
+CREATE (des40)-[:DEPENDS_ON]->(des41)
+CREATE (des41)-[:DEPENDS_ON]->(des42)
+CREATE (des42)-[:DEPENDS_ON]->(des43)
+CREATE (des43)-[:DEPENDS_ON]->(des44)
+CREATE (des44)-[:DEPENDS_ON]->(des45)
+CREATE (des45)-[:DEPENDS_ON]->(des46)
+CREATE (des46)-[:DEPENDS_ON]->(des47)
+CREATE (des47)-[:DEPENDS_ON]->(des48)
+CREATE (des48)-[:DEPENDS_ON]->(des49)
+CREATE (des49)-[:DEPENDS_ON]->(des50)
+CREATE (des50)-[:DEPENDS_ON]->(des51)
+CREATE (des51)-[:DEPENDS_ON]->(des52)
+CREATE (des52)-[:DEPENDS_ON]->(des53)
+CREATE (des53)-[:DEPENDS_ON]->(des54)
+CREATE (des54)-[:DEPENDS_ON]->(des55)
+----
+
+=== 5.8. Replay Upstream Dependency with Easter Egg
+
+This query demonstrates fast traversal on the long chain:
+
+[source, cypher, role=noheader]
+----
+MATCH path = (x:CustomerRequest {id:"CR001"})-[:SATISFIES]->{0,1}(y:Requirement)
+OPTIONAL MATCH opt1_path=(y)
+  (()-[:IMPLEMENTED_BY|DEPENDS_ON]->(d:Design))*
+  ()-[:TESTED_BY]->{0,1}(t)
+RETURN path, opt1_path
+----
+
+== 6. Exploration in Neo4j Bloom
+
+For interactive exploration, import the perspective from linkspire_perspective.json into Neo4j Bloom. Use full-text search (e.g., "Band Switching"), custom icons/styling, and scene actions for upstream dependencies, root cause, and impact analysis from nodes like CR001 or TC012. https://github.com/halftermeyer/linkspire-traceability-demo/tree/main[see GitHub Repository]
