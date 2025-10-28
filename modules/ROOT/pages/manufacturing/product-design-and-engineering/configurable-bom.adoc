@@ -232,7 +232,7 @@ RETURN p
 .Unpruned Loose BOM
 image::manufacturing/cbom-unpruned-loose-bom.png[]
 
-=== 5.3. Prune Not Optimal Branches
+=== 5.3. Resolve Undecided Branches
 
 This query, ideal for handling loose constraints, recursively prunes unresolved branches from the bottom up using a scoring mechanism. It evaluates options based on a provided scoring strategy parameter:
 
@@ -259,7 +259,7 @@ CALL (_) {
 MATCH (cf:ConfigGroup)
 WHERE count{(cf)-[:RESOLVED_LINK {id_variant: $id_variant}]->()} > 1
 AND NOT EXISTS {
-  (cf)-[:RESOLVED_LINK {id_variant: $id_variant}]->(cf_below:ConfigGroup)
+  (cf)-[:RESOLVED_LINK {id_variant: $id_variant}]->+(cf_below:ConfigGroup)
   WHERE count{(cf_below)-[:RESOLVED_LINK {id_variant: $id_variant}]->()} > 1
 }
 RETURN cf
