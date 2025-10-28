@@ -26,7 +26,7 @@ To grasp the importance of the Configurable Bill of Materials use case, consider
     ** https://eur-lex.europa.eu/eli/reg/2023/1230/oj/eng[EU Machinery Regulation]
     ** https://eur-lex.europa.eu/eli/dir/2012/19/oj/eng[WEEE]
     ** https://eur-lex.europa.eu/eli/reg/2024/2847/oj/eng[Cyber Resilience Act]
-    ** https://eur-lex.europa.eu/eli/reg/2019/1021/oj/eng[POPs]).
+    ** https://eur-lex.europa.eu/eli/reg/2019/1021/oj/eng[POPs].
    * Without unified tools, ensuring all variants meet constraints is time-consuming and error-prone.
    * Organizations face penalties and reputational damage if they cannot validate optimized, constraint-satisfying BOMs.
 
