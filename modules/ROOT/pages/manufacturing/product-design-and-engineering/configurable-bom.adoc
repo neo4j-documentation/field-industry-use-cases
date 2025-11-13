@@ -1,0 +1,347 @@
+= Configurable Bill of Materials (CBOM)
+
+== 1. Introduction
+
+In the dynamic world of manufacturing and product design, managing configurable bill of materials (CBOMs, often referred to as https://plmphilosophy483489853.wordpress.com/2019/07/07/what-is-mean-by-100-120-and-150-bom/[150% BOMs]) is crucial for handling product variants, customization, and supply chain efficiency. The Configurable Bill of Materials use case addresses a core business challenge: declaratively resolving optimal product configurations from a superset of components while respecting constraints, scoring criteria, and dependencies. By utilizing Neo4j's Cypher 25, organizations can model complex graph structures to traverse and prune variant options, ensuring cost-effective, lightweight, and compliant product builds. These capabilities enable better inventory management, faster time-to-market for customized products, and reduced operational risks in manufacturing environments.
+
+== 2. Scenario
+
+To grasp the importance of the Configurable Bill of Materials use case, consider practical challenges in manufacturing where unmanaged variants can lead to inefficiencies and errors. The following three key areas illustrate these issues:
+
+1. *Product Customization and Variant Management:*
+   * Customers demand personalized products, but without structured resolution, selecting compatible components becomes chaotic.
+   * Overly broad option sets (150% BOMs) can result in invalid configurations, delaying production and increasing waste.
+   * Lack of visibility into dependencies often leads to overlooked incompatibilities in assembly lines.
+
+2. *Cost and Resource Optimization:*
+   * Balancing cost, weight, and performance across variants is difficult without automated pruning of suboptimal branches.
+   * Manual configuration processes are prone to errors, leading to higher material costs or heavier products.
+   * Traditional systems struggle with dynamic constraints, complicating the minimization of supply chain risks.
+
+3. *Compliance and Quality Assurance:*
+   * Regulatory requirements from the following list mandate traceable configurations for safety and environmental standards that can hardly be met without a highly-efficient configurable BOM management system:
+    ** https://eur-lex.europa.eu/eli/dir/2011/65/oj/eng[RoHS]
+    ** https://eur-lex.europa.eu/eli/reg/2006/1907/oj/eng[REACH]
+    ** https://eur-lex.europa.eu/eli/dir/2006/42/oj/eng[Machinery Directive]
+    ** https://eur-lex.europa.eu/eli/reg/2023/1230/oj/eng[EU Machinery Regulation]
+    ** https://eur-lex.europa.eu/eli/dir/2012/19/oj/eng[WEEE]
+    ** https://eur-lex.europa.eu/eli/reg/2024/2847/oj/eng[Cyber Resilience Act]
+    ** https://eur-lex.europa.eu/eli/reg/2019/1021/oj/eng[POPs].
+   * Without unified tools, ensuring all variants meet constraints is time-consuming and error-prone.
+   * Organizations face penalties and reputational damage if they cannot validate optimized, constraint-satisfying BOMs.
+
+These scenarios highlight the need for an advanced solution like *Neo4j's Configurable Bill of Materials with Cypher 25*, which leverages graph technology to model, resolve, and visualize product variants, delivering essential insights for business and technical users in manufacturing.
+
+.Gemini-generated Mountain Bike CBOM Example
+image::manufacturing/cbom-bike-gemini.png[]
+
+== 3. Solution
+
+Advanced graph databases like Neo4j are essential for navigating the complexities of interconnected product data in manufacturing. They excel at representing hierarchical structures, dependencies, and configurable options, making it easy to resolve variants declaratively, which means you can ask the database to resolve configuration variants (like valid product combinations or dependencies) by simply describing the relationships and constraints, instead of writing complex procedural code. By modeling data as graphs, organizations can apply constraints, score options, and prune paths, which improves decision-making, customization efficiency, and manufacturing agility.
+
+=== 3.1. How Graph Databases Can Help?
+
+Graph databases offer a robust solution to the challenges of Configurable Bill of Materials in manufacturing. Here are five key reasons why a graph database is indispensable:
+
+1. *Hierarchical Structure Modeling:* Graphs naturally capture assemblies, parts, and config groups with relationships, handling the superset nature of 150% BOMs efficiently.
+
+2. *Constraint-Based Pruning:* They enable real-time application of allow/deny lists and other rules to eliminate invalid configurations during traversal.
+
+3. *Scoring and Optimization:* Graphs support multi-factor scoring (e.g., cost, weight) to select optimal branches from concurrent options.
+
+4. *Variant Resolution and Visualization:* They provide clear paths for resolved BOMs, exposing dependencies and unsatisfied requirements.
+
+5. *Flexible Constraint Handling:* Graphs simplify managing loose, well-constrained, or over-constrained scenarios, ensuring compliance and scalability.
+
+These features position graph databases as key to gaining insights and addressing the intricate problems in Configurable Bill of Materials for manufacturing organizations.
+
+== 4. Modelling
+
+This section describes an example graph data model and provides the data ingestion script. The goal is to guide data modeling in production and set up a small graph with several nodes, which will be used to demonstrate Cypher query structures in the following section.
+
+=== 4.1. Data Model
+
+.CBOM Data Model
+image::manufacturing/cbom-model.png[]
+
+.resolved BOM Data Model
+image::manufacturing/cbom-resolved-bom-model.png[]
+
+==== 4.1.1 Required Data Fields
+
+Below are the fields required to get started:
+
+* Product Node:
+  ** `id`: Unique identifier for the product (e.g., "MB1")
+  ** `desc`: Description of the product
+
+* Assembly Node:
+  ** `id`: Unique identifier for the assembly (e.g., "A_Drivetrain")
+  ** `desc`: Description of the assembly
+  ** category-specific properties (e.g., `wheel_size` for wheel assemblies)
+
+* ConfigGroup Node:
+  ** `id`: Unique identifier for the config group (e.g., "CG_Gear_Sys")
+  ** `category`: Category of options (e.g., "gear_system")
+  ** `options_properties`: List of properties for options (e.g., ["cost", "weight", "gear_system"])
+  ** `desc`: Description of the config group
+
+* Part Node:
+  ** `id`: Unique identifier for the part (e.g., "P_Gear_7")
+  ** `desc`: Description of the part
+  ** `cost`: Cost of the part
+  ** `weight`: Weight of the part
+  ** Various category-specific properties (e.g., `gear_system`, `material`, `pattern`)
+
+* HAS_PART Relationship:
+  ** `qty`: Quantity required
+
+* REQUIRES Relationship:
+  ** `qty`: Quantity required
+  ** `note`: Additional notes (e.g., "Select one gear system")
+
+* HAS_OPTION Relationship:
+  ** (No additional properties in this model)
+
+==== 4.1.2 Required Parameters
+
+Three parameter sets are used to demonstrate different constraint scenarios:
+
+* Well-Constrained Variant (leads to a perfectly resolved BOM):
+[source, cypher, role=noheader]
+include::example$manufacturing/product-design-and-engineering/cbom-params-well-defined.cypher[]
+
+* Loose Constraints Variant (concurrent branches resolved through scoring-led pruning):
+[source, cypher, role=noheader]
+include::example$manufacturing/product-design-and-engineering/cbom-params-loosely-defined.cypher[]
+
+* Too-Constrained Variant (some requirements not satisfied, e.g., no color):
+[source, cypher, role=noheader]
+include::example$manufacturing/product-design-and-engineering/cbom-params-over-constrained.cypher[]
+
+=== 4.2. Demo Data
+
+The following Cypher statement will create the example graph in the Neo4j database:
+
+[source, cypher, role=noheader]
+----
+CREATE CONSTRAINT id_Assembly_uniq IF NOT EXISTS FOR (node:Assembly) REQUIRE (node.id) IS UNIQUE;
+CREATE CONSTRAINT id_ConfigGroup_uniq IF NOT EXISTS FOR (node:ConfigGroup) REQUIRE (node.id) IS UNIQUE;
+CREATE CONSTRAINT id_Part_uniq IF NOT EXISTS FOR (node:Part) REQUIRE (node.id) IS UNIQUE;
+CREATE CONSTRAINT id_Product_uniq IF NOT EXISTS FOR (node:Product) REQUIRE (node.id) IS UNIQUE;
+
+CALL db.awaitIndexes(300);
+
+UNWIND [{id:"MB1", properties:{desc:"Configurable Mountain Bike"}}] AS row
+CREATE (n:Product{id: row.id}) SET n += row.properties;
+UNWIND [{id:"A_Drivetrain", properties:{desc:"Drivetrain Assembly"}}, {id:"A_Wheel", properties:{desc:"Wheel Assembly"}}, {id:"A_Wheel_26", properties:{wheel_size:26.0, desc:"26\" Wheel Set"}}, {id:"A_Wheel_275", properties:{wheel_size:27.5, desc:"27.5\" Wheel Set"}}, {id:"A_Wheel_29", properties:{wheel_size:29.0, desc:"29\" Wheel Set"}}, {id:"A_Frame", properties:{desc:"Frame Assembly"}}, {id:"A_Brakes", properties:{desc:"Disc Brakes Assembly"}}] AS row
+CREATE (n:Assembly{id: row.id}) SET n += row.properties;
+UNWIND [{id:"CG_Gear_Sys", properties:{category:"gear_system", options_properties:["cost", "weight", "gear_system"], desc:"Gear System Options"}}, {id:"CG_Shifter", properties:{category:"shifter", options_properties:["cost", "weight", "shifter"], desc:"Shifter Options"}}, {id:"CG_Derail", properties:{category:"derailleur", options_properties:["cost", "weight", "derailleur"], desc:"Derailleur Options"}}, {id:"CG_Caliper", properties:{category:"caliper", options_properties:["cost", "weight", "caliper"], desc:"Caliper Options"}}, {id:"CG_Wheel_Size", properties:{category:"wheel_size", options_properties:["wheel_size"], desc:"Wheel Size Options"}}, {id:"CG_Rim_26", properties:{category:"rim", options_properties:["cost", "weight", "material"], desc:"Rim Options for 26\""}}, {id:"CG_Tire_26", properties:{category:"tire", options_properties:["cost", "weight", "pattern"], desc:"Tire Options for 26\""}}, {id:"CG_Rim_275", properties:{category:"rim", options_properties:["cost", "weight", "material"], desc:"Rim Options for 27.5\""}}, {id:"CG_Tire_275", properties:{category:"tire", options_properties:["cost", "weight", "pattern"], desc:"Tire Options for 27.5\""}}, {id:"CG_Rim_29", properties:{category:"rim", options_properties:["cost", "weight", "material"], desc:"Rim Options for 29\""}}, {id:"CG_Tire_29", properties:{category:"tire", options_properties:["cost", "weight", "pattern"], desc:"Tire Options for 29\""}}, {id:"CG_Frame_Mat", properties:{category:"frame_material", options_properties:["cost", "weight", "material"], desc:"Frame Material Options"}}, {id:"CG_Color", properties:{category:"color", options_properties:["cost", "weight", "color"], desc:"Color Options"}}] AS row
+CREATE (n:ConfigGroup{id: row.id}) SET n += row.properties;
+UNWIND [{id:"P_Gear_7", properties:{gear_system:"7-Speed", cost:100.0, weight:0.8, desc:"7-Speed Gear System"}}, {id:"P_Gear_11", properties:{gear_system:"11-Speed", cost:200.0, weight:0.75, desc:"11-Speed Gear System"}}, {id:"P_Gear_12", properties:{gear_system:"12-Speed", cost:250.0, weight:0.7, desc:"12-Speed Gear System"}}, {id:"P_Shifter_Twist", properties:{cost:30.0, shifter:"Twist Grip", weight:0.15, desc:"Twist Grip Shifter"}}, {id:"P_Shifter_Trigger", properties:{cost:50.0, shifter:"Trigger", weight:0.18, desc:"Trigger Shifter"}}, {id:"P_Derail_Basic", properties:{cost:40.0, weight:0.25, derailleur:"Basic", desc:"Basic Derailleur"}}, {id:"P_Derail_Adv", properties:{cost:80.0, weight:0.22, derailleur:"Advanced", desc:"Advanced Derailleur"}}, {id:"P_Spokes", properties:{cost:20.0, weight:0.3, desc:"Steel Spokes (36-pack)"}}, {id:"P_Saddle", properties:{cost:30.0, weight:0.25, desc:"Padded Saddle"}}, {id:"P_Pedals", properties:{cost:50.0, weight:0.4, desc:"Clipless Pedals"}}, {id:"P_Chain", properties:{cost:25.0, weight:0.28, desc:"Bike Chain"}}, {id:"P_Cal_Mech", properties:{caliper:"Mechanical", cost:20.0, weight:0.2, desc:"Mechanical Caliper"}}, {id:"P_Cal_Hyd", properties:{caliper:"Hydraulic", cost:40.0, weight:0.18, desc:"Hydraulic Caliper"}}, {id:"P_Rim_Alloy_26", properties:{cost:45.0, material:"Alloy", weight:0.45, desc:"Alloy Rim for 26\""}}, {id:"P_Rim_Carbon_26", properties:{cost:140.0, material:"Carbon", weight:0.35, desc:"Carbon Rim for 26\""}}, {id:"P_Tire_Knobby_26", properties:{cost:35.0, pattern:"Knobby", weight:0.7, desc:"Knobby Tire for 26\""}}, {id:"P_Tire_Slick_26", properties:{cost:30.0, pattern:"Slick", weight:0.6, desc:"Slick Tire for 26\""}}, {id:"P_Rim_Alloy_275", properties:{cost:50.0, material:"Alloy", weight:0.5, desc:"Alloy Rim for 27.5\""}}, {id:"P_Rim_Carbon_275", properties:{cost:150.0, material:"Carbon", weight:0.4, desc:"Carbon Rim for 27.5\""}}, {id:"P_Tire_Knobby_275", properties:{cost:40.0, pattern:"Knobby", weight:0.75, desc:"Knobby Tire for 27.5\""}}] AS row
+CREATE (n:Part{id: row.id}) SET n += row.properties;
+UNWIND [{id:"P_Tire_Slick_275", properties:{cost:35.0, pattern:"Slick", weight:0.65, desc:"Slick Tire for 27.5\""}}, {id:"P_Rim_Alloy_29", properties:{cost:55.0, material:"Alloy", weight:0.55, desc:"Alloy Rim for 29\""}}, {id:"P_Rim_Carbon_29", properties:{cost:160.0, material:"Carbon", weight:0.45, desc:"Carbon Rim for 29\""}}, {id:"P_Tire_Knobby_29", properties:{cost:45.0, pattern:"Knobby", weight:0.8, desc:"Knobby Tire for 29\""}}, {id:"P_Tire_Slick_29", properties:{cost:40.0, pattern:"Slick", weight:0.7, desc:"Slick Tire for 29\""}}, {id:"P_Frame_Alum", properties:{cost:200.0, material:"Aluminum", weight:2.5, desc:"Aluminum Frame"}}, {id:"P_Frame_Carbon", properties:{cost:500.0, material:"Carbon Fiber", weight:1.5, desc:"Carbon Fiber Frame"}}, {id:"P_Frame_Steel", properties:{cost:150.0, material:"Steel", weight:3.0, desc:"Steel Frame"}}, {id:"P_Color_Black", properties:{cost:0.0, color:"Black Paint", weight:0.05, desc:"Black Paint"}}, {id:"P_Color_Blue", properties:{cost:10.0, color:"Blue Paint", weight:0.05, desc:"Blue Paint"}}, {id:"P_Color_Green", properties:{cost:10.0, color:"Green Paint", weight:0.05, desc:"Green Paint"}}] AS row
+CREATE (n:Part{id: row.id}) SET n += row.properties;
+
+UNWIND [{start: {id:"A_Drivetrain"}, end: {id:"P_Chain"}, properties:{qty:1}}, {start: {id:"A_Wheel"}, end: {id:"P_Spokes"}, properties:{qty:1}}] AS row
+MATCH (start:Assembly{id: row.start.id})
+MATCH (end:Part{id: row.end.id})
+CREATE (start)-[r:HAS_PART]->(end) SET r += row.properties;
+UNWIND [{start: {id:"A_Drivetrain"}, end: {id:"CG_Shifter"}, properties:{note:"Select one shifter type", qty:1}}, {start: {id:"A_Drivetrain"}, end: {id:"CG_Derail"}, properties:{note:"Select one derailleur", qty:1}}, {start: {id:"A_Wheel"}, end: {id:"CG_Wheel_Size"}, properties:{note:"Select one wheel size", qty:1}}, {start: {id:"A_Wheel_26"}, end: {id:"CG_Rim_26"}, properties:{note:"Select rim for 26\"", qty:1}}, {start: {id:"A_Wheel_26"}, end: {id:"CG_Tire_26"}, properties:{note:"Select tire for 26\"", qty:1}}, {start: {id:"A_Wheel_275"}, end: {id:"CG_Rim_275"}, properties:{note:"Select rim for 27.5\"", qty:1}}, {start: {id:"A_Wheel_275"}, end: {id:"CG_Tire_275"}, properties:{note:"Select tire for 27.5\"", qty:1}}, {start: {id:"A_Wheel_29"}, end: {id:"CG_Rim_29"}, properties:{note:"Select rim for 29\"", qty:1}}, {start: {id:"A_Wheel_29"}, end: {id:"CG_Tire_29"}, properties:{note:"Select tire for 29\"", qty:1}}, {start: {id:"A_Frame"}, end: {id:"CG_Frame_Mat"}, properties:{note:"Select one frame material", qty:1}}, {start: {id:"A_Frame"}, end: {id:"CG_Color"}, properties:{note:"Select one color", qty:1}}, {start: {id:"A_Brakes"}, end: {id:"CG_Caliper"}, properties:{note:"Select calipers for front/rear", qty:2}}] AS row
+MATCH (start:Assembly{id: row.start.id})
+MATCH (end:ConfigGroup{id: row.end.id})
+CREATE (start)-[r:REQUIRES]->(end) SET r += row.properties;
+UNWIND [{start: {id:"MB1"}, end: {id:"P_Saddle"}, properties:{qty:1}}, {start: {id:"MB1"}, end: {id:"P_Pedals"}, properties:{qty:1}}] AS row
+MATCH (start:Product{id: row.start.id})
+MATCH (end:Part{id: row.end.id})
+CREATE (start)-[r:HAS_PART]->(end) SET r += row.properties;
+UNWIND [{start: {id:"CG_Gear_Sys"}, end: {id:"P_Gear_7"}, properties:{}}, {start: {id:"CG_Gear_Sys"}, end: {id:"P_Gear_11"}, properties:{}}, {start: {id:"CG_Gear_Sys"}, end: {id:"P_Gear_12"}, properties:{}}, {start: {id:"CG_Shifter"}, end: {id:"P_Shifter_Twist"}, properties:{}}, {start: {id:"CG_Shifter"}, end: {id:"P_Shifter_Trigger"}, properties:{}}, {start: {id:"CG_Derail"}, end: {id:"P_Derail_Basic"}, properties:{}}, {start: {id:"CG_Derail"}, end: {id:"P_Derail_Adv"}, properties:{}}, {start: {id:"CG_Caliper"}, end: {id:"P_Cal_Mech"}, properties:{}}, {start: {id:"CG_Caliper"}, end: {id:"P_Cal_Hyd"}, properties:{}}, {start: {id:"CG_Rim_26"}, end: {id:"P_Rim_Alloy_26"}, properties:{}}, {start: {id:"CG_Rim_26"}, end: {id:"P_Rim_Carbon_26"}, properties:{}}, {start: {id:"CG_Tire_26"}, end: {id:"P_Tire_Knobby_26"}, properties:{}}, {start: {id:"CG_Tire_26"}, end: {id:"P_Tire_Slick_26"}, properties:{}}, {start: {id:"CG_Rim_275"}, end: {id:"P_Rim_Alloy_275"}, properties:{}}, {start: {id:"CG_Rim_275"}, end: {id:"P_Rim_Carbon_275"}, properties:{}}, {start: {id:"CG_Tire_275"}, end: {id:"P_Tire_Knobby_275"}, properties:{}}, {start: {id:"CG_Tire_275"}, end: {id:"P_Tire_Slick_275"}, properties:{}}, {start: {id:"CG_Rim_29"}, end: {id:"P_Rim_Alloy_29"}, properties:{}}, {start: {id:"CG_Rim_29"}, end: {id:"P_Rim_Carbon_29"}, properties:{}}, {start: {id:"CG_Tire_29"}, end: {id:"P_Tire_Knobby_29"}, properties:{}}] AS row
+MATCH (start:ConfigGroup{id: row.start.id})
+MATCH (end:Part{id: row.end.id})
+CREATE (start)-[r:HAS_OPTION]->(end) SET r += row.properties;
+UNWIND [{start: {id:"CG_Tire_29"}, end: {id:"P_Tire_Slick_29"}, properties:{}}, {start: {id:"CG_Frame_Mat"}, end: {id:"P_Frame_Alum"}, properties:{}}, {start: {id:"CG_Frame_Mat"}, end: {id:"P_Frame_Carbon"}, properties:{}}, {start: {id:"CG_Frame_Mat"}, end: {id:"P_Frame_Steel"}, properties:{}}, {start: {id:"CG_Color"}, end: {id:"P_Color_Black"}, properties:{}}, {start: {id:"CG_Color"}, end: {id:"P_Color_Blue"}, properties:{}}, {start: {id:"CG_Color"}, end: {id:"P_Color_Green"}, properties:{}}] AS row
+MATCH (start:ConfigGroup{id: row.start.id})
+MATCH (end:Part{id: row.end.id})
+CREATE (start)-[r:HAS_OPTION]->(end) SET r += row.properties;
+UNWIND [{start: {id:"MB1"}, end: {id:"A_Drivetrain"}, properties:{qty:1}}, {start: {id:"MB1"}, end: {id:"A_Wheel"}, properties:{qty:2}}, {start: {id:"MB1"}, end: {id:"A_Frame"}, properties:{qty:1}}, {start: {id:"MB1"}, end: {id:"A_Brakes"}, properties:{qty:1}}] AS row
+MATCH (start:Product{id: row.start.id})
+MATCH (end:Assembly{id: row.end.id})
+CREATE (start)-[r:REQUIRES]->(end) SET r += row.properties;
+UNWIND [{start: {id:"MB1"}, end: {id:"CG_Gear_Sys"}, properties:{note:"Select one gear system", qty:1}}] AS row
+MATCH (start:Product{id: row.start.id})
+MATCH (end:ConfigGroup{id: row.end.id})
+CREATE (start)-[r:REQUIRES]->(end) SET r += row.properties;
+UNWIND [{start: {id:"CG_Wheel_Size"}, end: {id:"A_Wheel_26"}, properties:{}}, {start: {id:"CG_Wheel_Size"}, end: {id:"A_Wheel_275"}, properties:{}}, {start: {id:"CG_Wheel_Size"}, end: {id:"A_Wheel_29"}, properties:{}}] AS row
+MATCH (start:ConfigGroup{id: row.start.id})
+MATCH (end:Assembly{id: row.end.id})
+CREATE (start)-[r:HAS_OPTION]->(end) SET r += row.properties;
+----
+
+== 5. Cypher Queries
+
+[NOTE]
+====
+These Cypher queries are compatible with Neo4j Version 2025.06+ and Cypher 25.
+====
+
+=== 5.1. Get Variant
+
+This query resolves the variant by creating resolved links based on constraints. It traverses the BOM from the Product to Parts, applying allow/deny list constraints at each `ConfigGroup` level to filter options. The resulting valid paths are then used to create `RESOLVED_LINK` relationships, capturing the selected components for the specified variant.
+
+[source, cypher, role=noheader]
+----
+CYPHER 25
+
+MATCH path = (p:Product)((x)-[r:!RESOLVED_LINK]->(y)
+WHERE NOT (
+    x:ConfigGroup
+    AND any (cons IN $constraints WHERE (
+      cons.category = x.category
+      AND any (prop IN cons.properties WHERE
+        (
+          NOT prop.allow_list IS null
+          AND NOT y[prop.name] IN prop.allow_list
+        )
+        OR (
+          NOT prop.deny_list IS null
+          AND y[prop.name] IN prop.deny_list 
+        )
+        )
+      )
+    )
+  )
+)*(last:Part)
+UNWIND relationships(path) AS rel
+RETURN startNode(rel) AS source, rel AS r, endNode(rel) AS target
+
+NEXT
+
+MERGE (source)-[rl:RESOLVED_LINK {id_variant: $id_variant, rel_type: type(r)}]->(target)
+SET rl.qty = r.qty
+----
+
+=== 5.2. Show Resolved BOM
+
+This query visualizes the resolved BOM (it can be run now and also after pruning and cleaning step):
+
+[source, cypher, role=noheader]
+----
+MATCH p=()-[:RESOLVED_LINK {id_variant: $id_variant}]->()
+RETURN p
+----
+.Unpruned Loose BOM
+image::manufacturing/cbom-unpruned-loose-bom.png[]
+
+=== 5.3. Resolve Undecided Branches
+
+This query, ideal for handling loose constraints, recursively prunes unresolved branches from the bottom up using a scoring mechanism. It evaluates options based on a provided scoring strategy parameter:
+
+* For each unresolved `ConfigGroup`, it calculates the cumulative cost and weight across each option branch.
+* It then applies the scoring strategy to rank the options.
+  ** Scoring relies on weighted factors (e.g., cost, weight).
+  ** The strategy consists of a list of pairs, each with a weight property name and a multiplication factor.
+  ** A negative factor favors lower values (e.g., for cost or weight),
+  ** while a positive factor favors higher values (e.g., for performance).
+  ** The absolute value of the factor reflects the relative importance of that field in the score.
+  ** Higher overall scores signify superior options.
+  ** Only the top-scoring option is kept.
+* Ultimately, it preserves the highest-scoring option and removes the rest.
+
+[source, cypher, role=noheader]
+----
+CYPHER 25
+
+// Converge before 10 iterations unless height of ConfigGroups tree is > 10
+UNWIND range(1, 10) AS _
+CALL (_) {
+
+// Find unresolved ConfigGroups with no unresolved ConfigGroups underneath
+MATCH (cf:ConfigGroup)
+WHERE count{(cf)-[:RESOLVED_LINK {id_variant: $id_variant}]->()} > 1
+AND NOT EXISTS {
+  (cf)-[:RESOLVED_LINK {id_variant: $id_variant}]->+(cf_below:ConfigGroup)
+  WHERE count{(cf_below)-[:RESOLVED_LINK {id_variant: $id_variant}]->()} > 1
+}
+RETURN cf
+
+NEXT
+
+// Compute costs and weight for all options of a given ConfigGroup
+MATCH path = (leaf)<-[rs:RESOLVED_LINK {id_variant: $id_variant}]-*(opt)
+    <-[opt_link:RESOLVED_LINK {id_variant: $id_variant}]-(cf)
+WHERE NOT EXISTS {(leaf)-[:RESOLVED_LINK {id_variant: $id_variant}]->()}
+WITH cf, opt_link, opt, leaf, reduce(acc=1,r IN rs | acc * coalesce(r.qty, 1)) AS times
+WITH cf, opt_link, opt, leaf, {cost: leaf.cost * times, weight: leaf.weight * times} AS vals
+WITH cf, opt_link, opt, collect(vals) AS vals_list
+WITH cf, opt_link, opt, reduce (acc= {cost: 0.0, weight:0.0}, vals In vals_list|
+    {cost: acc.cost + vals.cost, weight: acc.weight + vals.weight}) AS vals
+
+// Apply scoring strategy set as parameter to select the best option
+UNWIND $scoring AS field_factor
+WITH cf, opt_link, opt, vals[field_factor.field] * field_factor.factor AS score
+WITH cf, opt_link, opt, sum (score) AS score
+ORDER BY cf, score DESC
+
+// Detach unselected branch
+WITH cf, collect(opt_link) AS opt_links
+UNWIND opt_links[1..] AS del_opt_link
+DELETE del_opt_link
+
+}
+----
+.Pruned Loose BOM
+image::manufacturing/cbom-pruned-loose-bom.png[]
+
+=== 5.4. Garbage Collector
+
+This query cleans up resolved links detached from the product during the pruning phase (useful for loose constraints):
+
+[source, cypher, role=noheader]
+----
+// Remove  RESOLVED_LINKs not connected to Product
+MATCH ()<-[r:RESOLVED_LINK {id_variant: $id_variant}]-(x)
+WHERE NOT EXISTS {(x)<-[:RESOLVED_LINK {id_variant: $id_variant}]-*(:Product)}
+DELETE r
+----
+.Pruned and Cleaned Loose BOM
+image::manufacturing/cbom-clean-loose-bom.png[]
+
+=== 5.5. Compute Weight and Cost
+
+This query calculates the total weight and cost of the resolved BOM:
+
+[source, cypher, role=noheader]
+----
+// Compute weight and cost of resolved BOM
+MATCH path = (leaf)<-[rs:RESOLVED_LINK {id_variant: $id_variant}]-*(:Product)
+WHERE NOT EXISTS {(leaf)-[:RESOLVED_LINK {id_variant: $id_variant}]->()}
+WITH leaf, reduce(acc=1,r IN rs | acc * coalesce(r.qty, 1)) AS times
+WITH leaf, {cost: leaf.cost * times, weight: leaf.weight * times} AS vals
+WITH collect(vals) AS vals_list
+WITH reduce (acc= {cost: 0.0, weight:0.0}, vals In vals_list| {cost: acc.cost + vals.cost, weight: acc.weight + vals.weight}) AS vals
+RETURN vals.weight AS weight, vals.cost AS cost
+----
+
+This is the result of the computation for the pruned and cleaned loose `awesome_bike_loose_constraints` resolved BOM:
+
+[source, json, role=noheader]
+----
+{
+    "weight": 8.43,
+    "cost": 1045.0
+}
+----
+
+=== 5.6. Check Unsatisfied Requirements
+
+This query identifies unresolved config groups (useful for too-constrained cases):
+
+[source, cypher, role=noheader]
+----
+// Find unresolved ConfigGroups
+MATCH path = (:Product)-[rs:RESOLVED_LINK {id_variant: $id_variant}]-*(x)-[:REQUIRES]->(y:ConfigGroup)
+WHERE NOT EXISTS {(x)-[:RESOLVED_LINK {id_variant: $id_variant}]->(y)}
+RETURN path
+----
+.Unresolved Over-Constrained No-Color BOM
+image::manufacturing/cbom-unresolved-nocolor-bom.png[]

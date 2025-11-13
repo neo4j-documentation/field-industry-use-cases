@@ -1,0 +1,350 @@
+= Electric Vehicle Route Planning
+
+== 1. Introduction
+In the evolving landscape of automotive manufacturing and logistics, optimizing routes for electric vehicles (EVs) is essential for efficiency, sustainability, and cost management. The Electric Vehicle Route Planning use case tackles a key business challenge: declaratively finding optimal paths that account for energy constraints, charging needs, and time limitations within supply chains. By leveraging Neo4j's Cypher 25, organisations can model complex graph traversals to plan routes for EV fleets transporting components, ensuring minimal energy use and compliance with operational constraints. These insights help identify efficient logistics strategies, reduce downtime, and mitigate risks in manufacturing supply chains.
+
+== 2. Scenario
+To understand the value of the Electric Vehicle Route Planning use case, consider real-world scenarios in automotive manufacturing where routing inefficiencies can significantly impact operations. The following three key areas highlight these challenges:
+
+1. *Supply Chain Logistics Optimization:*
+    - EV fleets transporting parts may face inefficient routes due to unaccounted energy depletion or charging station availability.
+    - Without deep insights into path dependencies, unexpected delays can disrupt just-in-time manufacturing processes.
+    - Holistic views of routes are often lacking, leading to overlooked opportunities for energy-efficient detours or bulk transport.
+    
+2. *Energy and Risk Management:*
+    - Inadequate mapping of energy states makes it hard to evaluate overall fleet exposure to battery drain or time overruns.
+    - Over-reliance on specific charging infrastructure could cause cascading failures during peak demand or outages.
+    - Traditional routing systems struggle with dynamic constraints, complicating the prediction of systemic risks in supply chains.
+    
+3. *Sustainability and Regulatory Compliance:*
+    - Increasing regulations demand transparent reporting on energy-efficient practices to meet environmental standards.
+    - Manual route planning is error-prone and time-consuming without unified tools.
+    - Organisations risk penalties and reputational harm if they cannot demonstrate optimized, sustainable logistics data to authorities.
+These scenarios underscore the need for an advanced solution like Neo4j's Electric Vehicle Route Planning with Cypher 25, which uses graph technology to model, analyze, and visualize dynamic routes, providing critical insights for business and technical users in manufacturing.
+
+== 3. Solution
+Advanced graph databases like Neo4j are vital for handling the intricacies of interconnected logistics data in automotive manufacturing. They excel at managing dynamic relationships, making it straightforward to model routes, constraints, and states. By representing data as graphs, organisations can uncover optimal paths, simulate scenarios, and derive actionable insights—enhancing decision-making, sustainability, and supply chain resilience.
+
+=== 3.1. How Graph Databases Can Help?
+Graph databases provide a powerful solution to the challenges of Electric Vehicle Route Planning in automotive manufacturing. Here are five key reasons why a graph database is indispensable:
+
+1. *Dynamic Relationship Modeling:* Graph databases naturally handle complex connections like roads and charging loops, capturing dependencies that relational databases can't efficiently represent.
+2. *Real-Time State-Aware Pruning:* They enable on-the-fly evaluation of states (e.g., battery SOC, time), pruning invalid routes instantly for faster, more accurate planning.
+3. *Comprehensive Route Visualization:* Graphs offer a full view of logistics networks, exposing hidden efficiencies and risks in EV component transport.
+4. *Flexible Scenario Simulation:* With features like repeatable elements, graphs support modeling cycles (e.g., multiple charges), aiding proactive adjustments to manufacturing schedules.
+5. *Streamlined Compliance and Optimization:* Graphs simplify reporting on energy use and routes, ensuring adherence to sustainability regulations while minimizing costs.
+These capabilities make graph databases central to deriving insights and solving the multifaceted issues in Electric Vehicle Route Planning for automotive organisations.
+
+== 4. Modelling
+This section demonstrates Cypher queries on an example graph. The goal is to show query structures and guide data modeling in production. We'll use a small graph with several nodes, based on the data model below:
+
+=== 4.1. Data Model
+.Data Model
+image::manufacturing/ev-routing-model.png[]
+
+==== 4.1.1 Required Data Fields
+Below are the fields required to get started:
+
+* `Geo` Node:
+** `name`: A readable location name (e.g., city or intersection)
+** `geo`: Geospatial point for distance calculations (e.g., point({srid:4326, x:lon, y:lat}))
+* `ChargingStation` Node (sub-label of Geo):
+** `power_kw`: Charging power in kilowatts
+* `Car` Node:
+** `id`: Unique vehicle identifier
+** `battery_capacity_kwh`: Total battery capacity
+** `efficiency_kwh_per_km`: Energy efficiency per kilometer
+** `current_soc_percent`: Starting state of charge percentage
+* `ROAD` Relationship:
+** `distance_km`: Distance between locations
+** `speed_limit_kph`: Maximum speed
+** `hourly_expected_speed_kph`: List of 24 hourly expected speeds
+* `CHARGE` Relationship (self-loop on ChargingStation):
+** `time_in_minutes`: Charging duration
+** `power_kw`: Power for this charge segment
+** `station_id`: Linked station ID
+
+==== 4.1.2 Required Parameters
+
+- From Paris to Marseille with car 1:
+[source, cypher, role=noheader]
+include::example$manufacturing/supply-chain-management/ev-route-planning-car1-paris-marseille.cypher[]
+
+- From Le Havre to Nice with car 1:
+[source, cypher, role=noheader]
+include::example$manufacturing/supply-chain-management/ev-route-planning-car1-lehavre-nice.cypher[]
+
+- From Le Havre to Nice with car 2:
+[source, cypher, role=noheader]
+include::example$manufacturing/supply-chain-management/ev-route-planning-car2-lehavre-nice.cypher[]
+
+=== 4.2. Demo Data
+The following Cypher statement will create the example graph in the Neo4j database:
+[source, cypher, role=noheader]
+----
+MATCH (n) DETACH DELETE n;
+CREATE (paris:City {lat: 48.8566, lon: 2.3522, name: 'Paris'}),
+ (lyon:City {lat: 45.7640, lon: 4.8357, name: 'Lyon'}),
+ (marseille:City {lat: 43.2965, lon: 5.3698, name: 'Marseille'}),
+ (bordeaux:City {lat: 44.8378, lon: -0.5792, name: 'Bordeaux'}),
+ (strasbourg:City {lat: 48.5734, lon: 7.7521, name: 'Strasbourg'}),
+ (lille:City {lat: 50.6292, lon: 3.0573, name: 'Lille'}),
+ (toulouse:City {lat: 43.6047, lon: 1.4442, name: 'Toulouse'}),
+ (nice:City {lat: 43.7102, lon: 7.2620, name: 'Nice'}),
+ (nantes:City {lat: 47.2184, lon: -1.5536, name: 'Nantes'}),
+ (montpellier:City {lat: 43.6108, lon: 3.8767, name: 'Montpellier'}),
+ (rennes:City {lat: 48.1173, lon: -1.6778, name: 'Rennes'}),
+ (reims:City {lat: 49.2583, lon: 4.0317, name: 'Reims'}),
+ (grenoble:City {lat: 45.1885, lon: 5.7245, name: 'Grenoble'}),
+ (dijon:City {lat: 47.3220, lon: 5.0415, name: 'Dijon'}),
+ (lehavre:City {lat: 49.4938, lon: 0.1079, name: 'Le Havre'});
+
+CREATE (cs1:ChargingStation {lat: 48.7566, lon: 2.4522, id: 'CS1', name: 'CS1', power_kw: 150}),
+ (cs2:ChargingStation {lat: 45.8640, lon: 4.7357, id: 'CS2', name: 'CS2', power_kw: 200}),
+ (cs3:ChargingStation {lat: 43.3965, lon: 5.4698, id: 'CS3', name: 'CS3', power_kw: 350}),
+ (cs4:ChargingStation {lat: 44.7378, lon: -0.4792, id: 'CS4', name: 'CS4', power_kw: 100}),
+ (cs5:ChargingStation {lat: 48.4734, lon: 7.8521, id: 'CS5', name: 'CS5', power_kw: 250}),
+ (cs6:ChargingStation {lat: 50.5292, lon: 3.1573, id: 'CS6', name: 'CS6', power_kw: 150}),
+ (cs7:ChargingStation {lat: 43.5047, lon: 1.5442, id: 'CS7', name: 'CS7', power_kw: 200}),
+ (cs8:ChargingStation {lat: 43.6102, lon: 7.3620, id: 'CS8', name: 'CS8', power_kw: 300}),
+ (cs9:ChargingStation {lat: 47.1184, lon: -1.4536, id: 'CS9', name: 'CS9', power_kw: 120}),
+ (cs10:ChargingStation {lat: 43.5108, lon: 3.9767, id: 'CS10', name: 'CS10', power_kw: 180});
+
+CREATE (c0:Car {id: 'Car0', battery_capacity_kwh: 56, efficiency_kwh_per_km: 0.19, current_soc_percent: 39});
+CREATE (c1:Car {id: 'Car1', battery_capacity_kwh: 100, efficiency_kwh_per_km: 0.1, current_soc_percent: 75});
+CREATE (c2:Car {id: 'Car2', battery_capacity_kwh: 100, efficiency_kwh_per_km: 0.07, current_soc_percent: 50});
+
+MATCH (a:City {name: 'Paris'}), (b:ChargingStation {id: 'CS1'}) CREATE (a)-[:ROAD {distance_km: 10.0, speed_limit_kph: 50}]->(b);
+MATCH (a:City {name: 'Paris'}), (b:City {name: 'Lyon'}) CREATE (a)-[:ROAD {distance_km: 460.0, speed_limit_kph: 110}]->(b);
+MATCH (a:City {name: 'Lyon'}), (b:ChargingStation {id: 'CS2'}) CREATE (a)-[:ROAD {distance_km: 15.0, speed_limit_kph: 60}]->(b);
+MATCH (a:City {name: 'Lyon'}), (b:City {name: 'Marseille'}) CREATE (a)-[:ROAD {distance_km: 310.0, speed_limit_kph: 110}]->(b);
+MATCH (a:City {name: 'Marseille'}), (b:ChargingStation {id: 'CS3'}) CREATE (a)-[:ROAD {distance_km: 12.0, speed_limit_kph: 50}]->(b);
+MATCH (a:City {name: 'Marseille'}), (b:City {name: 'Nice'}) CREATE (a)-[:ROAD {distance_km: 190.0, speed_limit_kph: 100}]->(b);
+MATCH (a:City {name: 'Bordeaux'}), (b:ChargingStation {id: 'CS4'}) CREATE (a)-[:ROAD {distance_km: 8.0, speed_limit_kph: 50}]->(b);
+MATCH (a:City {name: 'Bordeaux'}), (b:City {name: 'Nantes'}) CREATE (a)-[:ROAD {distance_km: 320.0, speed_limit_kph: 110}]->(b);
+MATCH (a:City {name: 'Strasbourg'}), (b:ChargingStation {id: 'CS5'}) CREATE (a)-[:ROAD {distance_km: 10.0, speed_limit_kph: 60}]->(b);
+MATCH (a:City {name: 'Strasbourg'}), (b:City {name: 'Reims'}) CREATE (a)-[:ROAD {distance_km: 370.0, speed_limit_kph: 110}]->(b);
+MATCH (a:City {name: 'Lille'}), (b:ChargingStation {id: 'CS6'}) CREATE (a)-[:ROAD {distance_km: 7.0, speed_limit_kph: 50}]->(b);
+MATCH (a:City {name: 'Lille'}), (b:City {name: 'Paris'}) CREATE (a)-[:ROAD {distance_km: 220.0, speed_limit_kph: 110}]->(b);
+MATCH (a:City {name: 'Toulouse'}), (b:ChargingStation {id: 'CS7'}) CREATE (a)-[:ROAD {distance_km: 9.0, speed_limit_kph: 50}]->(b);
+MATCH (a:City {name: 'Toulouse'}), (b:City {name: 'Montpellier'}) CREATE (a)-[:ROAD {distance_km: 340.0, speed_limit_kph: 110}]->(b);
+MATCH (a:City {name: 'Nice'}), (b:ChargingStation {id: 'CS8'}) CREATE (a)-[:ROAD {distance_km: 11.0, speed_limit_kph: 60}]->(b);
+MATCH (a:City {name: 'Nice'}), (b:City {name: 'Marseille'}) CREATE (a)-[:ROAD {distance_km: 190.0, speed_limit_kph: 100}]->(b);
+MATCH (a:City {name: 'Nantes'}), (b:ChargingStation {id: 'CS9'}) CREATE (a)-[:ROAD {distance_km: 6.0, speed_limit_kph: 50}]->(b);
+MATCH (a:City {name: 'Nantes'}), (b:City {name: 'Rennes'}) CREATE (a)-[:ROAD {distance_km: 110.0, speed_limit_kph: 100}]->(b);
+MATCH (a:City {name: 'Montpellier'}), (b:ChargingStation {id: 'CS10'}) CREATE (a)-[:ROAD {distance_km: 13.0, speed_limit_kph: 60}]->(b);
+MATCH (a:City {name: 'Montpellier'}), (b:City {name: 'Toulouse'}) CREATE (a)-[:ROAD {distance_km: 340.0, speed_limit_kph: 110}]->(b);
+MATCH (a:City {name: 'Rennes'}), (b:City {name: 'Le Havre'}) CREATE (a)-[:ROAD {distance_km: 250.0, speed_limit_kph: 110}]->(b);
+MATCH (a:City {name: 'Reims'}), (b:City {name: 'Paris'}) CREATE (a)-[:ROAD {distance_km: 140.0, speed_limit_kph: 100}]->(b);
+MATCH (a:City {name: 'Grenoble'}), (b:City {name: 'Lyon'}) CREATE (a)-[:ROAD {distance_km: 100.0, speed_limit_kph: 100}]->(b);
+MATCH (a:City {name: 'Dijon'}), (b:City {name: 'Strasbourg'}) CREATE (a)-[:ROAD {distance_km: 300.0, speed_limit_kph: 110}]->(b);
+MATCH (a:City {name: 'Le Havre'}), (b:City {name: 'Lille'}) CREATE (a)-[:ROAD {distance_km: 230.0, speed_limit_kph: 110}]->(b);
+
+// create geo point
+MATCH (x: ChargingStation|City)
+SET x.geo = point({longitude:x.lon, latitude:x.lat}), x:Geo;
+
+// create geo index
+CREATE POINT INDEX point_index_geo
+IF NOT EXISTS
+FOR (n:Geo) ON (n.geo);
+
+// create charging loops (5 and 15 minutes)
+MATCH (cs:ChargingStation)
+MERGE (cs)-[:CHARGE {station_id:cs.id, power_kw: cs.power_kw, time_in_minutes: 5}]->(cs)
+MERGE (cs)-[:CHARGE {station_id:cs.id, power_kw: cs.power_kw, time_in_minutes: 15}]->(cs);
+
+// create max speed expected hourly time
+MATCH ()-[r:ROAD]-()
+SET r.hourly_expected_speed_kph = 
+  [h IN range(0,23) | r.speed_limit_kph];
+
+// Lyon-->Marseille with rush hours
+MATCH (x:Geo {name:"Lyon"})-[r {speed_limit_kph: 110}]-(y:Geo {name:"Marseille"})
+SET r.hourly_expected_speed_kph =
+  [80,80,80,80,80,110,110,110,
+  110,110,110,110,110,110,110,110,
+  110,80,80,80,80,80,80,80];
+----
+
+== 5. Cypher Queries
+
+[NOTE]
+====
+These Cypher queries are compatible with Neo4j Version 2025.08+ and Cypher 25.
+====
+
+=== 5.1. Apply Spatial Pre-Pruning to Pattern to Avoid Detours
+This pattern incorporates spatial filtering to limit paths to reasonable detours:
+[source, cypher, role=noheader]
+----
+MATCH REPEATABLE ELEMENTS p = (a:Geo {name: $source_geo_name})
+  (() -[rels:ROAD|CHARGE]- (x:Geo
+     // Spatial pruning to avoid excessive detours
+     WHERE point.distance(x.geo, b.geo) < $detour_ratio * point.distance(a.geo, b.geo)
+    AND point.distance(x.geo, a.geo) < $detour_ratio * point.distance(a.geo, b.geo)
+  )){1,12}
+  (b:Geo {name: $target_geo_name})
+----
+
+=== 5.2. Full Stateful Route Planning with Cypher 25
+Using Cypher 25 for declarative, state-aware traversal with pruning to generate all valid paths:
+[source, cypher, role=noheader]
+----
+// MATCH A QUANTIFIED PATH PATTERN
+
+// CHYPHER version >= 25 and parallel runtime
+CYPHER 25 runtime=parallel // Match the vehicle
+MATCH (c:Car {id: $car_id})
+// Define the path with repeatable elements
+MATCH REPEATABLE ELEMENTS p = (a:Geo {name: $source_geo_name})
+  (() -[rels:ROAD|CHARGE]- (x:Geo
+     // Spatial pruning to avoid excessive detours
+     WHERE point.distance(x.geo, b.geo) < $detour_ratio * point.distance(a.geo, b.geo)
+    AND point.distance(x.geo, a.geo) < $detour_ratio * point.distance(a.geo, b.geo)
+  )){1,12}
+  (b:Geo {name: $target_geo_name})
+
+// COMPUTE CURRENT STATE AND PRUNE
+
+// Apply stateful pruning with allReduce
+WHERE allReduce(
+  // initial state
+  current = {soc: c.current_soc_percent, time_in_min: 0.0},  // Initialize state
+  r IN rels |  // Accumulate per relationship at traversal time
+    CASE
+      WHEN r:ROAD
+        // state of charge goes down
+        THEN {soc: current.soc - (r.distance_km*c.efficiency_kwh_per_km*100) / c.battery_capacity_kwh,
+            time_in_min: current.time_in_min
+                        + 60.0 *(r.distance_km / r.hourly_expected_speed_kph[
+                ($departure_datetime+duration({minutes:current.time_in_min})).hour
+                                  ]) }
+
+      WHEN r:CHARGE
+        // state of charge goes up
+        THEN {soc: current.soc + (r.power_kw*(r.time_in_minutes/60.0)*100) / c.battery_capacity_kwh,
+            time_in_min: current.time_in_min + r.time_in_minutes }
+    END,
+  // Prune if constraints are violated
+  // The boolean value needs to be True at each hop
+  // Battery should be in an acceptable state
+  $min_soc <= current.soc <= $max_soc
+    // Travel duration should be under the defined threshold
+  AND current.time_in_min <= $max_mins
+  )
+// Return for next stage
+RETURN c, p
+----
+
+=== 5.3. Compute Time and Energy Consumption to Select the Best Path
+This query is chained to the previous one with `NEXT` and calculates total duration and energy use for a given path:
+[source, cypher, role=noheader]
+----
+// SCORE, ORDER AND SELECT
+NEXT
+
+// Score and order paths
+RETURN c, p, reduce(current = {soc: c.current_soc_percent, time_in_min: 0.0, energy_kwh: 0.0},
+  r IN relationships(p) | CASE
+    WHEN r:ROAD
+      THEN {soc: current.soc - (r.distance_km*c.efficiency_kwh_per_km*100) / c.battery_capacity_kwh,
+          time_in_min: current.time_in_min
+                        + 60.0 *(r.distance_km / r.hourly_expected_speed_kph[
+                ($departure_datetime+duration({minutes:current.time_in_min})).hour
+                                  ]),
+          energy_kwh: current.energy_kwh + (r.distance_km * c.efficiency_kwh_per_km)}
+    WHEN r:CHARGE
+      THEN {soc: current.soc + (r.power_kw*(r.time_in_minutes/60.0)*100) / c.battery_capacity_kwh,
+          time_in_min: current.time_in_min + r.time_in_minutes,
+          energy_kwh: current.energy_kwh}
+  END) AS final_values
+
+ORDER BY final_values.time_in_min ASC,
+         final_values.energy_kwh ASC,
+         size(relationships(p)) ASC
+LIMIT 1
+----
+.Optimal Route from Le Havre to Nice with Car2
+image::manufacturing/ev-routing-path.png[]
+
+=== 5.4. Optimizing Further: Graph Refactor and Advanced Pruning
+To enhance the graph for more efficient querying in directed scenarios, refactor the road relationships to ensure explicit bidirectionality. This is achieved by adding reverse relationships where they do not exist, copying properties from the original:
+
+[source, cypher, role=noheader]
+----
+MATCH (a)-[r:ROAD]->(b)
+MERGE (b)-[rev_r:ROAD]->(a)
+SET rev_r += r{.*}
+----
+
+With this refactor, roads are now fully bidirectional (modeled as directed edges in both directions), allowing flexible traversal while maintaining directionality if needed.
+
+This enables an improved query incorporating advanced heuristic pruning to eliminate cycles and 4-hop segments that do not progress toward the target. By tracking the last four distances to the target in the state (`previous_dists`) and ensuring progress (`state.previous_dists[0] >= state.previous_dists[-1]`), paths that are not advancing are pruned. Additionally, `roads_taken` tracks used roads to prevent reusing the same road in the same direction, avoiding cycles.
+
+The pruning is effective enough to support an extremely high upper bound of 1 million hops on path length without performance degradation. Here is the updated query:
+
+[source, cypher, role=noheader]
+----
+CYPHER 25 runtime=parallel
+MATCH (c:Car {id: $car_id})
+MATCH (a:Geo {name: $source_geo_name})
+MATCH (b:Geo {name: $target_geo_name})
+WITH c, a, b, a AS source, b AS target
+MATCH REPEATABLE ELEMENTS p =  (source)
+  (() -[rels:ROAD|CHARGE]-> (x:Geo
+     WHERE point.distance(x.geo, b.geo) < $detour_ratio * point.distance(a.geo, b.geo)
+     AND point.distance(x.geo, a.geo) < $detour_ratio * point.distance(a.geo, b.geo)
+  )){1,1000000}
+  (target)
+WHERE allReduce(
+  state = {soc: c.current_soc_percent, time_in_min: 0.0, previous_dists: [ 3_000_000_000, 2_000_000_000, 1_000_000_000, point.distance(a.geo, b.geo)], roads_taken: []},
+  r IN rels|
+    CASE
+      WHEN r:ROAD
+        THEN {
+          soc: state.soc - (r.distance_km*c.efficiency_kwh_per_km*100) / c.battery_capacity_kwh,
+          time_in_min: state.time_in_min
+                        + 60.0 *(r.distance_km / r.hourly_expected_speed_kph[
+                      ($departure_datetime+duration({minutes:state.time_in_min})).hour
+                            ]),
+          previous_dists: state.previous_dists[1..]+[point.distance(endNode(r).geo, b.geo)],
+          roads_taken: state.roads_taken + [elementId(r)]
+            }
+
+      WHEN r:CHARGE
+        THEN {
+          soc: state.soc + (r.power_kw*(r.time_in_minutes/60.0)*100) / c.battery_capacity_kwh,
+          time_in_min: state.time_in_min + r.time_in_minutes,
+          previous_dists: state.previous_dists,
+          roads_taken: state.roads_taken
+            }
+    END,
+  $min_soc <= state.soc <= $max_soc
+    AND state.time_in_min <= $max_mins
+    AND state.previous_dists[0] >= state.previous_dists[-1]
+    AND NOT state.roads_taken[-1] IN state.roads_taken[..-1]
+  )
+RETURN c, p
+NEXT
+RETURN c, p, reduce(state = {soc: c.current_soc_percent, time_in_min: 0.0, energy_kwh: 0.0},
+  r IN relationships(p) | CASE
+    WHEN r:ROAD
+      THEN {soc: state.soc - (r.distance_km*c.efficiency_kwh_per_km*100) / c.battery_capacity_kwh,
+          time_in_min: state.time_in_min
+                        + 60.0 *(r.distance_km / r.hourly_expected_speed_kph[
+                ($departure_datetime+duration({minutes:state.time_in_min})).hour
+                                  ]),
+          energy_kwh: state.energy_kwh + (r.distance_km * c.efficiency_kwh_per_km)}
+    WHEN r:CHARGE
+      THEN {soc: state.soc + (r.power_kw*(r.time_in_minutes/60.0)*100) / c.battery_capacity_kwh,
+          time_in_min: state.time_in_min + r.time_in_minutes,
+          energy_kwh: state.energy_kwh}
+  END) AS final_values
+ORDER BY final_values.time_in_min ASC,
+         final_values.energy_kwh ASC,
+         size(relationships(p)) ASC
+LIMIT 1
+----
+
+This version delivers superior performance. For example, the Le Havre to Nice route with Car2 executes in approximately 85 ms on a Neo4j instance (e.g., 24 CPU / 128 GB RAM), demonstrating the efficiency of Cypher 25's stateful pruning for complex graph traversals.
