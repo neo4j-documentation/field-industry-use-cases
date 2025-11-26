@@ -1,0 +1,43 @@
+= Healthcare & Life Sciences
+
+If you work in systems biology, you're tasked with understanding the connections between genes, proteins, cells and tissues. If you work in chemistry, each individual molecule renders its own graph. Even healthcare organizations must map patient journeys to better understand disease progression or prevent poor outcomes. In each of these cases, you’re solving problems naturally represented by interconnected data.
+
+That's why life sciences users - pharmaceutical companies, chemical manufacturers, agriculture companies, biotech startups and healthcare providers - are leveraging Neo4j to analyze their connected data in ways not possible without graphs. Neo4j, a native graph database specifically designed to store and process your connected data, helps solve complicated life sciences problems at every scale.
+
+Life science companies - dealing with everything from patients to molecules - understand the value of graphs for R&D, privacy and regulatory compliance, medical equipment manufacturing and affiliation management between healthcare providers (HCPs), patients and organizations. Neo4j has enabled companies like Novartis and ChemAxon to extract novel insights about relationships between biological and chemical data to accelerate drug discovery. We've also empowered companies like Monsanto to track genetic relationships in corn to breed better crops and feed the world's growing population.
+
+:toc:
+
+Sections for the broad strokes, so I guess (?)
+
+* Pharmaceuticals
+    - Drug Development
+    - Clinical Trials
+
+* Medical Devices
+    - Electronic Health Records (EHR)
+    - Telemedicine
+    - Health Data Analytics
+
+* Patient Care
+    - Patient Journey
+    - Care Coordination
+    - Hospital Management
+    - Patient Engagement
+
+* Healthcare Providers
+    - Hospitals
+    - Clinics
+    - Home Healthcare
+
+
+== Patient Care
+
+What do we mean by 'Patient Care' Is that even a valid title????
+
+=== Patient Journey
+
+The patient journey encompasses all the interactions a patient has with the healthcare system, from initial contact through treatment and follow-up care. Understanding this journey is critical for improving patient outcomes and enhancing the overall healthcare experience. It can help identify gaps in care, streamline processes, and ensure that patients receive the right care at the right time. Saving time, resources and improving patient outcomes.
+
+* xref:healthcare/patient-care/patient-journey.adoc[Patient Journey] 
+
