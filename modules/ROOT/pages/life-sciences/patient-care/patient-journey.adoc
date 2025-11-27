@@ -2,40 +2,204 @@
 
 A patient journey is a representation of the journey a patient takes through the healthcare system. It is a graph that represents the nodes and relationships between the nodes.
 
-== Introduction
+== 1. Introduction
 
 A patient journey is a representation of the journey a patient takes through the healthcare system. It is a graph that represents the nodes and relationships between the nodes.
 
-== Scenario
+== 2. Scenario
 
 A patient journey is a representation of the journey a patient takes through the healthcare system. It is a graph that represents the nodes and relationships between the nodes.
 
-== Solution
+== 3. Solution
 
 A patient journey use case tracks an individual's complete healthcare experience across multiple touchpoints, providers, and treatments over time. Neo4j's graph database excels at connecting fragmented patient data from disparate EHRs, lab results, prescriptions, and specialist visits—into a unified, relationship-rich model. This approach enables healthcare organizations to visualize complex care pathways, identify treatment gaps, and understand how different interventions impact outcomes. Graph queries can instantly traverse a patient's entire medical history to surface patterns like medication interactions, referral bottlenecks, or care coordination issues that traditional databases struggle to uncover. Ultimately, Neo4j empowers clinicians and administrators to deliver more personalized, continuous care while optimizing resource allocation across the healthcare network.
 
-== Modeling
-
-=== Data Model
+=== 4.1. Data Model
 
 Neo4j's labeled property graph model naturally aligns with the OMOP Common Data Model by representing clinical concepts as nodes (Person, Condition, Drug, Procedure), their attributes as properties (dates, codes, values), and clinical events as relationships (HAS_CONDITION, PRESCRIBED_DRUG), enabling intuitive mapping of standardized observational health data while preserving the rich semantic connections between patients, diagnoses, treatments, and outcomes that OMOP vocabularies define.
 
 .Patient Journey overview
 image::life-sciences/Industry_Use_Cases_Patient_Journey.svg[width=800]
 
-=== Demo Data
+`Patient` Node:
 
-=== Schema
+- `id`: Unique identifier for the patient
 
-=== Cypher Queries
+`Encounter` Node:
 
-=== GDS (Graph Data Science)
+`Observation` Node:
+
+`Provider` Node:
+
+`Speciality` Node:
+
+`Organisation` Node:
+
+`Drug` Node:
+
+`Condition` Node:
+
+=== 4.2. Demo Data
+
+The following Cypher statement will create the example graph in the Neo4j database:
+
+[source, cypher, role=noheader]
+----
+// Create patient
+CREATE (p:Patient {id: '987-223-1345', name: 'Alice Johnson', birthDate: date('1975-03-22')})
+
+// CREATE providers, specialities and organisation
+CREATE (p1:Provider {id: 'prov-001', name: 'Dr. Emily Smith'})
+CREATE (sp1:Speciality {name: 'Cardiology'})
+CREATE (p2:Provider {id: 'prov-002', name: 'Dr. Anisha Jones'})
+CREATE (sp2:Speciality {name: 'General Practice'})
+CREATE (org:Organisation {id: 'org-001', name: 'City Health Clinic', address: '123 Main St, Metropolis'})
+
+// Create encounter 1 and associated data
+CREATE (e1:Encounter {id: 'enc-aj75-001', date: date('2025-11-10'), type: 'Inpatient'})
+CREATE (o11:Observation {id: 'obs-aj75-011', code: '8320-2', value: '175/80', unit: 'mmHg'})
+CREATE (o12:Observation {id: 'obs-aj75-012', code: '29463-7', value: 68, unit: 'kg'})
+CREATE (dr1:Drug {id: 'pres-aj75-001', code:'386873009', name: 'Lisinopril', dosage: '10 mg', frequency: 'Once daily'})
+CREATE (con1:Condition {id: 'cond-aj75-001', code: '38341003', description: 'Hypertensive disorder, systemic arterial (disorder)'})
+
+// Create encounter 2 and associated data
+CREATE (e2:Encounter {id: 'enc-aj75-002', date: date('2025-11-12'), type: 'Outpatient'})
+CREATE (o21:Observation {id: 'obs-aj75-021', code: '8320-2', value: '140/80', unit: 'mmHg'})
+CREATE (o22:Observation {id: 'obs-aj75-022', code: '29463-7', value: 68.1, unit: 'kg'})
+CREATE (dr2:Drug {id: 'pres-aj75-002', code:'386873009', name: 'Lisinopril', dosage: '10 mg', frequency: 'Once daily'})
+CREATE (con2:Condition {id: 'cond-aj75-002', code: '44054006', description: 'Diabetes mellitus type 2 (disorder)'})
+
+// Create encounter 3 and associated data
+CREATE (e3:Encounter {id: 'enc-aj75-003', date: date('2025-11-24'), type: 'Outpatient'})
+CREATE (o31:Observation {id: 'obs-aj75-031', code: '8320-2', value: '120/80', unit: 'mmHg'})
+CREATE (o32:Observation {id: 'obs-aj75-032', code: '29463-7', value: 69.6, unit: 'kg'})
+
+// Create provider relationships
+CREATE (p1)-[:HAS_SPECIALITY]->(sp1)
+CREATE (p1)-[:BELONGS_TO]->(org)
+CREATE (p2)-[:HAS_SPECIALITY]->(sp2)
+CREATE (p2)-[:BELONGS_TO]->(org)
+
+// Create encounter 1 relationships
+CREATE (p)-[:HAS_ENCOUNTER]->(e1)
+CREATE (e1)-[:HAS_OBSERVATION]->(o11)
+CREATE (e1)-[:HAS_OBSERVATION]->(o12)
+CREATE (e1)-[:PRESCRIBED]->(dr1)
+CREATE (e1)-[:DIAGNOSED]->(con1)
+CREATE (e1)-[:ATTENDED_BY]->(p1) //better?
+
+// Create encounter 2 relationships
+CREATE (e1)-[:NEXT]->(e2)
+CREATE (p)-[:HAS_ENCOUNTER]->(e2)
+CREATE (e2)-[:HAS_OBSERVATION]->(o21)
+CREATE (e2)-[:HAS_OBSERVATION]->(o22)
+CREATE (e2)-[:DIAGNOSED]->(con1)
+CREATE (e2)-[:DIAGNOSED]->(con2)
+CREATE (e2)-[:PRESCRIBED]->(dr2)
+CREATE (e2)-[:ATTENDED_BY]->(p2)
+
+// Create encounter 3 relationships
+CREATE (e2)-[:NEXT]->(e3)
+CREATE (p)-[:HAS_ENCOUNTER]->(e3)
+CREATE (e3)-[:HAS_OBSERVATION]->(o31)
+CREATE (e3)-[:HAS_OBSERVATION]->(o32)
+CREATE (e3)-[:ATTENDED_BY]->(p2)
+----
+
+=== 4.3. Schema
+
+If you call:
+
+[source, cypher, role=noheader]
+----
+// Show neo4j scheme
+CALL db.schema.visualization()
+----
+
+You will see the following response:
+
+image::life-sciences/patient-journey/patient-journey-schema.png[]
+
+== 5. Cypher Queries
+
+=== 5.1. Patient based queries
+
+==== 5.1.1. Given a `Patient` what `Drug`s were `PRESCRIBED`?
+
+[source, cypher, role=noheader]
+----
+// Get all the drugs a patient has been prescribed
+MATCH (p:Patient {id: '987-223-1345'})-[:HAS_ENCOUNTER]->(:Encounter)-[:PRESCRIBED]->(d:Drug)
+RETURN p.name AS Name, collect(DISTINCT d.name) AS `Prescribed Drugs`;
+----
+
+==== 5.1.2. Given a `Patient` what `Condition`s were `DIAGONOSED`?
+
+[source, cypher, role=noheader]
+----
+// Get all the conditions a patient has been diagnosed with
+MATCH (p:Patient {id: '987-223-1345'})-[:HAS_ENCOUNTER]->(:Encounter)-[:DIAGNOSED]->(c:Condition)
+RETURN p.name AS Name, collect(DISTINCT c.description) AS conditions;
+----
+
+==== 5.1.3. Given a `Patient`` and their `Condition` - what are the comorbidities of other `Patient`s with the same `Condition`?
+
+[source, cypher, role=noheader]
+----
+//TODO: Need more data to demo this properly
+----
+
+=== 5.2. Condition based queries
+
+==== 5.2.1. 
+
+[source, cypher, role=noheader]
+----
+// What are the comorbidities associated with particular `Condition`?
+MATCH (c1:Condition {code: '38341003'})<-[:DIAGNOSED]-(:Encounter)-[:DIAGNOSED]->(c2:Condition)
+WHERE c1 <> c2
+RETURN c2.code AS Code, c2.description AS Description, count(*) AS Occurrences
+ORDER BY Occurrences DESC;
+----
+
+=== 5.3. Provide based queries
+
+==== 5.3.1. Given a `Provider` what `Patient`s have they seen, and how often?
+
+[source, cypher, role=noheader]
+----
+//* Given a provider what patients have they seen?
+MATCH (p:Provider {id: 'prov-002'})<-[:ATTENDED_BY]-(:Encounter)<-[:HAS_ENCOUNTER]-(pt:Patient)
+RETURN pt.id AS PatientId, pt.name AS `Patient Name`, count(*) AS Encounters
+ORDER BY Encounters DESC;
+----
+
+==== 5.3.2. Given a `Provider` what `Condition`s have they `DIAGNOSED`?
+
+[source, cypher, role=noheader]
+----
+// Given a provider what diagnoses have they made?
+MATCH (p:Provider {id: 'prov-002'})<-[:ATTENDED_BY]-(:Encounter)-[:DIAGNOSED]->(c:Condition)
+RETURN c.code AS Code, c.description AS Description, count(*) AS Diagnoses
+ORDER BY Diagnoses DESC;
+----
+
+==== 5.3.3. Given a `Provider` what `Drug`s have they `PRESCRIBED`?
+
+[source, cypher, role=noheader]
+----
+// Given a provider what drugs have they prescribed?
+MATCH (p:Provider {id: 'prov-002'})<-[:ATTENDED_BY]-(:Encounter)-[:PRESCRIBED]->(d:Drug)
+RETURN d.code AS Code, d.name AS Name, count(*) AS Prescriptions
+----
+
+== 6. GDS (Graph Data Science)
 
 Neo4j's Graph Data Science library enables sophisticated patient journey analytics through community detection algorithms that identify patient sub-phenotypes by clustering individuals with similar clinical trajectories, comorbidities, and treatment responses. Centrality algorithms like PageRank and degree centrality can highlight critical entities within a patient's medical history—such as severe allergies, adverse drug reactions, or key diagnoses—that disproportionately influence care decisions and outcomes. Pathfinding algorithms can reveal optimal treatment sequences by analyzing successful care pathways across similar patient cohorts, while similarity measures identify patients with comparable conditions for comparative effectiveness research. Link prediction capabilities can forecast potential complications or disease progressions based on relationship patterns observed in historical patient data, enabling proactive intervention strategies.
 
-== Real World Examples
+== 7. Real World Examples
 
-==== AstraZeneca
+=== 7.1. AstraZeneca
 
 AstraZeneca is using Neo4j to improve patient outcomes by analyzing patient journeys.
 
