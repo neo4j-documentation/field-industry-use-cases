@@ -1,0 +1,34 @@
+= Patient Journey
+
+A patient journey is a representation of the journey a patient takes through the healthcare system. It is a graph that represents the nodes and relationships between the nodes.
+
+== Introduction
+
+A patient journey is a representation of the journey a patient takes through the healthcare system. It is a graph that represents the nodes and relationships between the nodes.
+
+== Scenario
+
+A patient journey is a representation of the journey a patient takes through the healthcare system. It is a graph that represents the nodes and relationships between the nodes.
+
+== Solution
+
+== Modeling
+
+=== Data Model
+
+=== Demo Data
+
+=== Schema
+
+=== Cypher Queries
+
+=== GDS (Graph Data Science)
+
+== Real World Examples
+
+==== AstraZeneca
+
+AstraZeneca is using Neo4j to improve patient outcomes by analyzing patient journeys.
+
+- Blog post
+- Presentation

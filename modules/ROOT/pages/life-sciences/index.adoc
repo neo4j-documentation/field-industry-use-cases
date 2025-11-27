@@ -11,8 +11,9 @@ Life science companies - dealing with everything from patients to molecules - un
 Sections for the broad strokes, so I guess (?)
 
 * Pharmaceuticals
-    - Drug Development
+    - Target Identification
     - Clinical Trials
+    - Competitive Intelligence
 
 * Medical Devices
     - Electronic Health Records (EHR)

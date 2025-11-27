@@ -1,0 +1,9 @@
+= Patient Care
+
+Patient care has fundamentally evolved from a fragmented, visit-by-visit approach to a holistic, continuous journey that recognizes the interconnected nature of health and wellness. Rather than treating each appointment as an isolated event, modern healthcare views the patient experience as an ongoing narrative where every interaction, intervention, and outcome builds upon what came before and shapes what comes next. This connected care model acknowledges that a patient's health status between visits is just as important as what happens during clinical encounters, and that factors such as medication adherence, lifestyle changes, social determinants of health, and follow-up care all play critical roles in overall outcomes. By leveraging integrated data systems, care coordination platforms, and collaborative communication channels, healthcare providers can now maintain continuity across different settings—from primary care to specialists to home health—ensuring that every member of the care team has access to a complete picture of the patient's history, current status, and future goals. This shift transforms healthcare from reactive episodic treatment to proactive relationship-based partnership, where patients and providers work together across the entire care continuum to achieve sustained health improvements rather than simply addressing acute problems as they arise.
+
+== Use Cases
+
+=== Patient Journey
+
+* xref:life-sciences/patient-care/patient-journey.adoc[]
