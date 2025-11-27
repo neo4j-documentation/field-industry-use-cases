@@ -12,9 +12,16 @@ A patient journey is a representation of the journey a patient takes through the
 
 == Solution
 
+A patient journey use case tracks an individual's complete healthcare experience across multiple touchpoints, providers, and treatments over time. Neo4j's graph database excels at connecting fragmented patient data from disparate EHRs, lab results, prescriptions, and specialist visits—into a unified, relationship-rich model. This approach enables healthcare organizations to visualize complex care pathways, identify treatment gaps, and understand how different interventions impact outcomes. Graph queries can instantly traverse a patient's entire medical history to surface patterns like medication interactions, referral bottlenecks, or care coordination issues that traditional databases struggle to uncover. Ultimately, Neo4j empowers clinicians and administrators to deliver more personalized, continuous care while optimizing resource allocation across the healthcare network.
+
 == Modeling
 
 === Data Model
+
+Neo4j's labeled property graph model naturally aligns with the OMOP Common Data Model by representing clinical concepts as nodes (Person, Condition, Drug, Procedure), their attributes as properties (dates, codes, values), and clinical events as relationships (HAS_CONDITION, PRESCRIBED_DRUG), enabling intuitive mapping of standardized observational health data while preserving the rich semantic connections between patients, diagnoses, treatments, and outcomes that OMOP vocabularies define.
+
+.Patient Journey overview
+image::life-sciences/Industry_Use_Cases_Patient_Journey.svg[width=800]
 
 === Demo Data
 
@@ -23,6 +30,8 @@ A patient journey is a representation of the journey a patient takes through the
 === Cypher Queries
 
 === GDS (Graph Data Science)
+
+Neo4j's Graph Data Science library enables sophisticated patient journey analytics through community detection algorithms that identify patient sub-phenotypes by clustering individuals with similar clinical trajectories, comorbidities, and treatment responses. Centrality algorithms like PageRank and degree centrality can highlight critical entities within a patient's medical history—such as severe allergies, adverse drug reactions, or key diagnoses—that disproportionately influence care decisions and outcomes. Pathfinding algorithms can reveal optimal treatment sequences by analyzing successful care pathways across similar patient cohorts, while similarity measures identify patients with comparable conditions for comparative effectiveness research. Link prediction capabilities can forecast potential complications or disease progressions based on relationship patterns observed in historical patient data, enabling proactive intervention strategies.
 
 == Real World Examples
 
