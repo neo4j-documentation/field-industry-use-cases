@@ -10,6 +10,9 @@ A patient journey is a representation of the journey a patient takes through the
 
 A patient journey is a representation of the journey a patient takes through the healthcare system. It is a graph that represents the nodes and relationships between the nodes.
 
+.A walkthrough of Patient Journey use case
+image::life-sciences/patient_journey.png[width=800]
+
 == 3. Solution
 
 A patient journey use case tracks an individual's complete healthcare experience across multiple touchpoints, providers, and treatments over time. Neo4j's graph database excels at connecting fragmented patient data from disparate EHRs, lab results, prescriptions, and specialist visits—into a unified, relationship-rich model. This approach enables healthcare organizations to visualize complex care pathways, identify treatment gaps, and understand how different interventions impact outcomes. Graph queries can instantly traverse a patient's entire medical history to surface patterns like medication interactions, referral bottlenecks, or care coordination issues that traditional databases struggle to uncover. Ultimately, Neo4j empowers clinicians and administrators to deliver more personalized, continuous care while optimizing resource allocation across the healthcare network.
@@ -193,9 +196,13 @@ MATCH (p:Provider {id: 'prov-002'})<-[:ATTENDED_BY]-(:Encounter)-[:PRESCRIBED]->
 RETURN d.code AS Code, d.name AS Name, count(*) AS Prescriptions
 ----
 
-== 6. GDS (Graph Data Science)
+== 6. Graph Data Science (GDS)
 
-Neo4j's Graph Data Science library enables sophisticated patient journey analytics through community detection algorithms that identify patient sub-phenotypes by clustering individuals with similar clinical trajectories, comorbidities, and treatment responses. Centrality algorithms like PageRank and degree centrality can highlight critical entities within a patient's medical history—such as severe allergies, adverse drug reactions, or key diagnoses—that disproportionately influence care decisions and outcomes. Pathfinding algorithms can reveal optimal treatment sequences by analyzing successful care pathways across similar patient cohorts, while similarity measures identify patients with comparable conditions for comparative effectiveness research. Link prediction capabilities can forecast potential complications or disease progressions based on relationship patterns observed in historical patient data, enabling proactive intervention strategies.
+Neo4j's Graph Data Science library enables sophisticated patient journey analytics using the information of the relationships. 
+- Community detection algorithms identify sub-phenotypes of patients by clustering individuals with similar clinical trajectories, comorbidities, and treatment responses. 
+- Centrality algorithms like PageRank and degree centrality can highlight critical entities within a patient's medical history—such as severe allergies, adverse drug reactions, or key diagnoses—that disproportionately influence care decisions and outcomes. 
+- Pathfinding algorithms can reveal optimal treatment sequences by analyzing successful care pathways across similar patient cohorts, while similarity measures identify patients with comparable conditions for comparative effectiveness research. 
+- Link prediction capabilities can forecast potential complications or disease progressions based on relationship patterns observed in historical patient data, enabling proactive intervention strategies.
 
 == 7. Real World Examples
 
@@ -203,5 +210,7 @@ Neo4j's Graph Data Science library enables sophisticated patient journey analyti
 
 AstraZeneca is using Neo4j to improve patient outcomes by analyzing patient journeys.
 
-- Blog post
-- Presentation
+- https://neo4j.com/blog/healthcare/improving-patient-outcomes-algorithms-graphconnect/[Blog post]
+
+.Improving Patient Outcomes with Graph Algorithms
+video::6gAFnrWQ4kk[youtube]
