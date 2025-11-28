@@ -1,0 +1,202 @@
+= Single OMICs Data Integration
+
+== Introduction
+
+Integrating omics data into knowledge graphs typically begins with a single data type, such as RNA-seq experiments, which provides a foundation for subsequent multi-omics integration. By representing RNA-seq data in Neo4j, researchers can move beyond static tables and embrace the inherently connected nature of transcriptomic information. Each transcript measurement becomes a node connected to its corresponding gene, sample metadata, experimental conditions, and biological annotations. This graph structure naturally captures the relationships between differentially expressed genes, their protein products, associated pathways, and clinical phenotypes—all queryable through intuitive graph traversals. For instance, researchers can rapidly identify co-expressed gene modules across multiple experiments, trace expression changes from transcript to protein to pathway, or link expression signatures to patient outcomes. Neo4j's native graph architecture transforms RNA-seq data from isolated datasets into an integrated molecular map that accelerates hypothesis generation and biological discovery.
+
+== Scenario
+
+A typical research scenario involves comparing disease versus control samples to identify molecular signatures of pathology. Researchers collect tissue samples from both healthy controls and disease patients—for example, liver biopsies from patients with non-alcoholic fatty liver disease versus healthy donors. These samples undergo RNA-seq experimentation, where raw sequencing data is processed through bioinformatics pipelines to identify differentially expressed genes between the two groups. The analyzed results, such as the top 10 upregulated or downregulated genes with their fold-changes and statistical significance, are then stored in Neo4j. 
+
+In the graph database, each biological sample becomes a node with properties describing its tissue type, patient demographics, and group assignment (control or disease). Sample nodes connect to experiment nodes representing the RNA-seq analysis, which in turn link to gene nodes for the differentially expressed transcripts. This structure makes it intuitive to query across experiments—for instance, identifying genes consistently dysregulated across multiple disease cohorts, tracing which pathways are affected, or connecting expression changes to known protein functions. The graph naturally represents the experimental design, preserving the relationship between samples, conditions, and molecular measurements in a way that supports both immediate analysis and future integration with additional omics layers.
+
+== Solution
+
+==== Accommodating Heterogeneous Data
+Even within a single omics type like RNA-seq, experiments vary dramatically—different tissue sources, diverse phenotypic annotations, multiple comparison groups, and varying levels of biological annotation. The graph model handles this heterogeneity seamlessly. Projects connect to samples with flexible properties, samples link to their tissue origins and phenotypes (using standardized vocabularies like EFO), while experiments capture method-specific metadata. Critically, the Comparison node enables researchers to model complex experimental designs—whether comparing disease versus control, treatment versus baseline, or multiple conditions simultaneously—without restructuring the entire database.
+
+==== Bridging Identifiers and Knowledge
+The model addresses a fundamental challenge in omics integration: connecting experimental measurements to standardized biological entities. Gene identifiers from RNA-seq analysis link to multiple ID nodes from different sources (Ensembl, NCBI, HGNC), which then map to canonical Gene nodes. These genes connect onwards to their encoded Proteins, associated Gene Ontology terms, and disease relationships. This identifier-bridging layer is crucial because different experiments and databases use different naming conventions, yet the graph structure makes these mappings explicit and traversable.
+
+==== Flexibility for Discovery
+The schema's flexibility truly shines when solving biological questions. Need to find all differentially expressed genes across multiple liver disease experiments? Simply traverse from Disease → Gene ← Experiment ← Sample ← Tissue. Want to identify genes consistently dysregulated in a specific phenotype regardless of tissue type? The graph makes this natural. Looking for functional enrichment? Follow Gene → Protein → GO paths. The graph's property model also allows each node type to carry experiment-specific attributes—fold-changes, p-values, expression levels—without forcing every experiment to share identical properties.
+This adaptable structure means researchers can integrate new RNA-seq datasets incrementally, add novel annotation layers as they become available, and explore biological connections without extensive database redesign—transforming single omics analysis from a data management burden into an opportunity for insight.
+
+== Data Model
+
+The graph data model demonstrates how Neo4j's flexible schema elegantly addresses the inherent heterogeneity of single omics data. Unlike rigid relational databases that require predefined table structures, this graph architecture allows researchers to naturally represent the diverse experimental contexts, varied sample annotations, and multiple identifier systems that characterize real-world omics projects.
+
+.Single OMICs Data Model
+image:life-sciences/Industry_Use_Cases_single-OMICs.svg[]
+
+== Demo Data
+
+== Cypher Queries
+
+The following Cypher statements will create the example graph in the Neo4j database:
+
+[source, cypher, role=noheader]
+----
+// Create Projects
+CREATE (p1:Project {sid: "PROJ001", name: "Liver Disease Study"})
+CREATE (p2:Project {sid: "PROJ002", name: "Diabetes Research"})
+
+// Create Tissues
+CREATE (t1:Tissue {sid: "UBERON:0002107", name: "Liver"})
+CREATE (t2:Tissue {sid: "UBERON:0001264", name: "Pancreas"})
+
+// Create Diseases
+CREATE (d1:Disease {sid: "MONDO:0005359", name: "Non-alcoholic fatty liver disease"})
+CREATE (d2:Disease {sid: "MONDO:0005015", name: "Type 2 Diabetes"})
+
+// Create Phenotypes (EFO)
+CREATE (ph1:EFO {sid: "EFO:0004220", name: "Insulin resistance"})
+CREATE (ph2:EFO {sid: "EFO:0001421", name: "Elevated triglycerides"})
+
+// Create Samples
+CREATE (s1:Sample {sid: "SAMPLE001", name: "Patient_001_Liver"})
+CREATE (s2:Sample {sid: "SAMPLE002", name: "Control_001_Liver"})
+CREATE (s3:Sample {sid: "SAMPLE003", name: "Patient_002_Pancreas"})
+CREATE (s4:Sample {sid: "SAMPLE004", name: "Control_002_Pancreas"})
+
+// Create Experiments
+CREATE (e1:Experiment {sid: "EXP001", type: "RNA-seq"})
+CREATE (e2:Experiment {sid: "EXP002", type: "RNA-seq"})
+
+// Create Comparisons
+CREATE (comp1:Comparison {sid: "COMP001", name: "NAFLD vs Control", type: "disease_vs_control"})
+CREATE (comp2:Comparison {sid: "COMP002", name: "T2D vs Control", type: "disease_vs_control"})
+
+// Create Genes with expression data
+CREATE (g1:Gene {sid: "ENSG00000105851", symbol: "PIK3CG", source: "Ensembl"})
+CREATE (g2:Gene {sid: "ENSG00000169245", symbol: "CXCL10", source: "Ensembl"})
+CREATE (g3:Gene {sid: "ENSG00000198793", symbol: "MTOR", source: "Ensembl"})
+CREATE (g4:Gene {sid: "ENSG00000134108", symbol: "AKT1", source: "Ensembl"})
+CREATE (g5:Gene {sid: "ENSG00000171408", symbol: "PPARG", source: "Ensembl"})
+
+// Create IDs (alternative identifiers)
+CREATE (id1:ID {sid: "5294", source: "NCBI"})
+CREATE (id2:ID {sid: "3627", source: "NCBI"})
+CREATE (id3:ID {sid: "2475", source: "NCBI"})
+
+// Create Proteins
+CREATE (pr1:Protein {sid: "P48736", source: "UniProt"})
+CREATE (pr2:Protein {sid: "P02778", source: "UniProt"})
+CREATE (pr3:Protein {sid: "P42345", source: "UniProt"})
+CREATE (pr4:Protein {sid: "P31749", source: "UniProt"})
+CREATE (pr5:Protein {sid: "P37231", source: "UniProt"})
+
+// Create GO terms
+CREATE (go1:GO {sid: "GO:0005158", name: "insulin receptor binding"})
+CREATE (go2:GO {sid: "GO:0006954", name: "inflammatory response"})
+CREATE (go3:GO {sid: "GO:0043066", name: "negative regulation of apoptosis"})
+CREATE (go4:GO {sid: "GO:0008286", name: "insulin receptor signaling pathway"})
+
+// Connect Project -> Sample
+MATCH (p:Project {sid: "PROJ001"}), (s:Sample {sid: "SAMPLE001"})
+CREATE (p)-[:HAS_SAMPLE]->(s)
+MATCH (p:Project {sid: "PROJ001"}), (s:Sample {sid: "SAMPLE002"})
+CREATE (p)-[:HAS_SAMPLE]->(s)
+MATCH (p:Project {sid: "PROJ002"}), (s:Sample {sid: "SAMPLE003"})
+CREATE (p)-[:HAS_SAMPLE]->(s)
+MATCH (p:Project {sid: "PROJ002"}), (s:Sample {sid: "SAMPLE004"})
+CREATE (p)-[:HAS_SAMPLE]->(s)
+
+// Connect Sample -> Tissue
+MATCH (s:Sample {sid: "SAMPLE001"}), (t:Tissue {sid: "UBERON:0002107"})
+CREATE (s)-[:TAKEN_FROM]->(t)
+MATCH (s:Sample {sid: "SAMPLE002"}), (t:Tissue {sid: "UBERON:0002107"})
+CREATE (s)-[:TAKEN_FROM]->(t)
+MATCH (s:Sample {sid: "SAMPLE003"}), (t:Tissue {sid: "UBERON:0001264"})
+CREATE (s)-[:TAKEN_FROM]->(t)
+
+// Connect Sample -> Phenotype
+MATCH (s:Sample {sid: "SAMPLE001"}), (ph:EFO {sid: "EFO:0001421"})
+CREATE (s)-[:HAS_PHENOTYPE]->(ph)
+MATCH (s:Sample {sid: "SAMPLE003"}), (ph:EFO {sid: "EFO:0004220"})
+CREATE (s)-[:HAS_PHENOTYPE]->(ph)
+
+// Connect Sample -> Experiment
+MATCH (s:Sample {sid: "SAMPLE001"}), (e:Experiment {sid: "EXP001"})
+CREATE (s)-[:HAS_EXPERIMENT]->(e)
+MATCH (s:Sample {sid: "SAMPLE002"}), (e:Experiment {sid: "EXP001"})
+CREATE (s)-[:HAS_EXPERIMENT]->(e)
+MATCH (s:Sample {sid: "SAMPLE003"}), (e:Experiment {sid: "EXP002"})
+CREATE (s)-[:HAS_EXPERIMENT]->(e)
+
+// Connect Comparison -> Experiment
+MATCH (c:Comparison {sid: "COMP001"}), (e:Experiment {sid: "EXP001"})
+CREATE (c)-[:COMPARES]->(e)
+MATCH (c:Comparison {sid: "COMP002"}), (e:Experiment {sid: "EXP002"})
+CREATE (c)-[:COMPARES]->(e)
+
+// Connect Experiment -> Gene (with expression values)
+MATCH (e:Experiment {sid: "EXP001"}), (g:Gene {symbol: "PIK3CG"})
+CREATE (e)-[:HAS_VALUE {foldChange: 2.5, pValue: 0.001, regulated: "up"}]->(g)
+MATCH (e:Experiment {sid: "EXP001"}), (g:Gene {symbol: "CXCL10"})
+CREATE (e)-[:HAS_VALUE {foldChange: 3.2, pValue: 0.0005, regulated: "up"}]->(g)
+MATCH (e:Experiment {sid: "EXP002"}), (g:Gene {symbol: "MTOR"})
+CREATE (e)-[:HAS_VALUE {foldChange: -1.8, pValue: 0.01, regulated: "down"}]->(g)
+MATCH (e:Experiment {sid: "EXP002"}), (g:Gene {symbol: "AKT1"})
+CREATE (e)-[:HAS_VALUE {foldChange: 2.1, pValue: 0.002, regulated: "up"}]->(g)
+
+// Connect Gene -> Protein
+MATCH (g:Gene {symbol: "PIK3CG"}), (p:Protein {sid: "P48736"})
+CREATE (g)-[:CODES]->(p)
+MATCH (g:Gene {symbol: "CXCL10"}), (p:Protein {sid: "P02778"})
+CREATE (g)-[:CODES]->(p)
+MATCH (g:Gene {symbol: "MTOR"}), (p:Protein {sid: "P42345"})
+CREATE (g)-[:CODES]->(p)
+MATCH (g:Gene {symbol: "AKT1"}), (p:Protein {sid: "P31749"})
+CREATE (g)-[:CODES]->(p)
+MATCH (g:Gene {symbol: "PPARG"}), (p:Protein {sid: "P37231"})
+CREATE (g)-[:CODES]->(p)
+
+// Connect Gene -> ID
+MATCH (g:Gene {symbol: "PIK3CG"}), (id:ID {sid: "5294"})
+CREATE (g)-[:MAPPED]->(id)
+MATCH (g:Gene {symbol: "CXCL10"}), (id:ID {sid: "3627"})
+CREATE (g)-[:MAPPED]->(id)
+MATCH (g:Gene {symbol: "MTOR"}), (id:ID {sid: "2475"})
+CREATE (g)-[:MAPPED]->(id)
+
+// Connect Gene -> Disease
+MATCH (g:Gene {symbol: "PIK3CG"}), (d:Disease {sid: "MONDO:0005359"})
+CREATE (g)-[:RELATED_TO {source: "DisGeNET", score: 0.75}]->(d)
+MATCH (g:Gene {symbol: "PPARG"}), (d:Disease {sid: "MONDO:0005015"})
+CREATE (g)-[:RELATED_TO {source: "OpenTargets", score: 0.85}]->(d)
+MATCH (g:Gene {symbol: "MTOR"}), (d:Disease {sid: "MONDO:0005015"})
+CREATE (g)-[:RELATED_TO {source: "DisGeNET", score: 0.68}]->(d)
+
+// Connect Protein -> GO
+MATCH (p:Protein {sid: "P48736"}), (go:GO {sid: "GO:0008286"})
+CREATE (p)-[:ASSOCIATED_WITH {source: "GO"}]->(go)
+MATCH (p:Protein {sid: "P02778"}), (go:GO {sid: "GO:0006954"})
+CREATE (p)-[:ASSOCIATED_WITH {source: "GO"}]->(go)
+MATCH (p:Protein {sid: "P42345"}), (go:GO {sid: "GO:0008286"})
+CREATE (p)-[:ASSOCIATED_WITH {source: "GO"}]->(go)
+MATCH (p:Protein {sid: "P31749"}), (go:GO {sid: "GO:0008286"})
+CREATE (p)-[:ASSOCIATED_WITH {source: "GO"}]->(go)
+MATCH (p:Protein {sid: "P37231"}), (go:GO {sid: "GO:0005158"})
+CREATE (p)-[:ASSOCIATED_WITH {source: "GO"}]->(go)
+
+// Add protein-protein interactions (extending the model)
+MATCH (p1:Protein {sid: "P48736"}), (p2:Protein {sid: "P31749"})
+CREATE (p1)-[:INTERACTS_WITH {source: "STRING", score: 0.9}]->(p2)
+MATCH (p1:Protein {sid: "P31749"}), (p2:Protein {sid: "P42345"})
+CREATE (p1)-[:INTERACTS_WITH {source: "STRING", score: 0.95}]->(p2)
+
+----
+
+* Which proteins/genes are associated with a given disease or phenotype?
+	* Which diseases or phenotypes are linked to a given gene/protein (i.e. what else might targeting this protein affect)?
+	* Which proteins are in the network neighborhood — interacting proteins, upstream regulators, downstream effectors — of a candidate target?
+	*	Which proteins are “close” (1–2 hops) to known disease-associated nodes yet have no known drugs — i.e. under-explored but potentially druggable targets?
+	*	Among candidate targets for a disease, which have the strongest support from multiple evidence types (genetics, expression, pathway involvement, literature, etc.)?
+	*	Which candidate targets are expressed (or dysregulated) in the relevant tissue / cell type / biological context for the disease?
+	*	What are the potential off-target risks or pleiotropic effects if a given protein were modulated — based on its links to other diseases, pathways, or physiological processes?
+	*	Are there functional modules or sub-networks (pathways, protein complexes) enriched among disease-associated proteins that might be more robust therapeutic targets than single proteins?
+	*	Are there novel (previously unreported) associations between proteins and diseases — or proteins and biological processes — that are suggested by the graph topology or via link-prediction / inference approaches?
+	*	For a proposed target, what is the provenance and confidence of each supporting piece of evidence (what data sources, what type of evidence)?
+
+== GDS (Graph Data Science)

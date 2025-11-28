@@ -1,0 +1,366 @@
+{
+  "style": {
+    "font-family": "sans-serif",
+    "background-color": "#ffffff",
+    "background-image": "",
+    "background-size": "100%",
+    "node-color": "#ffffff",
+    "border-width": 4,
+    "border-color": "#000000",
+    "radius": 50,
+    "node-padding": 5,
+    "node-margin": 2,
+    "outside-position": "auto",
+    "node-icon-image": "",
+    "node-background-image": "",
+    "icon-position": "inside",
+    "icon-size": 64,
+    "caption-position": "inside",
+    "caption-max-width": 200,
+    "caption-color": "#000000",
+    "caption-font-size": 50,
+    "caption-font-weight": "normal",
+    "label-position": "inside",
+    "label-display": "pill",
+    "label-color": "#000000",
+    "label-background-color": "#ffffff",
+    "label-border-color": "#000000",
+    "label-border-width": 4,
+    "label-font-size": 40,
+    "label-padding": 5,
+    "label-margin": 4,
+    "directionality": "directed",
+    "detail-position": "inline",
+    "detail-orientation": "parallel",
+    "arrow-width": 5,
+    "arrow-color": "#000000",
+    "margin-start": 5,
+    "margin-end": 5,
+    "margin-peer": 20,
+    "attachment-start": "normal",
+    "attachment-end": "normal",
+    "relationship-icon-image": "",
+    "type-color": "#000000",
+    "type-background-color": "#ffffff",
+    "type-border-color": "#000000",
+    "type-border-width": 0,
+    "type-font-size": 16,
+    "type-padding": 5,
+    "property-position": "outside",
+    "property-alignment": "colon",
+    "property-color": "#000000",
+    "property-font-size": 16,
+    "property-font-weight": "normal"
+  },
+  "nodes": [
+    {
+      "id": "n1",
+      "position": {
+        "x": 1108.5523120689763,
+        "y": 322.5174373563259
+      },
+      "caption": "",
+      "labels": [
+        "Gene"
+      ],
+      "properties": {
+        "sid": "string",
+        "source": "string",
+        "symbol": "string"
+      },
+      "style": {
+        "node-color": "#fe9200"
+      }
+    },
+    {
+      "id": "n2",
+      "position": {
+        "x": 1435.0697494253018,
+        "y": 322.5174373563258
+      },
+      "caption": "",
+      "labels": [
+        "Protein"
+      ],
+      "properties": {
+        "sid": "string",
+        "source": "string"
+      },
+      "style": {
+        "node-color": "#fe9200"
+      }
+    },
+    {
+      "id": "n3",
+      "position": {
+        "x": 782.0348747126509,
+        "y": 322.5174548374648
+      },
+      "caption": "",
+      "labels": [
+        "ID"
+      ],
+      "properties": {
+        "source": "string",
+        "sid": "string"
+      },
+      "style": {
+        "node-color": "#e27300"
+      }
+    },
+    {
+      "id": "n4",
+      "position": {
+        "x": 1761.5871867816272,
+        "y": 322.5174373563258
+      },
+      "caption": "",
+      "labels": [
+        "GO"
+      ],
+      "properties": {
+        "name": "string",
+        "sid": "string"
+      },
+      "style": {
+        "node-color": "#73d8ff"
+      }
+    },
+    {
+      "id": "n5",
+      "position": {
+        "x": 1108.5523120689763,
+        "y": -4
+      },
+      "caption": "",
+      "labels": [
+        "Disease"
+      ],
+      "properties": {
+        "name": "string",
+        "sid": "string"
+      },
+      "style": {
+        "node-color": "#73d8ff"
+      }
+    },
+    {
+      "id": "n6",
+      "position": {
+        "x": 129,
+        "y": 649.0348747126518
+      },
+      "caption": "",
+      "labels": [
+        "Project"
+      ],
+      "properties": {
+        "name": "string",
+        "sid": "string"
+      },
+      "style": {
+        "node-color": "#fda1ff"
+      }
+    },
+    {
+      "id": "n7",
+      "position": {
+        "x": 455.51743735632544,
+        "y": 649.0348747126518
+      },
+      "caption": "",
+      "labels": [
+        "Sample"
+      ],
+      "properties": {
+        "name": "string",
+        "sid": "string"
+      },
+      "style": {
+        "node-color": "#fda1ff"
+      }
+    },
+    {
+      "id": "n8",
+      "position": {
+        "x": 782.0348747126509,
+        "y": 649.0348747126518
+      },
+      "caption": "",
+      "labels": [
+        "Experiment"
+      ],
+      "properties": {
+        "type": "string",
+        "sid": "string"
+      },
+      "style": {
+        "node-color": "#fda1ff"
+      }
+    },
+    {
+      "id": "n9",
+      "position": {
+        "x": 455.51743735632544,
+        "y": 322.51743735632635
+      },
+      "caption": "",
+      "labels": [
+        "Tissue"
+      ],
+      "properties": {
+        "name": "string",
+        "sid": "string"
+      },
+      "style": {
+        "node-color": "#73d8ff"
+      }
+    },
+    {
+      "id": "n10",
+      "position": {
+        "x": 455.51743735632544,
+        "y": 975.5523120689772
+      },
+      "caption": "",
+      "labels": [
+        "EFO"
+      ],
+      "properties": {
+        "name": "string",
+        "sid": "string"
+      },
+      "style": {
+        "node-color": "#73d8ff"
+      }
+    },
+    {
+      "id": "n11",
+      "position": {
+        "x": 781.9280299999641,
+        "y": 975.5522945878387
+      },
+      "caption": "",
+      "labels": [
+        "Comparison"
+      ],
+      "properties": {},
+      "style": {}
+    },
+    {
+      "id": "n12",
+      "position": {
+        "x": 1243.8002629732741,
+        "y": 649.0348747126518
+      },
+      "caption": "",
+      "style": {},
+      "labels": [
+        "Metabolite"
+      ],
+      "properties": {}
+    }
+  ],
+  "relationships": [
+    {
+      "id": "n0",
+      "fromId": "n1",
+      "toId": "n2",
+      "type": "CODES",
+      "properties": {},
+      "style": {}
+    },
+    {
+      "id": "n1",
+      "fromId": "n1",
+      "toId": "n3",
+      "type": "MAPPED",
+      "properties": {},
+      "style": {}
+    },
+    {
+      "id": "n2",
+      "fromId": "n2",
+      "toId": "n4",
+      "type": "ASSOCIATED_WITH",
+      "properties": {
+        "source": "string"
+      },
+      "style": {}
+    },
+    {
+      "id": "n3",
+      "fromId": "n1",
+      "toId": "n5",
+      "type": "RELATED_TO",
+      "properties": {
+        "source": "string"
+      },
+      "style": {}
+    },
+    {
+      "id": "n4",
+      "fromId": "n6",
+      "toId": "n7",
+      "type": "HAS_SAMPLE",
+      "properties": {},
+      "style": {}
+    },
+    {
+      "id": "n5",
+      "fromId": "n7",
+      "toId": "n8",
+      "type": "HAS_EXPERIMENT",
+      "properties": {},
+      "style": {}
+    },
+    {
+      "id": "n6",
+      "fromId": "n7",
+      "toId": "n9",
+      "type": "TAKEN_FROM",
+      "properties": {},
+      "style": {}
+    },
+    {
+      "id": "n7",
+      "fromId": "n7",
+      "toId": "n10",
+      "type": "HAS_PHENOTYPE",
+      "properties": {},
+      "style": {}
+    },
+    {
+      "id": "n8",
+      "fromId": "n11",
+      "toId": "n8",
+      "type": "COMPARES",
+      "properties": {},
+      "style": {}
+    },
+    {
+      "id": "n9",
+      "fromId": "n8",
+      "toId": "n1",
+      "type": "HAS_VALUE",
+      "properties": {},
+      "style": {}
+    },
+    {
+      "id": "n10",
+      "type": "HAS_VALUE",
+      "style": {},
+      "properties": {},
+      "fromId": "n8",
+      "toId": "n2"
+    },
+    {
+      "id": "n11",
+      "type": "HAS_VALUE",
+      "style": {},
+      "properties": {},
+      "fromId": "n8",
+      "toId": "n12"
+    }
+  ]
+}

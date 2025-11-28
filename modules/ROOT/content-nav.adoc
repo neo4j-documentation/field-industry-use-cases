@@ -28,6 +28,10 @@
 *** xref:life-sciences/competitive-intelligence/pipeline-intelligence.adoc[]
 *** xref:life-sciences/competitive-intelligence/publication-intelligence.adoc[]
 *** xref:life-sciences/competitive-intelligence/patent-intelligence.adoc[]
+** xref:life-sciences/research-development/index.adoc[]
+*** xref:life-sciences/research-development/single-omics.adoc[]
+*** xref:life-sciences/research-development/multi-omics.adoc[]
+*** xref:life-sciences/research-development/omics-with-ontologies.adoc[]
 
 * xref:manufacturing/index.adoc[]
 ** xref:manufacturing/supply-chain-management/index.adoc[]
