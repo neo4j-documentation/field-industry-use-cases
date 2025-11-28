@@ -1,17 +1,15 @@
 = Patient Journey
 
-A patient journey is a representation of the journey a patient takes through the healthcare system. It is a graph that represents the nodes and relationships between the nodes.
-
 == 1. Introduction
 
-A patient journey is a representation of the journey a patient takes through the healthcare system. It is a graph that represents the nodes and relationships between the nodes.
+Patient journey data is inherently both highly heterogeneous and deeply interconnected, spanning clinical records, laboratory results, medications, imaging, lifestyle factors, and social determinants of health. By definition, these diverse data points form a complex web of relationships, i.e. a patient's dietary habits influence metabolic conditions, exercise patterns correlate with cardiovascular outcomes, and environmental exposures connect to respiratory diseases. Traditional relational databases struggle to capture and query these intricate, multi-dimensional connections efficiently, often requiring complex joins across dozens of tables. Neo4j's flexible, schema-optional graph database model excels in this domain by naturally representing patients, conditions, treatments, and lifestyle factors as nodes with relationships that mirror real-world clinical causality and correlation. This approach enables healthcare organizations to seamlessly integrate disparate data sources while maintaining the semantic richness essential for comprehensive patient journey analytics.
 
 == 2. Scenario
 
 A patient journey is a representation of the journey a patient takes through the healthcare system. It is a graph that represents the nodes and relationships between the nodes.
 
 .A walkthrough of Patient Journey use case
-image::life-sciences/patient_journey.png[width=800]
+image::life-sciences/patient-journey/patient_journey.png[width=800]
 
 == 3. Solution
 
@@ -22,7 +20,7 @@ A patient journey use case tracks an individual's complete healthcare experience
 Neo4j's labeled property graph model naturally aligns with the OMOP Common Data Model by representing clinical concepts as nodes (Person, Condition, Drug, Procedure), their attributes as properties (dates, codes, values), and clinical events as relationships (HAS_CONDITION, PRESCRIBED_DRUG), enabling intuitive mapping of standardized observational health data while preserving the rich semantic connections between patients, diagnoses, treatments, and outcomes that OMOP vocabularies define.
 
 .Patient Journey overview
-image::life-sciences/Industry_Use_Cases_Patient_Journey.svg[width=800]
+image::life-sciences/patient-journey/Industry_Use_Cases_Patient_Journey.svg[width=800]
 
 `Patient` Node:
 
