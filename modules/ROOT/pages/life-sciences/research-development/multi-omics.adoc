@@ -11,3 +11,202 @@
 == Demo Data
 
 == Cypher Queries
+
+The following Cypher statements will create the example graph in the Neo4j database:
+
+[source, cypher, role=noheader]
+----
+// Create Projects
+CREATE (p1:Project {sid: "PROJ001", name: "Liver Disease Study"})
+CREATE (p2:Project {sid: "PROJ002", name: "Diabetes Research"})
+
+// Create Tissues
+CREATE (t1:Tissue {sid: "UBERON:0002107", name: "Liver"})
+CREATE (t2:Tissue {sid: "UBERON:0001264", name: "Pancreas"})
+
+// Create Diseases
+CREATE (d1:Disease {sid: "MONDO:0005359", name: "Non-alcoholic fatty liver disease"})
+CREATE (d2:Disease {sid: "MONDO:0005015", name: "Type 2 Diabetes"})
+
+// Create Phenotypes (EFO)
+CREATE (ph1:EFO {sid: "EFO:0004220", name: "Insulin resistance"})
+CREATE (ph2:EFO {sid: "EFO:0001421", name: "Elevated triglycerides"})
+
+// Create Samples
+CREATE (s1:Sample {sid: "SAMPLE001", name: "Patient_001_Liver"})
+CREATE (s2:Sample {sid: "SAMPLE002", name: "Control_001_Liver"})
+CREATE (s3:Sample {sid: "SAMPLE003", name: "Patient_002_Pancreas"})
+CREATE (s4:Sample {sid: "SAMPLE004", name: "Control_002_Pancreas"})
+
+// Create Experiments
+CREATE (e1:Experiment {sid: "EXP001", type: "RNA-seq"})
+CREATE (e2:Experiment {sid: "EXP002", type: "RNA-seq"})
+
+// Create Comparisons
+CREATE (comp1:Comparison {sid: "COMP001", name: "NAFLD vs Control", type: "disease_vs_control"})
+CREATE (comp2:Comparison {sid: "COMP002", name: "T2D vs Control", type: "disease_vs_control"})
+
+// Create Genes with expression data
+CREATE (g1:Gene {sid: "ENSG00000105851", symbol: "PIK3CG", source: "Ensembl"})
+CREATE (g2:Gene {sid: "ENSG00000169245", symbol: "CXCL10", source: "Ensembl"})
+CREATE (g3:Gene {sid: "ENSG00000198793", symbol: "MTOR", source: "Ensembl"})
+CREATE (g4:Gene {sid: "ENSG00000134108", symbol: "AKT1", source: "Ensembl"})
+CREATE (g5:Gene {sid: "ENSG00000171408", symbol: "PPARG", source: "Ensembl"})
+
+// Create IDs (alternative identifiers)
+CREATE (id1:ID {sid: "5294", source: "NCBI"})
+CREATE (id2:ID {sid: "3627", source: "NCBI"})
+CREATE (id3:ID {sid: "2475", source: "NCBI"})
+
+// Create Proteins
+CREATE (pr1:Protein {sid: "P48736", source: "UniProt"})
+CREATE (pr2:Protein {sid: "P02778", source: "UniProt"})
+CREATE (pr3:Protein {sid: "P42345", source: "UniProt"})
+CREATE (pr4:Protein {sid: "P31749", source: "UniProt"})
+CREATE (pr5:Protein {sid: "P37231", source: "UniProt"})
+
+// Create GO terms
+CREATE (go1:GO {sid: "GO:0005158", name: "insulin receptor binding"})
+CREATE (go2:GO {sid: "GO:0006954", name: "inflammatory response"})
+CREATE (go3:GO {sid: "GO:0043066", name: "negative regulation of apoptosis"})
+CREATE (go4:GO {sid: "GO:0008286", name: "insulin receptor signaling pathway"})
+
+// Connect Project -> Sample
+MATCH (p:Project {sid: "PROJ001"}), (s:Sample {sid: "SAMPLE001"})
+CREATE (p)-[:HAS_SAMPLE]->(s)
+MATCH (p:Project {sid: "PROJ001"}), (s:Sample {sid: "SAMPLE002"})
+CREATE (p)-[:HAS_SAMPLE]->(s)
+MATCH (p:Project {sid: "PROJ002"}), (s:Sample {sid: "SAMPLE003"})
+CREATE (p)-[:HAS_SAMPLE]->(s)
+MATCH (p:Project {sid: "PROJ002"}), (s:Sample {sid: "SAMPLE004"})
+CREATE (p)-[:HAS_SAMPLE]->(s)
+
+// Connect Sample -> Tissue
+MATCH (s:Sample {sid: "SAMPLE001"}), (t:Tissue {sid: "UBERON:0002107"})
+CREATE (s)-[:TAKEN_FROM]->(t)
+MATCH (s:Sample {sid: "SAMPLE002"}), (t:Tissue {sid: "UBERON:0002107"})
+CREATE (s)-[:TAKEN_FROM]->(t)
+MATCH (s:Sample {sid: "SAMPLE003"}), (t:Tissue {sid: "UBERON:0001264"})
+CREATE (s)-[:TAKEN_FROM]->(t)
+
+// Connect Sample -> Phenotype
+MATCH (s:Sample {sid: "SAMPLE001"}), (ph:EFO {sid: "EFO:0001421"})
+CREATE (s)-[:HAS_PHENOTYPE]->(ph)
+MATCH (s:Sample {sid: "SAMPLE003"}), (ph:EFO {sid: "EFO:0004220"})
+CREATE (s)-[:HAS_PHENOTYPE]->(ph)
+
+// Connect Sample -> Experiment
+MATCH (s:Sample {sid: "SAMPLE001"}), (e:Experiment {sid: "EXP001"})
+CREATE (s)-[:HAS_EXPERIMENT]->(e)
+MATCH (s:Sample {sid: "SAMPLE002"}), (e:Experiment {sid: "EXP001"})
+CREATE (s)-[:HAS_EXPERIMENT]->(e)
+MATCH (s:Sample {sid: "SAMPLE003"}), (e:Experiment {sid: "EXP002"})
+CREATE (s)-[:HAS_EXPERIMENT]->(e)
+
+// Connect Comparison -> Experiment
+MATCH (c:Comparison {sid: "COMP001"}), (e:Experiment {sid: "EXP001"})
+CREATE (c)-[:COMPARES]->(e)
+MATCH (c:Comparison {sid: "COMP002"}), (e:Experiment {sid: "EXP002"})
+CREATE (c)-[:COMPARES]->(e)
+
+// Connect Experiment -> Gene (with expression values)
+MATCH (e:Experiment {sid: "EXP001"}), (g:Gene {symbol: "PIK3CG"})
+CREATE (e)-[:HAS_VALUE {foldChange: 2.5, pValue: 0.001, regulated: "up"}]->(g)
+MATCH (e:Experiment {sid: "EXP001"}), (g:Gene {symbol: "CXCL10"})
+CREATE (e)-[:HAS_VALUE {foldChange: 3.2, pValue: 0.0005, regulated: "up"}]->(g)
+MATCH (e:Experiment {sid: "EXP002"}), (g:Gene {symbol: "MTOR"})
+CREATE (e)-[:HAS_VALUE {foldChange: -1.8, pValue: 0.01, regulated: "down"}]->(g)
+MATCH (e:Experiment {sid: "EXP002"}), (g:Gene {symbol: "AKT1"})
+CREATE (e)-[:HAS_VALUE {foldChange: 2.1, pValue: 0.002, regulated: "up"}]->(g)
+
+// Connect Gene -> Protein
+MATCH (g:Gene {symbol: "PIK3CG"}), (p:Protein {sid: "P48736"})
+CREATE (g)-[:CODES]->(p)
+MATCH (g:Gene {symbol: "CXCL10"}), (p:Protein {sid: "P02778"})
+CREATE (g)-[:CODES]->(p)
+MATCH (g:Gene {symbol: "MTOR"}), (p:Protein {sid: "P42345"})
+CREATE (g)-[:CODES]->(p)
+MATCH (g:Gene {symbol: "AKT1"}), (p:Protein {sid: "P31749"})
+CREATE (g)-[:CODES]->(p)
+MATCH (g:Gene {symbol: "PPARG"}), (p:Protein {sid: "P37231"})
+CREATE (g)-[:CODES]->(p)
+
+// Connect Gene -> ID
+MATCH (g:Gene {symbol: "PIK3CG"}), (id:ID {sid: "5294"})
+CREATE (g)-[:MAPPED]->(id)
+MATCH (g:Gene {symbol: "CXCL10"}), (id:ID {sid: "3627"})
+CREATE (g)-[:MAPPED]->(id)
+MATCH (g:Gene {symbol: "MTOR"}), (id:ID {sid: "2475"})
+CREATE (g)-[:MAPPED]->(id)
+
+// Connect Gene -> Disease
+MATCH (g:Gene {symbol: "PIK3CG"}), (d:Disease {sid: "MONDO:0005359"})
+CREATE (g)-[:RELATED_TO {source: "DisGeNET", score: 0.75}]->(d)
+MATCH (g:Gene {symbol: "PPARG"}), (d:Disease {sid: "MONDO:0005015"})
+CREATE (g)-[:RELATED_TO {source: "OpenTargets", score: 0.85}]->(d)
+MATCH (g:Gene {symbol: "MTOR"}), (d:Disease {sid: "MONDO:0005015"})
+CREATE (g)-[:RELATED_TO {source: "DisGeNET", score: 0.68}]->(d)
+
+// Connect Protein -> GO
+MATCH (p:Protein {sid: "P48736"}), (go:GO {sid: "GO:0008286"})
+CREATE (p)-[:ASSOCIATED_WITH {source: "GO"}]->(go)
+MATCH (p:Protein {sid: "P02778"}), (go:GO {sid: "GO:0006954"})
+CREATE (p)-[:ASSOCIATED_WITH {source: "GO"}]->(go)
+MATCH (p:Protein {sid: "P42345"}), (go:GO {sid: "GO:0008286"})
+CREATE (p)-[:ASSOCIATED_WITH {source: "GO"}]->(go)
+MATCH (p:Protein {sid: "P31749"}), (go:GO {sid: "GO:0008286"})
+CREATE (p)-[:ASSOCIATED_WITH {source: "GO"}]->(go)
+MATCH (p:Protein {sid: "P37231"}), (go:GO {sid: "GO:0005158"})
+CREATE (p)-[:ASSOCIATED_WITH {source: "GO"}]->(go)
+
+// Add protein-protein interactions (extending the model)
+MATCH (p1:Protein {sid: "P48736"}), (p2:Protein {sid: "P31749"})
+CREATE (p1)-[:INTERACTS_WITH {source: "STRING", score: 0.9}]->(p2)
+MATCH (p1:Protein {sid: "P31749"}), (p2:Protein {sid: "P42345"})
+CREATE (p1)-[:INTERACTS_WITH {source: "STRING", score: 0.95}]->(p2)
+
+----
+
+== Which proteins/genes are associated with a given disease or phenotype?
+
+[source, cypher, role=noheader]
+----
+// Find all genes/proteins associated with NAFLD
+MATCH (d:Disease {name: "Non-alcoholic fatty liver disease"})<-[:RELATED_TO]-(g:Gene)-[:CODES]->(p:Protein)
+RETURN g.symbol AS Gene, 
+       p.sid AS Protein, 
+       d.name AS Disease
+ORDER BY g.symbol;
+
+// Alternative: Find genes from experiments on samples with specific phenotype
+MATCH (ph:EFO {name: "Elevated triglycerides"})<-[:HAS_PHENOTYPE]-(s:Sample)-[:HAS_EXPERIMENT]->(e:Experiment)-[hv:HAS_VALUE]->(g:Gene)
+WHERE hv.pValue < 0.05
+RETURN g.symbol AS Gene, 
+       hv.foldChange AS FoldChange, 
+       hv.pValue AS PValue,
+       ph.name AS Phenotype
+ORDER BY hv.pValue;
+----
+
+== Which diseases or phenotypes are linked to a given gene/protein?
+
+[source, cypher, role=noheader]
+----
+// Find all diseases associated with PIK3CG
+MATCH (g:Gene {symbol: "PIK3CG"})-[r:RELATED_TO]->(d:Disease)
+RETURN g.symbol AS Gene, 
+       d.name AS Disease, 
+       r.source AS EvidenceSource,
+       r.score AS ConfidenceScore
+ORDER BY r.score DESC;
+
+// Alternative: Find diseases from experiments on samples with specific phenotype
+MATCH (ph:EFO {name: "Elevated triglycerides"})<-[:HAS_PHENOTYPE]-(s:Sample)-[:HAS_EXPERIMENT]->(e:Experiment)-[hv:HAS_VALUE]->(g:Gene)-[r:RELATED_TO]->(d:Disease)
+WHERE hv.pValue < 0.05
+RETURN g.symbol AS Gene, 
+       d.name AS Disease, 
+       r.source AS EvidenceSource,
+       r.score AS ConfidenceScore,
+       ph.name AS Phenotype
+ORDER BY r.score DESC;
+----
