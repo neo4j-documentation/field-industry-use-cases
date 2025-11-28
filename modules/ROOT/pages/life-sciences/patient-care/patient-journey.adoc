@@ -123,7 +123,11 @@ image::life-sciences/patient-journey/patient-journey-schema.png[]
 
 == 5. Cypher Queries
 
+This section provides a set of example Cypher queries that can be used to explore the patient journey graph from different perspectives.
+
 === 5.1. Patient based queries
+
+These queries are focused on retrieving information from a patient-centric perspective.
 
 ==== 5.1.1. Given a `Patient` what `Drug`s were `PRESCRIBED`?
 
@@ -143,7 +147,7 @@ MATCH (p:Patient {id: '987-223-1345'})-[:HAS_ENCOUNTER]->(:Encounter)-[:DIAGNOSE
 RETURN p.name AS Name, collect(DISTINCT c.description) AS conditions;
 ----
 
-==== 5.1.3. Given a `Patient`` and their `Condition` - what are the comorbidities of other `Patient`s with the same `Condition`?
+==== 5.1.3. Given a `Patient` and their `Condition` - what are the comorbidities of other `Patient`s with the same `Condition`?
 
 [source, cypher, role=noheader]
 ----
@@ -151,6 +155,8 @@ RETURN p.name AS Name, collect(DISTINCT c.description) AS conditions;
 ----
 
 === 5.2. Condition based queries
+
+These queries are focused on retrieving information from a condition-centric perspective.
 
 ==== 5.2.1. 
 
@@ -164,6 +170,8 @@ ORDER BY Occurrences DESC;
 ----
 
 === 5.3. Provide based queries
+
+These queries are focused on retrieving information from a provider-centric perspective.
 
 ==== 5.3.1. Given a `Provider` what `Patient`s have they seen, and how often?
 
@@ -197,6 +205,7 @@ RETURN d.code AS Code, d.name AS Name, count(*) AS Prescriptions
 == 6. Graph Data Science (GDS)
 
 Neo4j's Graph Data Science library enables sophisticated patient journey analytics using the information of the relationships. 
+
 - Community detection algorithms identify sub-phenotypes of patients by clustering individuals with similar clinical trajectories, comorbidities, and treatment responses. 
 - Centrality algorithms like PageRank and degree centrality can highlight critical entities within a patient's medical history—such as severe allergies, adverse drug reactions, or key diagnoses—that disproportionately influence care decisions and outcomes. 
 - Pathfinding algorithms can reveal optimal treatment sequences by analyzing successful care pathways across similar patient cohorts, while similarity measures identify patients with comparable conditions for comparative effectiveness research. 
