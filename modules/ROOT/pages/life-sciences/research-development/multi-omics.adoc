@@ -1,16 +1,13 @@
 = Multi-OMICs Data Integration
 
-== Introduction
-
 == Scenario
 
-== Solution
+Building on the single omics foundation, we now extend the integration to support multiple omics layers such as proteomics and metabolomics. By mapping relationships between genes, their protein products, and metabolic pathways, the knowledge graph captures the full spectrum from transcriptomics through proteomics to metabolomic contexts. This unified representation enables researchers to trace molecular changes across different omics types and gain holistic insights into biological systems and disease mechanisms.
 
 == Data Model
 
+image::life-sciences/research-development/Industry_Use_Cases_multi-OMICs.svg[Multi-OMICs data model]
 == Demo Data
-
-== Cypher Queries
 
 The following Cypher statements will create the example graph in the Neo4j database:
 
@@ -167,46 +164,60 @@ CREATE (p1)-[:INTERACTS_WITH {source: "STRING", score: 0.95}]->(p2)
 
 ----
 
-== Which proteins/genes are associated with a given disease or phenotype?
+== Cypher Queries
+
+=== Which genes are overexpressed at both the mRNA (transcript) and protein levels in a given disease?
 
 [source, cypher, role=noheader]
 ----
-// Find all genes/proteins associated with NAFLD
-MATCH (d:Disease {name: "Non-alcoholic fatty liver disease"})<-[:RELATED_TO]-(g:Gene)-[:CODES]->(p:Protein)
-RETURN g.symbol AS Gene, 
-       p.sid AS Protein, 
-       d.name AS Disease
-ORDER BY g.symbol;
-
-// Alternative: Find genes from experiments on samples with specific phenotype
-MATCH (ph:EFO {name: "Elevated triglycerides"})<-[:HAS_PHENOTYPE]-(s:Sample)-[:HAS_EXPERIMENT]->(e:Experiment)-[hv:HAS_VALUE]->(g:Gene)
-WHERE hv.pValue < 0.05
-RETURN g.symbol AS Gene, 
-       hv.foldChange AS FoldChange, 
-       hv.pValue AS PValue,
-       ph.name AS Phenotype
-ORDER BY hv.pValue;
+// Find genes that are upregulated both at the transcript (RNA-seq) and protein (proteomics) levels
+MATCH (comp:Comparison {sid: "COMP001"})<-[:COMPARES]-(exp_trans:Experiment {type: "RNA-seq"})-[hv_trans:HAS_VALUE {regulated: "up"}]->(g:Gene)
+WHERE hv_trans.foldChange > 1.5 AND hv_trans.pValue < 0.05
+MATCH (exp_prot:Experiment {type: "Proteomics"})-[hv_prot:HAS_VALUE {regulated: "up"}]->(g)
+WHERE hv_prot.foldChange > 1.2 AND hv_prot.pValue < 0.05
+RETURN g.symbol AS Gene,
+       hv_trans.foldChange AS TranscriptFoldChange,
+       hv_prot.foldChange AS ProteinFoldChange,
+       hv_trans.pValue AS TranscriptPValue,
+       hv_prot.pValue AS ProteinPValue
+ORDER BY ProteinFoldChange DESC, TranscriptFoldChange DESC;
 ----
 
-== Which diseases or phenotypes are linked to a given gene/protein?
+
+=== Which proteins are in the network neighborhood of a candidate target?
 
 [source, cypher, role=noheader]
 ----
-// Find all diseases associated with PIK3CG
-MATCH (g:Gene {symbol: "PIK3CG"})-[r:RELATED_TO]->(d:Disease)
-RETURN g.symbol AS Gene, 
-       d.name AS Disease, 
-       r.source AS EvidenceSource,
-       r.score AS ConfidenceScore
-ORDER BY r.score DESC;
+// Find direct interacting proteins for PIK3CG
+MATCH (g:Gene {symbol: "PIK3CG"})-[:CODES]->(p:Protein)-[i:INTERACTS_WITH]-(neighbor:Protein)<-[:CODES]-(ng:Gene)
+RETURN g.symbol AS TargetGene,
+       ng.symbol AS NeighborGene,
+       neighbor.sid AS NeighborProtein,
+       i.score AS InteractionScore
+ORDER BY i.score DESC;
 
-// Alternative: Find diseases from experiments on samples with specific phenotype
-MATCH (ph:EFO {name: "Elevated triglycerides"})<-[:HAS_PHENOTYPE]-(s:Sample)-[:HAS_EXPERIMENT]->(e:Experiment)-[hv:HAS_VALUE]->(g:Gene)-[r:RELATED_TO]->(d:Disease)
-WHERE hv.pValue < 0.05
-RETURN g.symbol AS Gene, 
-       d.name AS Disease, 
-       r.source AS EvidenceSource,
-       r.score AS ConfidenceScore,
-       ph.name AS Phenotype
-ORDER BY r.score DESC;
+// Find proteins 1-2 hops away
+MATCH path = (g:Gene {symbol: "PIK3CG"})-[:CODES]->(p:Protein)-[:INTERACTS_WITH*1..2]-(neighbor:Protein)<-[:CODES]-(ng:Gene)
+RETURN g.symbol AS TargetGene,
+       ng.symbol AS NeighborGene,
+       length(path) AS Distance,
+       [rel in relationships(path) | rel.score] AS InteractionScores;
 ----
+
+=== What are the protein-protein interactions in 1–2 hops of my overexpressed genes from my RNA-seq?
+
+[source, cypher, role=noheader]
+----
+// Find protein-protein interactions (1–2 hops) for overexpressed genes from RNA-seq (e.g., for COMP001 comparison)
+MATCH (comp:Comparison {sid: "COMP001"})<-[:COMPARES]-(exp:Experiment {type: "RNA-seq"})-[hv:HAS_VALUE {regulated: "up"}]->(g:Gene)
+WHERE hv.foldChange > 1.5 AND hv.pValue < 0.05
+MATCH (g)-[:CODES]->(p:Protein)
+MATCH path = (p)-[:INTERACTS_WITH*1..2]-(neighbor:Protein)
+RETURN g.symbol AS SourceGene,
+       p.sid AS SourceProtein,
+       neighbor.sid AS NeighborProtein,
+       length(path) AS Hops,
+       [rel in relationships(path) | rel.score] AS InteractionScores
+ORDER BY SourceGene, Hops DESC;
+----
+

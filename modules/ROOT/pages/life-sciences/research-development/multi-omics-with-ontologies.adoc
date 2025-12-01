@@ -1,0 +1,305 @@
+= Multi-OMICs Data with Ontologies
+
+== Scenario
+
+Building on the single and multi-omics integration, we further enhance biological insight by connecting ontology information directly into the knowledge graph. Linking standardized biomedical ontologies—such as the Gene Ontology *(GO)*, Disease Ontology *(MONDO)* and phenotype *(EFO, HPO)* which enriches the multi-omics graph with layers of curated knowledge. Each gene, protein, metabolite, or biological entity in the graph can be annotated with relevant ontology terms, enabling not just data integration, but deep semantic enrichment.
+
+This ontology-driven approach allows researchers to query molecular data in concept-driven ways: for example, finding all genes participating in a specific biological process (GO term), all proteins annotated as drug targets, or all molecular entities linked to a disease category across experiments. By linking omics data to ontological nodes and relationships, the knowledge graph supports cross-omics reasoning (e.g., transcript changes that impact disease-relevant pathways), leverages hierarchical vocabulary structures for inference, and enables federated analysis across datasets and domains. The result is a truly interconnected data and knowledge landscape—accelerating hypothesis generation, translational discovery, and precision medicine.
+
+== Data Model
+
+This data model extends the xref:life-sciences/research-development/single-omics.adoc[Single OMICs Data Integration] and xref:life-sciences/research-development/multi-omics.adoc[Multi-OMICs Data Integration] pages by adding ontology information to the nodes and relationships.
+
+.Multi-OMICs data model with ontologies
+image:life-sciences/research-development/Industry_Use_Cases_single-OMICs_and_Ontologies.svg[Multi-OMICs data model with ontologies]
+
+For multi-omics integration only, see the xref:life-sciences/research-development/multi-omics.adoc[Multi-OMICs Data Integration] page.
+
+
+== Demo Data
+
+
+== Cypher Queries
+
+=== Which proteins/genes are associated with a given disease or phenotype?
+
+[source, cypher, role=noheader]
+----
+// Find proteins associated with a given disease or phenotype
+MATCH (d:Disease {name: "Non-alcoholic fatty liver disease"})<-[:RELATED_TO]-(g:Gene)-[:CODES]->(p:Protein)-[:ASSOCIATED_WITH]->(go:GO)
+RETURN g.symbol AS Gene,
+       p.sid AS Protein,
+       go.name AS BiologicalProcess
+ORDER BY Gene;
+
+// Alternative: Find genes from experiments on samples with specific phenotype
+MATCH (ph:EFO {name: "Elevated triglycerides"})<-[:HAS_PHENOTYPE]-(s:Sample)-[:HAS_EXPERIMENT]->(e:Experiment)-[hv:HAS_VALUE]->(g:Gene)
+WHERE hv.pValue < 0.05
+RETURN g.symbol AS Gene, 
+       hv.foldChange AS FoldChange, 
+       hv.pValue AS PValue,
+       ph.name AS Phenotype
+ORDER BY hv.pValue;
+----
+
+=== Which diseases or phenotypes are linked to a given gene/protein (i.e. what else might targeting this protein affect)?
+
+[source, cypher, role=noheader]
+----
+// Find diseases linked to a given gene/protein
+MATCH (g:Gene {symbol: "PIK3CG"})<-[:RELATED_TO]-(d:Disease)
+RETURN d.name AS Disease
+ORDER BY Disease;
+----
+
+// Find phenotypes linked to a given gene/protein
+MATCH (g:Gene {symbol: "PIK3CG"})<-[:RELATED_TO]-(ph:EFO)
+RETURN ph.name AS Phenotype
+ORDER BY Phenotype;
+----
+
+=== Which proteins are in the network neighborhood — interacting proteins, upstream regulators, downstream effectors — of a candidate target?
+
+[source, cypher, role=noheader]
+----
+// Find direct interacting proteins for PIK3CG
+MATCH (g:Gene {symbol: "PIK3CG"})-[:CODES]->(p:Protein)-[i:INTERACTS_WITH]-(neighbor:Protein)<-[:CODES]-(ng:Gene)
+RETURN g.symbol AS TargetGene,
+       ng.symbol AS NeighborGene,
+       neighbor.sid AS NeighborProtein,
+       i.score AS InteractionScore
+ORDER BY i.score DESC;
+----
+
+=== Which proteins are “close” (1–2 hops) to known disease-associated nodes yet have no known drugs — i.e. under-explored but potentially druggable targets?
+
+[source, cypher, role=noheader]
+----
+// Find proteins 1-2 hops away from known disease-associated nodes that aren't annotated to drugs
+MATCH path = (d:Disease)-[:RELATED_TO]->(g:Gene)-[:CODES]->(p:Protein)-[:INTERACTS_WITH*1..2]-(neighbor:Protein)<-[:CODES]-(ng:Gene)
+WHERE NOT (p)-[:ASSOCIATED_WITH]->(:Drug)
+RETURN g.symbol AS TargetGene,
+       ng.symbol AS NeighborGene,
+       neighbor.sid AS NeighborProtein,
+       length(path) AS Distance
+ORDER BY Distance;
+----
+
+=== Under-explored but potentially druggable targets close to disease nodes?
+
+[source, cypher, role=noheader]
+----
+// Find proteins 1-2 hops away from known disease-associated nodes that aren't annotated to drugs
+MATCH path = (d:Disease)-[:RELATED_TO]->(g:Gene)-[:CODES]->(p:Protein)-[:INTERACTS_WITH*1..2]-(neighbor:Protein)<-[:CODES]-(ng:Gene)
+WHERE NOT (p)-[:ASSOCIATED_WITH]->(:Drug)
+RETURN g.symbol AS TargetGene,
+       ng.symbol AS NeighborGene,
+       neighbor.sid AS NeighborProtein,
+       length(path) AS Distance
+ORDER BY Distance;
+----
+
+=== Among candidate targets for a disease, which have the strongest support from multiple evidence types (genetics, expression, pathway involvement, literature, etc.)?
+
+[source, cypher, role=noheader]
+----
+// Find genes that share multiple GO terms with known disease genes but aren't annotated to the disease
+MATCH (d:Disease {name: "Type 2 Diabetes"})<-[:RELATED_TO]-(known:Gene)-[:CODES]->(kp:Protein)-[:ASSOCIATED_WITH]->(go:GO)
+MATCH (go)<-[:ASSOCIATED_WITH]-(cp:Protein)<-[:CODES]-(candidate:Gene)
+WHERE NOT (candidate)-[:RELATED_TO]->(d)
+  AND candidate <> known
+WITH candidate, d, count(DISTINCT go) AS sharedPathways, collect(DISTINCT go.name) AS pathways
+WHERE sharedPathways >= 2
+RETURN candidate.symbol AS NovelCandidate,
+       d.name AS Disease,
+       sharedPathways AS SharedPathwayCount,
+       pathways AS SharedPathways
+ORDER BY sharedPathways DESC
+LIMIT 10;
+----
+
+=== Which candidate targets are expressed (or dysregulated) in the relevant tissue / cell type / biological context for the disease?
+
+[source, cypher, role=noheader]
+----
+// Find genes co-expressed with known disease genes across experiments
+MATCH (d:Disease)<-[:RELATED_TO]-(known:Gene)<-[hv1:HAS_VALUE]-(e:Experiment)-[hv2:HAS_VALUE]->(candidate:Gene)
+WHERE NOT (candidate)-[:RELATED_TO]->(d)
+  AND hv1.regulated = hv2.regulated
+  AND hv1.pValue < 0.05 AND hv2.pValue < 0.05
+WITH candidate, d, count(DISTINCT e) AS coExpressionCount
+WHERE coExpressionCount >= 2
+RETURN candidate.symbol AS NovelCandidate,
+       d.name AS Disease,
+       coExpressionCount AS TimesCoExpressed
+ORDER BY coExpressionCount DESC;
+----
+
+=== What are the potential off-target risks or pleiotropic effects if a given protein were modulated — based on its links to other diseases, pathways, or physiological processes?
+
+[source, cypher, role=noheader]
+----
+// Find proteins that are associated with multiple diseases
+MATCH (p:Protein)-[:ASSOCIATED_WITH]->(go:GO)-[:RELATED_TO]->(d:Disease)
+WITH p, go, count(DISTINCT d) AS diseaseCount
+WHERE diseaseCount >= 2
+RETURN p.sid AS Protein,
+       diseaseCount AS DiseaseCount
+ORDER BY DiseaseCount DESC;
+----
+
+=== Novel associations via graph topology?
+
+[source, cypher, role=noheader]
+----
+// Find unreported associations between proteins and diseases
+MATCH (p:Protein)-[:ASSOCIATED_WITH]->(go:GO)-[:RELATED_TO]->(d:Disease)
+WHERE NOT (p)-[:INTERACTS_WITH]->(:Protein)-[:ASSOCIATED_WITH]->(go)
+RETURN p.sid AS Protein,
+       d.name AS Disease,
+       go.name AS BiologicalProcess
+ORDER BY Protein;
+----
+
+=== Provenance and confidence of evidence for a target?
+
+[source, cypher, role=noheader]
+----
+// Get all evidence and provenance for PIK3CG
+MATCH (g:Gene {symbol: "PIK3CG"})
+OPTIONAL MATCH (g)-[r1:RELATED_TO]->(d:Disease)
+OPTIONAL MATCH (g)<-[hv:HAS_VALUE]-(e:Experiment)<-[:COMPARES]-(c:Comparison)
+OPTIONAL MATCH (g)-[:CODES]->(p:Protein)-[r2:ASSOCIATED_WITH]->(go:GO)
+RETURN g.symbol AS Gene,
+       collect(DISTINCT {
+         evidenceType: "Literature",
+         source: r1.source,
+         disease: d.name,
+         confidence: r1.score
+       }) AS literatureEvidence,
+       collect(DISTINCT {
+         evidenceType: "Expression",
+         experiment: e.sid,
+         comparison: c.name,
+         foldChange: hv.foldChange,
+         pValue: hv.pValue,
+         regulation: hv.regulated
+       }) AS expressionEvidence,
+       collect(DISTINCT {
+         evidenceType: "Pathway",
+         source: r2.source,
+         pathway: go.name,
+         goId: go.sid
+       }) AS pathwayEvidence;
+----
+
+=== Are there functional modules or sub-networks (pathways, protein complexes) enriched among disease-associated proteins that might be more robust therapeutic targets than single proteins?
+
+[source, cypher, role=noheader]
+----
+// Find pathways enriched for disease-associated proteins
+MATCH (d:Disease)-[:RELATED_TO]->(g:Gene)-[:CODES]->(p:Protein)-[:ASSOCIATED_WITH]->(go:GO)
+WITH d, go, COUNT(DISTINCT g) AS proteinCount
+MATCH (go)-[:IS_PART_OF]->(pathway:Pathway)
+RETURN pathway.name AS Pathway,
+       proteinCount AS ProteinCount
+ORDER BY ProteinCount DESC;
+
+// Find GO terms enriched among NAFLD-associated genes
+MATCH (d:Disease {name: "Non-alcoholic fatty liver disease"})<-[:RELATED_TO]-(g:Gene)-[:CODES]->(p:Protein)-[:ASSOCIATED_WITH]->(go:GO)
+WITH go, count(DISTINCT g) AS geneCount
+WHERE geneCount >= 2
+RETURN go.sid AS GOTerm,
+       go.name AS GOName,
+       geneCount AS NumGenesInModule
+ORDER BY geneCount DESC;
+
+// Find interconnected protein complexes in disease
+MATCH path = (d:Disease {name: "Type 2 Diabetes"})<-[:RELATED_TO]-(g1:Gene)-[:CODES]->(p1:Protein)-[:INTERACTS_WITH]-(p2:Protein)<-[:CODES]-(g2:Gene)-[:RELATED_TO]->(d)
+RETURN g1.symbol AS Gene1,
+       g2.symbol AS Gene2,
+       p1.sid AS Protein1,
+       p2.sid AS Protein2
+LIMIT 20;
+----
+
+=== Are there novel (previously unreported) associations between proteins and diseases — or proteins and biological processes — that are suggested by the graph topology or via link-prediction / inference approaches?
+
+[source, cypher, role=noheader]
+----
+// Find unreported associations between proteins and diseases
+MATCH (p:Protein)-[:ASSOCIATED_WITH]->(go:GO)-[:RELATED_TO]->(d:Disease)
+WHERE NOT (p)-[:INTERACTS_WITH]->(:Protein)-[:ASSOCIATED_WITH]->(go)
+RETURN p.sid AS Protein,
+       d.name AS Disease,
+       go.name AS BiologicalProcess
+ORDER BY Protein;
+
+// Find genes that share multiple GO terms with known disease genes but aren't annotated to the disease
+MATCH (d:Disease {name: "Type 2 Diabetes"})<-[:RELATED_TO]-(known:Gene)-[:CODES]->(kp:Protein)-[:ASSOCIATED_WITH]->(go:GO)
+MATCH (go)<-[:ASSOCIATED_WITH]-(cp:Protein)<-[:CODES]-(candidate:Gene)
+WHERE NOT (candidate)-[:RELATED_TO]->(d)
+  AND candidate <> known
+WITH candidate, d, count(DISTINCT go) AS sharedPathways, collect(DISTINCT go.name) AS pathways
+WHERE sharedPathways >= 2
+RETURN candidate.symbol AS NovelCandidate,
+       d.name AS Disease,
+       sharedPathways AS SharedPathwayCount,
+       pathways AS SharedPathways
+ORDER BY sharedPathways DESC
+LIMIT 10;
+
+// Find genes co-expressed with known disease genes across experiments
+MATCH (d:Disease)<-[:RELATED_TO]-(known:Gene)<-[hv1:HAS_VALUE]-(e:Experiment)-[hv2:HAS_VALUE]->(candidate:Gene)
+WHERE NOT (candidate)-[:RELATED_TO]->(d)
+  AND hv1.regulated = hv2.regulated
+  AND hv1.pValue < 0.05 AND hv2.pValue < 0.05
+WITH candidate, d, count(DISTINCT e) AS coExpressionCount
+WHERE coExpressionCount >= 2
+RETURN candidate.symbol AS NovelCandidate,
+       d.name AS Disease,
+       coExpressionCount AS TimesCoExpressed
+ORDER BY coExpressionCount DESC;
+
+// Get all evidence and provenance for PIK3CG
+MATCH (g:Gene {symbol: "PIK3CG"})
+OPTIONAL MATCH (g)-[r1:RELATED_TO]->(d:Disease)
+OPTIONAL MATCH (g)<-[hv:HAS_VALUE]-(e:Experiment)<-[:COMPARES]-(c:Comparison)
+OPTIONAL MATCH (g)-[:CODES]->(p:Protein)-[r2:ASSOCIATED_WITH]->(go:GO)
+RETURN g.symbol AS Gene,
+       collect(DISTINCT {
+         evidenceType: "Literature",
+         source: r1.source,
+         disease: d.name,
+         confidence: r1.score
+       }) AS literatureEvidence,
+       collect(DISTINCT {
+         evidenceType: "Expression",
+         experiment: e.sid,
+         comparison: c.name,
+         foldChange: hv.foldChange,
+         pValue: hv.pValue,
+         regulation: hv.regulated
+       }) AS expressionEvidence,
+       collect(DISTINCT {
+         evidenceType: "Pathway",
+         source: r2.source,
+         pathway: go.name,
+         goId: go.sid
+       }) AS pathwayEvidence;
+
+// Trace full provenance from sample to gene association
+MATCH path = (proj:Project)-[:HAS_SAMPLE]->(s:Sample)-[:HAS_EXPERIMENT]->(e:Experiment)-[hv:HAS_VALUE]->(g:Gene {symbol: "CXCL10"})
+MATCH (s)-[:TAKEN_FROM]->(t:Tissue)
+MATCH (s)-[:HAS_PHENOTYPE]->(ph:EFO)
+RETURN proj.name AS Project,
+       s.sid AS Sample,
+       t.name AS Tissue,
+       ph.name AS Phenotype,
+       e.type AS ExperimentType,
+       g.symbol AS Gene,
+       hv.foldChange AS FoldChange,
+       hv.pValue AS PValue,
+       hv.regulated AS Regulation;
+----
+

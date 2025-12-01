@@ -10,15 +10,19 @@ A typical research scenario involves comparing disease versus control samples to
 
 In the graph database, each biological sample becomes a node with properties describing its tissue type, patient demographics, and group assignment (control or disease). Sample nodes connect to experiment nodes representing the RNA-seq analysis, which in turn link to gene nodes for the differentially expressed transcripts. This structure makes it intuitive to query across experiments—for instance, identifying genes consistently dysregulated across multiple disease cohorts, tracing which pathways are affected, or connecting expression changes to known protein functions. The graph naturally represents the experimental design, preserving the relationship between samples, conditions, and molecular measurements in a way that supports both immediate analysis and future integration with additional omics layers.
 
+*Our scenario starts from a foundational single omics scenario, illustrating how transcriptomics data (like RNA-seq) is modeled in a graph structure. We progressively expand this core by demonstrating how the same framework is extended to handle multi-omics integration and incorporate rich information from biomedical ontologies. As the model grows, more complex biological and clinical questions can be addressed directly in the graph.*
+
+
 == Solution
 
-==== Accommodating Heterogeneous Data
+=== Accommodating Heterogeneous Data
+
 Even within a single omics type like RNA-seq, experiments vary dramatically—different tissue sources, diverse phenotypic annotations, multiple comparison groups, and varying levels of biological annotation. The graph model handles this heterogeneity seamlessly. Projects connect to samples with flexible properties, samples link to their tissue origins and phenotypes (using standardized vocabularies like EFO), while experiments capture method-specific metadata. Critically, the Comparison node enables researchers to model complex experimental designs—whether comparing disease versus control, treatment versus baseline, or multiple conditions simultaneously—without restructuring the entire database.
 
-==== Bridging Identifiers and Knowledge
+=== Bridging Identifiers and Knowledge
 The model addresses a fundamental challenge in omics integration: connecting experimental measurements to standardized biological entities. Gene identifiers from RNA-seq analysis link to multiple ID nodes from different sources (Ensembl, NCBI, HGNC), which then map to canonical Gene nodes. These genes connect onwards to their encoded Proteins, associated Gene Ontology terms, and disease relationships. This identifier-bridging layer is crucial because different experiments and databases use different naming conventions, yet the graph structure makes these mappings explicit and traversable.
 
-==== Flexibility for Discovery
+=== Flexibility for Discovery
 The schema's flexibility truly shines when solving biological questions. Need to find all differentially expressed genes across multiple liver disease experiments? Simply traverse from Disease → Gene ← Experiment ← Sample ← Tissue. Want to identify genes consistently dysregulated in a specific phenotype regardless of tissue type? The graph makes this natural. Looking for functional enrichment? Follow Gene → Protein → GO paths. The graph's property model also allows each node type to carry experiment-specific attributes—fold-changes, p-values, expression levels—without forcing every experiment to share identical properties.
 This adaptable structure means researchers can integrate new RNA-seq datasets incrementally, add novel annotation layers as they become available, and explore biological connections without extensive database redesign—transforming single omics analysis from a data management burden into an opportunity for insight.
 
@@ -27,11 +31,15 @@ This adaptable structure means researchers can integrate new RNA-seq datasets in
 The graph data model demonstrates how Neo4j's flexible schema elegantly addresses the inherent heterogeneity of single omics data. Unlike rigid relational databases that require predefined table structures, this graph architecture allows researchers to naturally represent the diverse experimental contexts, varied sample annotations, and multiple identifier systems that characterize real-world omics projects.
 
 .Single OMICs Data Model
-image:life-sciences/Industry_Use_Cases_single-OMICs.svg[]
+image:life-sciences/research-development/Industry_Use_Cases_single_OMICs.svg[Single OMICs data model]
+
+We will continue to build on this model by adding more OMICs data types and ontologies.
+
+For multi-omics integration, see the xref:life-sciences/research-development/multi-omics.adoc[Multi-OMICs Data Integration] page.
+
+For bioscientific ontologies and semantic enrichment, see the xref:life-sciences/research-development/multi-omics-with-ontologies.adoc[Multi-OMICs Data Integration with Ontologies] page.
 
 == Demo Data
-
-== Cypher Queries
 
 The following Cypher statements will create the example graph in the Neo4j database:
 
@@ -188,15 +196,49 @@ CREATE (p1)-[:INTERACTS_WITH {source: "STRING", score: 0.95}]->(p2)
 
 ----
 
-* Which proteins/genes are associated with a given disease or phenotype?
-	* Which diseases or phenotypes are linked to a given gene/protein (i.e. what else might targeting this protein affect)?
-	* Which proteins are in the network neighborhood — interacting proteins, upstream regulators, downstream effectors — of a candidate target?
-	*	Which proteins are “close” (1–2 hops) to known disease-associated nodes yet have no known drugs — i.e. under-explored but potentially druggable targets?
-	*	Among candidate targets for a disease, which have the strongest support from multiple evidence types (genetics, expression, pathway involvement, literature, etc.)?
-	*	Which candidate targets are expressed (or dysregulated) in the relevant tissue / cell type / biological context for the disease?
-	*	What are the potential off-target risks or pleiotropic effects if a given protein were modulated — based on its links to other diseases, pathways, or physiological processes?
-	*	Are there functional modules or sub-networks (pathways, protein complexes) enriched among disease-associated proteins that might be more robust therapeutic targets than single proteins?
-	*	Are there novel (previously unreported) associations between proteins and diseases — or proteins and biological processes — that are suggested by the graph topology or via link-prediction / inference approaches?
-	*	For a proposed target, what is the provenance and confidence of each supporting piece of evidence (what data sources, what type of evidence)?
+== Cypher Queries
 
-== GDS (Graph Data Science)
+=== Return all synonyms for a given gene?
+[source, cypher, role=noheader]
+----
+// Find all synonyms for the gene PIK3CG
+MATCH (g:Gene {symbol: "PIK3CG"})-[:MAPPED]->(syn:ID)
+RETURN syn.sid AS ID, syn.source AS Source
+ORDER BY syn.name;
+----
+
+=== Which genes are overexpressed in a given comparison?
+[source, cypher, role=noheader]
+----
+// Find all genes overexpressed in the NAFLD vs Control comparison
+MATCH (c:Comparison {sid: "COMP001"}), (e:Experiment)-[:HAS_VALUE]->(g:Gene)
+WHERE e.foldChange > 1.5
+RETURN g.symbol AS Gene,
+       e.foldChange AS FoldChange,
+       e.pValue AS PValue
+ORDER BY e.pValue;
+----
+
+=== Which genes are differentially expressed in a given comparison?
+[source, cypher, role=noheader]
+----
+// Find all genes differentially expressed in the NAFLD vs Control comparison
+MATCH (c:Comparison {sid: "COMP001"}), (e:Experiment)-[:HAS_VALUE]->(g:Gene)
+RETURN g.symbol AS Gene,
+       e.foldChange AS FoldChange,
+       e.pValue AS PValue
+ORDER BY e.pValue;
+----
+
+=== How can I find the network neighborhood of a candidate protein target—including direct interactors, upstream regulators, and downstream effectors?
+[source, cypher, role=noheader]
+----
+// Find direct interacting proteins for PIK3CG
+MATCH (g:Gene {symbol: "PIK3CG"})-[:CODES]->(p:Protein)-[i:INTERACTS_WITH]-(neighbor:Protein)<-[:CODES]-(ng:Gene)
+RETURN g.symbol AS TargetGene,
+       ng.symbol AS NeighborGene,
+       neighbor.sid AS NeighborProtein,
+       i.score AS InteractionScore
+ORDER BY i.score DESC;
+----
+

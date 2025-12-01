@@ -8,10 +8,8 @@ Effective omics data management requires robust infrastructure for storage, anno
 
 == Use Cases
 
-=== Knowledge Graphs for Research and Development
+=== xref:life-sciences/research-development/single-omics.adoc[Single OMICs Data Integration]    
 
-=== Single OMICs Data Integration
+=== xref:life-sciences/research-development/multi-omics.adoc[Multi-OMICs Data Integration]
 
-=== Multi-OMICs Data Integration
-
-=== OMICs Data Integration with Ontologies
+=== xref:life-sciences/research-development/multi-omics-with-ontologies.adoc[Multi-OMICs Data Integration with Ontologies]
