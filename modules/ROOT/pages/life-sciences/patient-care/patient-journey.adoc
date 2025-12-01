@@ -1,6 +1,10 @@
 = Patient Journey
 
+A patient journey is a representation of the journey a patient takes through the healthcare system. It is a graph that represents the nodes and relationships between the nodes.
+
 == 1. Introduction
+
+A patient journey is a representation of the journey a patient takes through the healthcare system. It is a graph that represents the nodes and relationships between the nodes.
 
 Patient journey data is inherently both highly heterogeneous and deeply interconnected, spanning clinical records, laboratory results, medications, imaging, lifestyle factors, and social determinants of health. By definition, these diverse data points form a complex web of relationships, i.e. a patient's dietary habits influence metabolic conditions, exercise patterns correlate with cardiovascular outcomes, and environmental exposures connect to respiratory diseases. Traditional relational databases struggle to capture and query these intricate, multi-dimensional connections efficiently, often requiring complex joins across dozens of tables. Neo4j's flexible, schema-optional graph database model excels in this domain by naturally representing patients, conditions, treatments, and lifestyle factors as nodes with relationships that mirror real-world clinical causality and correlation. This approach enables healthcare organizations to seamlessly integrate disparate data sources while maintaining the semantic richness essential for comprehensive patient journey analytics.
 
@@ -169,7 +173,7 @@ RETURN c2.code AS Code, c2.description AS Description, count(*) AS Occurrences
 ORDER BY Occurrences DESC;
 ----
 
-=== 5.3. Provide based queries
+=== 5.3. Provider based queries
 
 These queries are focused on retrieving information from a provider-centric perspective.
 
@@ -200,6 +204,13 @@ ORDER BY Diagnoses DESC;
 // Given a provider what drugs have they prescribed?
 MATCH (p:Provider {id: 'prov-002'})<-[:ATTENDED_BY]-(:Encounter)-[:PRESCRIBED]->(d:Drug)
 RETURN d.code AS Code, d.name AS Name, count(*) AS Prescriptions
+----
+
+==== 5.3.4. How are providers connected for a given `Patient`?
+
+[source, cypher, role=noheader]
+----
+//TODO: Need more data to demo this properly
 ----
 
 == 6. Graph Data Science (GDS)
