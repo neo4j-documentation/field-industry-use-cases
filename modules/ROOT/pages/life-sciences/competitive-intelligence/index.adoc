@@ -2,14 +2,14 @@
 
 Competitive intelligence is the process of gathering, analyzing, and using information to gain a competitive advantage. It is a key part of business intelligence and is used to make informed decisions about market trends and customer needs.
 
-== 1. Introduction
+== Patent Intelligence
 
+* xref:life-sciences/competitive-intelligence/patent-intelligence.adoc[]
 
-== 2. Scenario
+== Publication Intelligence
 
+* xref:life-sciences/competitive-intelligence/publication-intelligence.adoc[]
 
-== 3. Solution
+== Pipeline Intelligence    
 
-=== Patent Intelligence
-
-=== Publication Intelligence
+* xref:life-sciences/competitive-intelligence/pipeline-intelligence.adoc[]

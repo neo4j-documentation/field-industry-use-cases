@@ -2,6 +2,278 @@
 
 == 1. Introduction
 
+Patent-based competitive intelligence reveals critical insights into competitors' R&D pipelines, therapeutic strategies, and potential market moves by analyzing what genes, disease targets, drug mechanisms, and treatment approaches are being claimed in patent filings. By tracking which companies are patenting specific molecular targets, combination therapies, or indications for particular diseases, organizations can identify emerging competitive threats, potential collaboration opportunities, and white space for their own innovation efforts. This intelligence becomes particularly valuable in pharma and biotech, where patent filings often signal strategic intent years before clinical data or product launches, allowing companies to anticipate competitive dynamics in specific therapeutic areas and adjust their development priorities accordingly.
+
 == 2. Scenario
 
+Consider a pharma company's competitive intelligence team trying to understand the competitive landscape for Alzheimer's disease treatments—they need to connect fragmented information across thousands of patents to identify which competitors are targeting specific genes (like APOE or TREM2), what mechanisms of action are being explored, and which companies might have overlapping or complementary approaches. Traditional relational databases struggle with this because the relationships between patents, genes, diseases, drug mechanisms, companies, and inventors create a complex, interconnected web that's difficult to query efficiently.
+
 == 3. Solution
+
+Neo4j's graph database excels here by naturally modeling these relationships—patents connect to genes they mention, genes link to diseases they're associated with, diseases connect to treatments and drug classes, and companies relate to both their own patents and their competitors' through shared targets or mechanisms. A competitive analyst can write a single Cypher query to ask questions like "show me all companies patenting BACE inhibitors for Alzheimer's that also mention inflammation-related genes" or "find all patents targeting the same protein as our lead compound and reveal the competitive network around that target." This enables the team to rapidly visualize competitive clusters, identify potential acquisition targets working on complementary mechanisms, spot emerging therapeutic trends before they become mainstream, and make informed decisions about where to focus their own R&D investments based on a comprehensive view of the competitive patent landscape.
+
+== Data Model
+
+image::life-sciences/competitive-intelligence/Industry_Use_Cases_Competitive_Intelligence_Patents.png[]
+
+== Demo Data
+
+This dataset includes 
+
+* 4 pharmaceutical companies (Pfizer, Novartis, Roche, Biogen) with overlapping competitive interests
+* 6 patents covering various therapeutic areas
+* Drug targets (BACE1, TREM2, TNF-alpha, IL-6, APOE, MAPT/tau)
+* 4 diseases (Alzheimer's, Parkinson's, Rheumatoid Arthritis, Crohn's)
+* Mechanism types and inventor networks
+
+The following Cypher statement will create the example graph in the Neo4j database:
+
+[source, cypher, role=noheader]
+----
+// Create Companies (Owners/Applicants)
+CREATE (pfizer:Owner {name: 'Pfizer Inc.', country: 'US'})
+CREATE (novartis:Owner {name: 'Novartis AG', country: 'CH'})
+CREATE (roche:Owner {name: 'Roche Holdings', country: 'CH'})
+CREATE (biogen:Owner {name: 'Biogen Inc.', country: 'US'})
+
+// Create Drug Targets (Genes/Proteins)
+CREATE (bace1:Target {name: 'BACE1', type: 'Protein', function: 'Beta-secretase enzyme'})
+CREATE (apoe:Target {name: 'APOE', type: 'Gene', function: 'Apolipoprotein E'})
+CREATE (trem2:Target {name: 'TREM2', type: 'Gene', function: 'Immune receptor'})
+CREATE (tau:Target {name: 'MAPT', type: 'Gene', function: 'Tau protein'})
+CREATE (tnf:Target {name: 'TNF-alpha', type: 'Protein', function: 'Inflammatory cytokine'})
+CREATE (il6:Target {name: 'IL-6', type: 'Protein', function: 'Interleukin-6'})
+
+// Create Diseases
+CREATE (alzheimers:Disease {name: "Alzheimer's Disease", icd10: 'G30'})
+CREATE (parkinsons:Disease {name: "Parkinson's Disease", icd10: 'G20'})
+CREATE (ra:Disease {name: 'Rheumatoid Arthritis', icd10: 'M05'})
+CREATE (crohns:Disease {name: "Crohn's Disease", icd10: 'K50'})
+
+// Create Drug Mechanisms
+CREATE (baceInhibitor:Mechanism {name: 'BACE Inhibition', class: 'Small molecule'})
+CREATE (antiInflammatory:Mechanism {name: 'Anti-inflammatory', class: 'Biologic'})
+CREATE (immunomodulator:Mechanism {name: 'Immune modulation', class: 'Antibody'})
+CREATE (tauAggregation:Mechanism {name: 'Tau aggregation inhibitor', class: 'Small molecule'})
+
+// Create Inventors
+CREATE (smith:Inventor {name: 'Dr. Sarah Smith', expertise: 'Neuroscience'})
+CREATE (zhang:Inventor {name: 'Dr. Wei Zhang', expertise: 'Medicinal Chemistry'})
+CREATE (mueller:Inventor {name: 'Dr. Klaus Mueller', expertise: 'Immunology'})
+CREATE (patel:Inventor {name: 'Dr. Raj Patel', expertise: 'Structural Biology'})
+
+// ============================================
+// PFIZER PATENTS - Alzheimer's Focus
+// ============================================
+
+// Patent 1: Pfizer BACE inhibitor for Alzheimer's
+CREATE (p1:Patent {
+  id: 'US10123456',
+  title: 'Novel BACE1 inhibitors for treatment of neurodegenerative diseases',
+  filing_date: '2022-03-15',
+  status: 'Active'
+})
+CREATE (p1_claim1:Claim {number: 1, text: 'A compound that inhibits BACE1 activity', independent: true})
+CREATE (p1_claim2:Claim {number: 2, text: 'The compound of claim 1 for treating Alzheimers', independent: false})
+CREATE (p1_desc:Description {text: 'Small molecule inhibitors targeting BACE1 with improved brain penetration'})
+
+CREATE (p1)-[:HAS_OWNER]->(pfizer)
+CREATE (p1)-[:HAS_INVENTOR]->(smith)
+CREATE (p1)-[:HAS_INVENTOR]->(zhang)
+CREATE (p1)-[:HAS_CLAIM]->(p1_claim1)
+CREATE (p1)-[:HAS_CLAIM]->(p1_claim2)
+CREATE (p1_claim2)-[:HAS_SUBCLAIM]->(p1_claim1)
+CREATE (p1)-[:HAS_DESCRIPTION]->(p1_desc)
+CREATE (p1)-[:TARGETS]->(bace1)
+CREATE (p1)-[:MENTIONS_TARGET]->(apoe)
+CREATE (p1)-[:TREATS]->(alzheimers)
+CREATE (p1)-[:USES_MECHANISM]->(baceInhibitor)
+
+// Patent 2: Pfizer inflammation-related AD patent
+CREATE (p2:Patent {
+  id: 'US10234567',
+  title: 'Anti-inflammatory compounds for cognitive disorders',
+  filing_date: '2023-01-20',
+  status: 'Active'
+})
+CREATE (p2)-[:HAS_OWNER]->(pfizer)
+CREATE (p2)-[:HAS_INVENTOR]->(smith)
+CREATE (p2)-[:TARGETS]->(trem2)
+CREATE (p2)-[:TARGETS]->(tnf)
+CREATE (p2)-[:TREATS]->(alzheimers)
+CREATE (p2)-[:USES_MECHANISM]->(immunomodulator)
+
+// ============================================
+// NOVARTIS PATENTS - Multi-disease approach
+// ============================================
+
+// Patent 3: Novartis tau-targeting therapy
+CREATE (p3:Patent {
+  id: 'EP3456789',
+  title: 'Tau protein aggregation inhibitors',
+  filing_date: '2022-08-10',
+  status: 'Active'
+})
+CREATE (p3)-[:HAS_OWNER]->(novartis)
+CREATE (p3)-[:HAS_INVENTOR]->(mueller)
+CREATE (p3)-[:TARGETS]->(tau)
+CREATE (p3)-[:TREATS]->(alzheimers)
+CREATE (p3)-[:TREATS]->(parkinsons)
+CREATE (p3)-[:USES_MECHANISM]->(tauAggregation)
+
+// Patent 4: Novartis anti-inflammatory
+CREATE (p4:Patent {
+  id: 'EP3567890',
+  title: 'IL-6 antagonists for autoimmune diseases',
+  filing_date: '2023-02-15',
+  status: 'Active'
+})
+CREATE (p4)-[:HAS_OWNER]->(novartis)
+CREATE (p4)-[:HAS_INVENTOR]->(mueller)
+CREATE (p4)-[:TARGETS]->(il6)
+CREATE (p4)-[:TREATS]->(ra)
+CREATE (p4)-[:TREATS]->(crohns)
+CREATE (p4)-[:USES_MECHANISM]->(antiInflammatory)
+
+// ============================================
+// ROCHE PATENTS - Competitive overlap
+// ============================================
+
+// Patent 5: Roche BACE inhibitor (competitive with Pfizer)
+CREATE (p5:Patent {
+  id: 'WO2022123456',
+  title: 'Beta-secretase inhibitors with enhanced selectivity',
+  filing_date: '2022-06-01',
+  status: 'Active'
+})
+CREATE (p5)-[:HAS_OWNER]->(roche)
+CREATE (p5)-[:HAS_INVENTOR]->(patel)
+CREATE (p5)-[:TARGETS]->(bace1)
+CREATE (p5)-[:MENTIONS_TARGET]->(trem2)
+CREATE (p5)-[:TREATS]->(alzheimers)
+CREATE (p5)-[:USES_MECHANISM]->(baceInhibitor)
+
+// ============================================
+// BIOGEN PATENTS - Neuroinflammation focus
+// ============================================
+
+// Patent 6: Biogen neuroinflammation
+CREATE (p6:Patent {
+  id: 'US10345678',
+  title: 'Immune checkpoint modulation in neurodegenerative diseases',
+  filing_date: '2023-03-10',
+  status: 'Active'
+})
+CREATE (p6)-[:HAS_OWNER]->(biogen)
+CREATE (p6)-[:HAS_INVENTOR]->(patel)
+CREATE (p6)-[:TARGETS]->(trem2)
+CREATE (p6)-[:TARGETS]->(tnf)
+CREATE (p6)-[:TREATS]->(alzheimers)
+CREATE (p6)-[:TREATS]->(parkinsons)
+CREATE (p6)-[:USES_MECHANISM]->(immunomodulator)
+
+// ============================================
+// PATENT CITATIONS (showing prior art connections)
+// ============================================
+
+CREATE (pub1:Publication {id: 'PMID12345678', title: 'BACE1 structure and function'})
+CREATE (pub2:Publication {id: 'PMID23456789', title: 'TREM2 role in Alzheimers'})
+
+CREATE (p1)-[:CITES]->(pub1)
+CREATE (p5)-[:CITES]->(pub1)
+CREATE (p2)-[:CITES]->(pub2)
+CREATE (p6)-[:CITES]->(pub2)
+
+// ============================================
+// PATENT FAMILIES
+// ============================================
+
+CREATE (fam1:Family {id: 'FAM001', priority_date: '2022-03-15'})
+CREATE (fam2:Family {id: 'FAM002', priority_date: '2022-06-01'})
+
+CREATE (p1)-[:BELONGS_TO]->(fam1)
+CREATE (p5)-[:BELONGS_TO]->(fam2)
+----
+
+== Cypher Queries
+
+=== 1. What diseases is a company working on based on their patents?
+
+[source, cypher, role=noheader]
+----
+MATCH (company:Owner {name: 'Pfizer Inc.'})<-[:HAS_OWNER]-(patent:Patent)-[:TREATS]->(disease:Disease)
+RETURN company.name, collect(DISTINCT disease.name) AS diseases
+----
+
+=== 2. Which companies are targeting the same gene/protein for the same disease?
+
+[source, cypher, role=noheader]
+----
+MATCH (pfizer:Owner {name: 'Pfizer Inc.'})<-[:HAS_OWNER]-(pfizerPatent:Patent)-[:TREATS]->(ad:Disease {name: "Alzheimer's Disease"})
+MATCH (pfizerPatent)-[:TARGETS]->(target:Target)
+MATCH (competitorPatent:Patent)-[:TARGETS]->(target)
+MATCH (competitorPatent)-[:TREATS]->(ad)
+MATCH (competitorPatent)-[:HAS_OWNER]->(competitor:Owner)
+WHERE competitor.name <> 'Pfizer Inc.'
+RETURN target.name AS SharedTarget, 
+       collect(DISTINCT competitor.name) AS Competitors,
+       count(DISTINCT competitorPatent) AS CompetingPatents
+----
+
+=== 3. Find all companies working on BACE1 inhibitors and what diseases they target
+
+[source, cypher, role=noheader]
+----
+MATCH (patent:Patent)-[:TARGETS]->(target:Target {name: 'BACE1'})
+MATCH (patent)-[:HAS_OWNER]->(company:Owner)
+MATCH (patent)-[:TREATS]->(disease:Disease)
+RETURN company.name AS Company,
+       collect(DISTINCT disease.name) AS Diseases,
+       count(patent) AS PatentCount
+----
+
+=== 4. Competitive landscape - which companies have overlapping targets and diseases?
+
+[source, cypher, role=noheader]
+----
+MATCH (p1:Patent)-[:HAS_OWNER]->(c1:Owner)
+MATCH (p1)-[:TARGETS]->(target:Target)
+MATCH (p1)-[:TREATS]->(disease:Disease)
+MATCH (p2:Patent)-[:HAS_OWNER]->(c2:Owner)
+MATCH (p2)-[:TARGETS]->(target)
+MATCH (p2)-[:TREATS]->(disease)
+WHERE c1.name < c2.name
+RETURN c1.name AS Company1, 
+       c2.name AS Company2,
+       target.name AS SharedTarget,
+       disease.name AS SharedDisease,
+       count(*) AS OverlapScore
+ORDER BY OverlapScore DESC
+----
+
+=== 5. Find patents that mention inflammation-related targets for Alzheimer's
+
+[source, cypher, role=noheader]
+----
+MATCH (patent:Patent)-[:TREATS]->(ad:Disease {name: "Alzheimer's Disease"})
+MATCH (patent)-[:TARGETS|MENTIONS_TARGET]->(target:Target)
+WHERE target.name IN ['TREM2', 'TNF-alpha', 'IL-6']
+MATCH (patent)-[:HAS_OWNER]->(company:Owner)
+RETURN company.name AS Company,
+       patent.id AS PatentID,
+       collect(target.name) AS InflammatoryTargets
+----
+
+=== 6. Inventor collaboration networks
+
+[source, cypher, role=noheader]
+----
+MATCH (inv1:Inventor)<-[:HAS_INVENTOR]-(patent:Patent)-[:HAS_INVENTOR]->(inv2:Inventor)
+WHERE inv1.name < inv2.name
+MATCH (patent)-[:HAS_OWNER]->(company:Owner)
+MATCH (patent)-[:TREATS]->(disease:Disease)
+RETURN inv1.name AS Inventor1,
+       inv2.name AS Inventor2,
+       company.name AS Company,
+       collect(DISTINCT disease.name) AS DiseasesWorkedOn   
+----
