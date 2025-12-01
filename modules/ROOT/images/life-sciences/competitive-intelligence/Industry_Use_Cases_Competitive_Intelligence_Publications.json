@@ -1,0 +1,305 @@
+{
+  "style": {
+    "font-family": "sans-serif",
+    "background-color": "#ffffff",
+    "background-image": "",
+    "background-size": "100%",
+    "node-color": "#ffffff",
+    "border-width": 4,
+    "border-color": "#000000",
+    "radius": 50,
+    "node-padding": 5,
+    "node-margin": 2,
+    "outside-position": "auto",
+    "node-icon-image": "",
+    "node-background-image": "",
+    "icon-position": "inside",
+    "icon-size": 64,
+    "caption-position": "inside",
+    "caption-max-width": 200,
+    "caption-color": "#000000",
+    "caption-font-size": 50,
+    "caption-font-weight": "normal",
+    "label-position": "inside",
+    "label-display": "pill",
+    "label-color": "#000000",
+    "label-background-color": "#ffffff",
+    "label-border-color": "#000000",
+    "label-border-width": 4,
+    "label-font-size": 40,
+    "label-padding": 5,
+    "label-margin": 4,
+    "directionality": "directed",
+    "detail-position": "inline",
+    "detail-orientation": "parallel",
+    "arrow-width": 5,
+    "arrow-color": "#000000",
+    "margin-start": 5,
+    "margin-end": 5,
+    "margin-peer": 20,
+    "attachment-start": "normal",
+    "attachment-end": "normal",
+    "relationship-icon-image": "",
+    "type-color": "#000000",
+    "type-background-color": "#ffffff",
+    "type-border-color": "#000000",
+    "type-border-width": 0,
+    "type-font-size": 16,
+    "type-padding": 5,
+    "property-position": "outside",
+    "property-alignment": "colon",
+    "property-color": "#000000",
+    "property-font-size": 16,
+    "property-font-weight": "normal"
+  },
+  "nodes": [
+    {
+      "id": "n0",
+      "position": {
+        "x": 10.21106184395674,
+        "y": -19.500427620621153
+      },
+      "caption": "",
+      "style": {
+        "outside-position": "bottom-right"
+      },
+      "labels": [
+        "Publication"
+      ],
+      "properties": {
+        "id": "",
+        "text": "",
+        "abstract": ""
+      }
+    },
+    {
+      "id": "n1",
+      "position": {
+        "x": -298.5630910979263,
+        "y": -91.0187321225356
+      },
+      "caption": "",
+      "style": {},
+      "labels": [
+        "Author"
+      ],
+      "properties": {}
+    },
+    {
+      "id": "n2",
+      "position": {
+        "x": -298.5630910979263,
+        "y": 40.402288460499484
+      },
+      "caption": "",
+      "style": {},
+      "labels": [
+        "Journal"
+      ],
+      "properties": {}
+    },
+    {
+      "id": "n3",
+      "position": {
+        "x": -615.5115812407347,
+        "y": -91.0187321225356
+      },
+      "caption": "",
+      "style": {},
+      "labels": [
+        "Institution"
+      ],
+      "properties": {}
+    },
+    {
+      "id": "n4",
+      "position": {
+        "x": -179.33299881278623,
+        "y": -209.04448827736414
+      },
+      "caption": "",
+      "style": {},
+      "labels": [
+        "Keyword"
+      ],
+      "properties": {}
+    },
+    {
+      "id": "n5",
+      "position": {
+        "x": -49.809950858444864,
+        "y": -280.75007813650666
+      },
+      "caption": "",
+      "style": {},
+      "labels": [
+        "Figure"
+      ],
+      "properties": {}
+    },
+    {
+      "id": "n6",
+      "position": {
+        "x": 10.21106184395674,
+        "y": 268.11559246035716
+      },
+      "caption": "",
+      "style": {},
+      "labels": [
+        "Gene"
+      ],
+      "properties": {}
+    },
+    {
+      "id": "n7",
+      "position": {
+        "x": -298.5630910979263,
+        "y": 171.82330904353458
+      },
+      "caption": "",
+      "style": {},
+      "labels": [
+        "Protein"
+      ],
+      "properties": {}
+    },
+    {
+      "id": "n8",
+      "position": {
+        "x": 466.08250395481605,
+        "y": 124.30758241986796
+      },
+      "caption": "",
+      "style": {},
+      "labels": [
+        "Disease"
+      ],
+      "properties": {}
+    },
+    {
+      "id": "n9",
+      "position": {
+        "x": -298.5630910979263,
+        "y": 324.3046842829668
+      },
+      "caption": "",
+      "style": {},
+      "labels": [
+        "SNP"
+      ],
+      "properties": {}
+    }
+  ],
+  "relationships": [
+    {
+      "id": "n0",
+      "type": "CITES",
+      "style": {
+        "attachment-end": "right",
+        "attachment-start": "top"
+      },
+      "properties": {},
+      "fromId": "n0",
+      "toId": "n0"
+    },
+    {
+      "id": "n1",
+      "type": "HAS_AUTHOR",
+      "style": {},
+      "properties": {},
+      "fromId": "n0",
+      "toId": "n1"
+    },
+    {
+      "id": "n2",
+      "type": "PUBLISHED_IN",
+      "style": {},
+      "properties": {},
+      "fromId": "n0",
+      "toId": "n2"
+    },
+    {
+      "id": "n3",
+      "type": "IS_PART_OF",
+      "style": {},
+      "properties": {},
+      "fromId": "n1",
+      "toId": "n3"
+    },
+    {
+      "id": "n4",
+      "type": "HAS_KEYWORD",
+      "style": {},
+      "properties": {},
+      "fromId": "n0",
+      "toId": "n4"
+    },
+    {
+      "id": "n5",
+      "type": "HAS_FIGURE",
+      "style": {},
+      "properties": {},
+      "fromId": "n0",
+      "toId": "n5"
+    },
+    {
+      "id": "n6",
+      "type": "IS_A",
+      "style": {
+        "attachment-start": "left",
+        "attachment-end": "top"
+      },
+      "properties": {},
+      "fromId": "n4",
+      "toId": "n4"
+    },
+    {
+      "id": "n7",
+      "type": "MENTIONS",
+      "style": {},
+      "properties": {},
+      "fromId": "n0",
+      "toId": "n6"
+    },
+    {
+      "id": "n8",
+      "type": "MENTIONS",
+      "style": {},
+      "properties": {},
+      "fromId": "n0",
+      "toId": "n7"
+    },
+    {
+      "id": "n9",
+      "type": "MENTIONS",
+      "style": {},
+      "properties": {},
+      "fromId": "n0",
+      "toId": "n8"
+    },
+    {
+      "id": "n10",
+      "type": "ASSOCIATED_WITH",
+      "style": {},
+      "properties": {},
+      "fromId": "n9",
+      "toId": "n6"
+    },
+    {
+      "id": "n11",
+      "type": "CODES",
+      "style": {},
+      "properties": {},
+      "fromId": "n6",
+      "toId": "n7"
+    },
+    {
+      "id": "n12",
+      "type": "",
+      "style": {},
+      "properties": {},
+      "fromId": "n6",
+      "toId": "n8"
+    }
+  ]
+}

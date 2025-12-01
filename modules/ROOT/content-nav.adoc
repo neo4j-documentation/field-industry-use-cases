@@ -24,6 +24,9 @@
 * xref:life-sciences/index.adoc[]
 ** xref:life-sciences/medical-care/index.adoc[]
 *** xref:life-sciences/medical-care/patient-journey.adoc[]
+** xref:life-sciences/competitive-intelligence/index.adoc[]
+*** xref:life-sciences/competitive-intelligence/patent-intelligence.adoc[]
+*** xref:life-sciences/competitive-intelligence/publication-intelligence.adoc[]
 
 * xref:manufacturing/index.adoc[]
 ** xref:manufacturing/supply-chain-management/index.adoc[]

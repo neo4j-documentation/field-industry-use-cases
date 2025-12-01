@@ -1,0 +1,328 @@
+{
+  "style": {
+    "font-family": "sans-serif",
+    "background-color": "#ffffff",
+    "background-image": "",
+    "background-size": "100%",
+    "node-color": "#ffffff",
+    "border-width": 4,
+    "border-color": "#000000",
+    "radius": 50,
+    "node-padding": 5,
+    "node-margin": 2,
+    "outside-position": "auto",
+    "node-icon-image": "",
+    "node-background-image": "",
+    "icon-position": "inside",
+    "icon-size": 64,
+    "caption-position": "inside",
+    "caption-max-width": 200,
+    "caption-color": "#000000",
+    "caption-font-size": 50,
+    "caption-font-weight": "normal",
+    "label-position": "inside",
+    "label-display": "pill",
+    "label-color": "#000000",
+    "label-background-color": "#ffffff",
+    "label-border-color": "#000000",
+    "label-border-width": 4,
+    "label-font-size": 40,
+    "label-padding": 5,
+    "label-margin": 4,
+    "directionality": "directed",
+    "detail-position": "inline",
+    "detail-orientation": "parallel",
+    "arrow-width": 5,
+    "arrow-color": "#000000",
+    "margin-start": 5,
+    "margin-end": 5,
+    "margin-peer": 20,
+    "attachment-start": "normal",
+    "attachment-end": "normal",
+    "relationship-icon-image": "",
+    "type-color": "#000000",
+    "type-background-color": "#ffffff",
+    "type-border-color": "#000000",
+    "type-border-width": 0,
+    "type-font-size": 16,
+    "type-padding": 5,
+    "property-position": "outside",
+    "property-alignment": "colon",
+    "property-color": "#000000",
+    "property-font-size": 16,
+    "property-font-weight": "normal"
+  },
+  "nodes": [
+    {
+      "id": "n0",
+      "position": {
+        "x": -23,
+        "y": 0
+      },
+      "caption": "",
+      "labels": [
+        "Patent"
+      ],
+      "properties": {},
+      "style": {}
+    },
+    {
+      "id": "n1",
+      "position": {
+        "x": 247.81598826616138,
+        "y": -195.6153390779851
+      },
+      "caption": "",
+      "labels": [
+        "Claim"
+      ],
+      "properties": {},
+      "style": {}
+    },
+    {
+      "id": "n2",
+      "position": {
+        "x": -129.96612601278866,
+        "y": -284.1098137556568
+      },
+      "caption": "",
+      "labels": [
+        "Publication"
+      ],
+      "properties": {},
+      "style": {}
+    },
+    {
+      "id": "n3",
+      "position": {
+        "x": -302.5595910694878,
+        "y": -118.34937020330338
+      },
+      "caption": "",
+      "labels": [
+        "Inventor"
+      ],
+      "properties": {},
+      "style": {}
+    },
+    {
+      "id": "n4",
+      "position": {
+        "x": -302.5595910694878,
+        "y": 118.34937020330337
+      },
+      "caption": "",
+      "labels": [
+        "Applicant"
+      ],
+      "properties": {},
+      "style": {}
+    },
+    {
+      "id": "n5",
+      "position": {
+        "x": -326.57888330128924,
+        "y": -2.1608492430140658e-13
+      },
+      "caption": "",
+      "labels": [
+        "Owner"
+      ],
+      "properties": {},
+      "style": {}
+    },
+    {
+      "id": "n6",
+      "position": {
+        "x": 109.09228144605515,
+        "y": -273.3345341679934
+      },
+      "caption": "",
+      "labels": [
+        "Description"
+      ],
+      "properties": {},
+      "style": {}
+    },
+    {
+      "id": "n7",
+      "position": {
+        "x": 311.07583028883244,
+        "y": 3.13465049978228e-13
+      },
+      "caption": "",
+      "labels": [
+        "Family"
+      ],
+      "properties": {},
+      "style": {}
+    },
+    {
+      "id": "n8",
+      "position": {
+        "x": 530.2837310645973,
+        "y": 3.13465049978228e-13
+      },
+      "caption": "",
+      "labels": [
+        "Superfamily"
+      ],
+      "properties": {},
+      "style": {}
+    },
+    {
+      "id": "n9",
+      "position": {
+        "x": 253.64186553229865,
+        "y": 195.6153390779854
+      },
+      "caption": "",
+      "labels": [
+        "Opposition"
+      ],
+      "properties": {},
+      "style": {}
+    },
+    {
+      "id": "n10",
+      "position": {
+        "x": 530.2837310645973,
+        "y": 195.6153390779854
+      },
+      "caption": "",
+      "labels": [
+        "Opponent"
+      ],
+      "properties": {},
+      "style": {}
+    },
+    {
+      "id": "n11",
+      "position": {
+        "x": -23,
+        "y": 303.5788833012893
+      },
+      "caption": "",
+      "labels": [
+        "Priority"
+      ],
+      "properties": {},
+      "style": {}
+    }
+  ],
+  "relationships": [
+    {
+      "id": "n0",
+      "type": "HAS_CLAIM",
+      "style": {},
+      "properties": {},
+      "fromId": "n0",
+      "toId": "n1"
+    },
+    {
+      "id": "n1",
+      "fromId": "n1",
+      "toId": "n1",
+      "type": "HAS_SUBCLAIM",
+      "properties": {},
+      "style": {
+        "attachment-start": "top",
+        "attachment-end": "right",
+        "detail-position": "above",
+        "detail-orientation": "parallel"
+      }
+    },
+    {
+      "id": "n2",
+      "fromId": "n0",
+      "toId": "n2",
+      "type": "CITES",
+      "properties": {},
+      "style": {}
+    },
+    {
+      "id": "n3",
+      "type": "NEXT",
+      "style": {
+        "attachment-start": "bottom",
+        "attachment-end": "right",
+        "detail-position": "above"
+      },
+      "properties": {},
+      "fromId": "n1",
+      "toId": "n1"
+    },
+    {
+      "id": "n4",
+      "fromId": "n0",
+      "toId": "n3",
+      "type": "HAS_INVENTOR",
+      "properties": {},
+      "style": {}
+    },
+    {
+      "id": "n5",
+      "fromId": "n0",
+      "toId": "n4",
+      "type": "HAS_APPLICANT",
+      "properties": {},
+      "style": {}
+    },
+    {
+      "id": "n6",
+      "fromId": "n0",
+      "toId": "n5",
+      "type": "HAS_OWNER",
+      "properties": {},
+      "style": {}
+    },
+    {
+      "id": "n7",
+      "fromId": "n0",
+      "toId": "n6",
+      "type": "HAS_DESCRIPTION",
+      "properties": {},
+      "style": {}
+    },
+    {
+      "id": "n8",
+      "fromId": "n0",
+      "toId": "n7",
+      "type": "BELONGS_TO",
+      "properties": {},
+      "style": {}
+    },
+    {
+      "id": "n9",
+      "fromId": "n7",
+      "toId": "n8",
+      "type": "PART_OF",
+      "properties": {},
+      "style": {}
+    },
+    {
+      "id": "n10",
+      "type": "HAS_OPPOSITION",
+      "style": {},
+      "properties": {},
+      "fromId": "n0",
+      "toId": "n9"
+    },
+    {
+      "id": "n11",
+      "type": "RAISED",
+      "style": {},
+      "properties": {},
+      "fromId": "n10",
+      "toId": "n9"
+    },
+    {
+      "id": "n12",
+      "fromId": "n0",
+      "toId": "n11",
+      "type": "HAS_PRIORITY",
+      "properties": {},
+      "style": {}
+    }
+  ]
+}

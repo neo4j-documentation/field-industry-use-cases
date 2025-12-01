@@ -1,0 +1,15 @@
+= Competitive Intelligence
+
+Competitive intelligence is the process of gathering, analyzing, and using information to gain a competitive advantage. It is a key part of business intelligence and is used to make informed decisions about market trends and customer needs.
+
+== 1. Introduction
+
+
+== 2. Scenario
+
+
+== 3. Solution
+
+=== Patent Intelligence
+
+=== Publication Intelligence
