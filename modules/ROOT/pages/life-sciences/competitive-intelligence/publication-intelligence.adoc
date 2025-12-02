@@ -2,6 +2,403 @@
 
 == 1. Introduction
 
+Scientific publications reveal competitive research directions years before patents or clinical trials appear. By connecting publications with authors, institutions, genes, diseases, and clinical variants from databases like ClinVar, companies can identify emerging therapeutic targets, track institutional expertise, and discover collaboration opportunities. This intelligence becomes particularly valuable in pharma and biotech, where publications often signal strategic intent years before clinical data or product launches, allowing companies to anticipate competitive dynamics in specific therapeutic areas and adjust their development priorities accordingly.
+
 == 2. Scenario
 
+A pharma CI team monitoring Alzheimer's research faces information overload—thousands of disconnected PubMed results make it impossible to answer strategic questions like: "Which institutions are leading TREM2 research?" or "What new gene-disease links are validated by clinical evidence?" They need to connect these publications to patents, clinical trials, and other research to understand the competitive landscape and identify potential collaboration opportunities.
+
 == 3. Solution
+
+The graph connects publications → authors → institutions → genes → proteins → diseases → SNPs in a unified model. This enables traversing complex paths like "Institution → Author → Publication → Gene → Clinical Variant → Disease" in single queries, revealing patterns invisible in traditional databases. 
+
+== Data Model
+
+image::life-sciences/competitive-intelligence/Industry_Use_Cases_Competitive_Intelligence_Publications.png[Publication intelligence data model]
+
+== Demo Data
+
+[source, cypher, role=noheader]
+----
+
+// ============================================
+// MERGE INSTITUTIONS (Academic & Pharma)
+// ============================================
+
+MERGE (mit:Institution {name: 'MIT', type: 'Academic', country: 'US'})
+MERGE (stanford:Institution {name: 'Stanford University', type: 'Academic', country: 'US'})
+MERGE (ucl:Institution {name: 'University College London', type: 'Academic', country: 'UK'})
+MERGE (dzne:Institution {name: 'DZNE', type: 'Academic', country: 'DE'})
+MERGE (genentechRes:Institution {name: 'Genentech Research', type: 'Industry', country: 'US'})
+MERGE (biogenRes:Institution {name: 'Biogen Research', type: 'Industry', country: 'US'})
+
+// ============================================
+// MERGE AUTHORS
+// ============================================
+
+MERGE (chen:Author {name: 'Dr. Li Chen', h_index: 45, expertise: 'Neurogenetics'})
+MERGE (rodriguez:Author {name: 'Dr. Maria Rodriguez', h_index: 52, expertise: 'Immunology'})
+MERGE (tanaka:Author {name: 'Dr. Kenji Tanaka', h_index: 38, expertise: 'Structural Biology'})
+MERGE (schmidt:Author {name: 'Dr. Anna Schmidt', h_index: 41, expertise: 'Neuroscience'})
+MERGE (williams:Author {name: 'Dr. James Williams', h_index: 35, expertise: 'Genomics'})
+MERGE (kumar:Author {name: 'Dr. Priya Kumar', h_index: 29, expertise: 'Clinical Genetics'})
+
+// Author-Institution relationships
+MERGE (chen)-[:AFFILIATED_WITH]->(mit)
+MERGE (rodriguez)-[:AFFILIATED_WITH]->(stanford)
+MERGE (tanaka)-[:AFFILIATED_WITH]->(genentechRes)
+MERGE (schmidt)-[:AFFILIATED_WITH]->(dzne)
+MERGE (williams)-[:AFFILIATED_WITH]->(ucl)
+MERGE (kumar)-[:AFFILIATED_WITH]->(biogenRes)
+
+// ============================================
+// MERGE JOURNALS
+// ============================================
+
+MERGE (nature:Journal {name: 'Nature', impact_factor: 49.9})
+MERGE (cell:Journal {name: 'Cell', impact_factor: 41.6})
+MERGE (natGenet:Journal {name: 'Nature Genetics', impact_factor: 31.7})
+MERGE (neuron:Journal {name: 'Neuron', impact_factor: 16.2})
+
+// ============================================
+// MERGE DISEASES
+// ============================================
+
+MERGE (ad:Disease {name: "Alzheimer's Disease", icd10: 'G30', prevalence: '6.7M US'})
+MERGE (pd:Disease {name: "Parkinson's Disease", icd10: 'G20', prevalence: '1M US'})
+MERGE (ftd:Disease {name: 'Frontotemporal Dementia', icd10: 'G31.09', prevalence: '60K US'})
+
+// ============================================
+// MERGE GENES AND PROTEINS
+// ============================================
+
+MERGE (trem2_gene:Gene {symbol: 'TREM2', name: 'Triggering receptor expressed on myeloid cells 2', chromosome: '6'})
+MERGE (apoe_gene:Gene {symbol: 'APOE', name: 'Apolipoprotein E', chromosome: '19'})
+MERGE (app_gene:Gene {symbol: 'APP', name: 'Amyloid precursor protein', chromosome: '21'})
+MERGE (mapt_gene:Gene {symbol: 'MAPT', name: 'Microtubule associated protein tau', chromosome: '17'})
+MERGE (bin1_gene:Gene {symbol: 'BIN1', name: 'Bridging integrator 1', chromosome: '2'})
+
+MERGE (trem2_prot:Protein {name: 'TREM2', uniprot: 'Q9NZC2', function: 'Immune receptor'})
+MERGE (apoe_prot:Protein {name: 'ApoE', uniprot: 'P02649', function: 'Lipid transport'})
+MERGE (tau_prot:Protein {name: 'Tau', uniprot: 'P10636', function: 'Microtubule binding'})
+MERGE (abeta_prot:Protein {name: 'Amyloid-beta', uniprot: 'P05067', function: 'Peptide fragment'})
+
+// Gene codes for Protein
+MERGE (trem2_gene)-[:CODES_FOR]->(trem2_prot)
+MERGE (apoe_gene)-[:CODES_FOR]->(apoe_prot)
+MERGE (mapt_gene)-[:CODES_FOR]->(tau_prot)
+MERGE (app_gene)-[:CODES_FOR]->(abeta_prot)
+
+// ============================================
+// MERGE SNPs (Clinical Variants from ClinVar)
+// ============================================
+
+MERGE (rs75932628:SNP {
+  rsid: 'rs75932628',
+  variant: 'R47H',
+  clinical_significance: 'Pathogenic',
+  review_status: '3-star',
+  allele_freq: 0.002
+})
+MERGE (rs429358:SNP {
+  rsid: 'rs429358',
+  variant: 'ε4 allele',
+  clinical_significance: 'Risk factor',
+  review_status: '4-star',
+  allele_freq: 0.14
+})
+MERGE (rs63750847:SNP {
+  rsid: 'rs63750847',
+  variant: 'A152T',
+  clinical_significance: 'Likely pathogenic',
+  review_status: '2-star',
+  allele_freq: 0.0001
+})
+
+// SNP-Gene associations
+MERGE (rs75932628)-[:VARIANT_IN]->(trem2_gene)
+MERGE (rs429358)-[:VARIANT_IN]->(apoe_gene)
+MERGE (rs63750847)-[:VARIANT_IN]->(app_gene)
+
+// ============================================
+// MERGE KEYWORDS (Research Themes)
+// ============================================
+
+MERGE (neuroinflamm:Keyword {term: 'Neuroinflammation'})
+MERGE (microglia:Keyword {term: 'Microglia'})
+MERGE (geneticRisk:Keyword {term: 'Genetic Risk Factors'})
+MERGE (proteinAgg:Keyword {term: 'Protein Aggregation'})
+MERGE (immunotherapy:Keyword {term: 'Immunotherapy'})
+
+// Keyword hierarchies
+MERGE (microglia)-[:IS_A]->(neuroinflamm)
+MERGE (immunotherapy)-[:IS_A]->(neuroinflamm)
+
+// ============================================
+// PUBLICATION 1: TREM2 Discovery Paper
+// ============================================
+
+MERGE (pub1:Publication {
+  pmid: 'PMID35123456',
+  title: 'TREM2 variants confer risk for Alzheimers disease through microglial dysfunction',
+  year: 2023,
+  citations: 342,
+  abstract: 'Rare variants in TREM2 increase Alzheimers disease risk 3-fold...'
+})
+MERGE (pub1)-[:PUBLISHED_IN]->(natGenet)
+MERGE (pub1)-[:HAS_AUTHOR]->(chen)
+MERGE (pub1)-[:HAS_AUTHOR]->(rodriguez)
+MERGE (pub1)-[:HAS_KEYWORD]->(neuroinflamm)
+MERGE (pub1)-[:HAS_KEYWORD]->(microglia)
+MERGE (pub1)-[:HAS_KEYWORD]->(geneticRisk)
+MERGE (pub1)-[:MENTIONS]->(trem2_gene)
+MERGE (pub1)-[:MENTIONS]->(trem2_prot)
+MERGE (pub1)-[:MENTIONS]->(ad)
+MERGE (pub1)-[:MENTIONS_VARIANT]->(rs75932628)
+
+// ============================================
+// PUBLICATION 2: APOE Review Paper
+// ============================================
+
+MERGE (pub2:Publication {
+  pmid: 'PMID35234567',
+  title: 'APOE4: The most significant genetic risk factor for late-onset Alzheimers',
+  year: 2023,
+  citations: 589,
+  abstract: 'The APOE ε4 allele increases AD risk in dose-dependent manner...'
+})
+MERGE (pub2)-[:PUBLISHED_IN]->(neuron)
+MERGE (pub2)-[:HAS_AUTHOR]->(williams)
+MERGE (pub2)-[:HAS_KEYWORD]->(geneticRisk)
+MERGE (pub2)-[:MENTIONS]->(apoe_gene)
+MERGE (pub2)-[:MENTIONS]->(apoe_prot)
+MERGE (pub2)-[:MENTIONS]->(ad)
+MERGE (pub2)-[:MENTIONS_VARIANT]->(rs429358)
+MERGE (pub2)-[:CITES]->(pub1)
+
+// ============================================
+// PUBLICATION 3: TREM2 Therapeutic Paper (Industry)
+// ============================================
+
+MERGE (pub3:Publication {
+  pmid: 'PMID35345678',
+  title: 'Therapeutic targeting of TREM2 in neurodegenerative diseases',
+  year: 2024,
+  citations: 127,
+  abstract: 'TREM2 agonists show promise in preclinical models...'
+})
+MERGE (pub3)-[:PUBLISHED_IN]->(cell)
+MERGE (pub3)-[:HAS_AUTHOR]->(tanaka)
+MERGE (pub3)-[:HAS_AUTHOR]->(rodriguez)
+MERGE (pub3)-[:HAS_KEYWORD]->(immunotherapy)
+MERGE (pub3)-[:HAS_KEYWORD]->(microglia)
+MERGE (pub3)-[:MENTIONS]->(trem2_gene)
+MERGE (pub3)-[:MENTIONS]->(trem2_prot)
+MERGE (pub3)-[:MENTIONS]->(ad)
+MERGE (pub3)-[:MENTIONS]->(pd)
+MERGE (pub3)-[:CITES]->(pub1)
+
+// ============================================
+// PUBLICATION 4: Multi-omics Paper
+// ============================================
+
+MERGE (pub4:Publication {
+  pmid: 'PMID35456789',
+  title: 'Integrated genomics reveals novel Alzheimers disease susceptibility loci',
+  year: 2024,
+  citations: 234,
+  abstract: 'Genome-wide association analysis identifies BIN1 and CD33...'
+})
+MERGE (pub4)-[:PUBLISHED_IN]->(nature)
+MERGE (pub4)-[:HAS_AUTHOR]->(schmidt)
+MERGE (pub4)-[:HAS_AUTHOR]->(kumar)
+MERGE (pub4)-[:HAS_AUTHOR]->(chen)
+MERGE (pub4)-[:HAS_KEYWORD]->(geneticRisk)
+MERGE (pub4)-[:MENTIONS]->(bin1_gene)
+MERGE (pub4)-[:MENTIONS]->(trem2_gene)
+MERGE (pub4)-[:MENTIONS]->(apoe_gene)
+MERGE (pub4)-[:MENTIONS]->(ad)
+
+// ============================================
+// PUBLICATION 5: Tau/FTD Paper
+// ============================================
+
+MERGE (pub5:Publication {
+  pmid: 'PMID35567890',
+  title: 'MAPT mutations in frontotemporal dementia and Alzheimers overlap',
+  year: 2023,
+  citations: 178,
+  abstract: 'Tau protein dysfunction links multiple neurodegenerative diseases...'
+})
+MERGE (pub5)-[:PUBLISHED_IN]->(neuron)
+MERGE (pub5)-[:HAS_AUTHOR]->(kumar)
+MERGE (pub5)-[:HAS_KEYWORD]->(proteinAgg)
+MERGE (pub5)-[:MENTIONS]->(mapt_gene)
+MERGE (pub5)-[:MENTIONS]->(tau_prot)
+MERGE (pub5)-[:MENTIONS]->(ftd)
+MERGE (pub5)-[:MENTIONS]->(ad)
+
+// ============================================
+// PUBLICATION 6: Industry-Academic Collaboration
+// ============================================
+
+MERGE (pub6:Publication {
+  pmid: 'PMID35678901',
+  title: 'Clinical validation of TREM2 R47H variant in diverse populations',
+  year: 2024,
+  citations: 95,
+  abstract: 'Multi-center study confirms TREM2 variant pathogenicity...'
+})
+MERGE (pub6)-[:PUBLISHED_IN]->(natGenet)
+MERGE (pub6)-[:HAS_AUTHOR]->(tanaka)
+MERGE (pub6)-[:HAS_AUTHOR]->(williams)
+MERGE (pub6)-[:HAS_AUTHOR]->(schmidt)
+MERGE (pub6)-[:HAS_KEYWORD]->(geneticRisk)
+MERGE (pub6)-[:MENTIONS]->(trem2_gene)
+MERGE (pub6)-[:MENTIONS]->(ad)
+MERGE (pub6)-[:MENTIONS_VARIANT]->(rs75932628)
+MERGE (pub6)-[:CITES]->(pub1)
+MERGE (pub6)-[:CITES]->(pub3)
+----
+== Cypher Queries
+
+=== 1. Which institutions are publishing on a drug target and a specific disease?
+
+Find competitive hotspots and potential collaboration partners.
+
+[source, cypher, role=noheader]
+----
+MATCH (pub:Publication)-[:MENTIONS]->(gene:Gene {symbol: 'TREM2'})
+MATCH (pub)-[:MENTIONS]->(disease:Disease {name: "Alzheimer's Disease"})
+MATCH (pub)-[:HAS_AUTHOR]->(author:Author)-[:AFFILIATED_WITH]->(inst:Institution)
+RETURN inst.name AS Institution,
+       inst.type AS Type,
+       count(DISTINCT pub) AS Publications,
+       collect(DISTINCT author.name) AS Researchers,
+       avg(pub.citations) AS AvgCitations
+ORDER BY Publications DESC, AvgCitations DESC;
+----
+
+==== Which authors are publishing on a drug target and a specific disease?
+
+[source, cypher, role=noheader]
+----
+MATCH (pub:Publication)-[:MENTIONS]->(gene:Gene {symbol: 'TREM2'})
+MATCH (pub)-[:MENTIONS]->(disease:Disease {name: "Alzheimer's Disease"})
+MATCH (pub)-[:HAS_AUTHOR]->(author:Author)
+RETURN author.name AS Author,
+       author.h_index AS H-Index,
+       count(DISTINCT pub) AS Publications
+ORDER BY Publications DESC, h_index DESC;
+----
+
+=== Which keywords are associated with a drug target and a specific disease?
+
+[source, cypher, role=noheader]
+----
+MATCH (pub:Publication)-[:MENTIONS]->(gene:Gene {symbol: 'TREM2'})
+MATCH (pub)-[:MENTIONS]->(disease:Disease {name: "Alzheimer's Disease"})
+MATCH (pub)-[:HAS_KEYWORD]->(keyword:Keyword)
+RETURN keyword.term AS Keyword,
+       count(DISTINCT pub) AS Publications
+ORDER BY Publications DESC;
+----
+
+=== Find emerging gene-disease associations through clinical variants
+
+Discover novel therapeutic targets validated by clinical evidence.
+
+[source, cypher, role=noheader]
+----
+MATCH (snp:SNP)-[:VARIANT_IN]->(gene:Gene)
+MATCH (pub:Publication)-[:MENTIONS_VARIANT]->(snp)
+MATCH (pub)-[:MENTIONS]->(disease:Disease)
+WHERE snp.clinical_significance IN ['Pathogenic', 'Likely pathogenic']
+RETURN gene.symbol AS Gene,
+       gene.name AS GeneName,
+       snp.rsid AS ClinicalVariant,
+       snp.variant AS Mutation,
+       disease.name AS Disease,
+       count(DISTINCT pub) AS Publications,
+       snp.clinical_significance AS ClinicalSignificance
+ORDER BY Publications DESC;
+----
+
+=== Map research collaboration networks
+
+
+[source, cypher, role=noheader]
+----
+MATCH (auth1:Author)-[:AFFILIATED_WITH]->(inst1:Institution)
+MATCH (auth2:Author)-[:AFFILIATED_WITH]->(inst2:Institution)
+MATCH (pub:Publication)-[:HAS_AUTHOR]->(auth1)
+MATCH (pub)-[:HAS_AUTHOR]->(auth2)
+WHERE inst1.name < inst2.name
+  AND inst1.type <> inst2.type  // Cross-sector collaboration
+MATCH (pub)-[:MENTIONS]->(disease:Disease)
+RETURN inst1.name AS AcademicInstitution,
+       inst2.name AS IndustryPartner,
+       count(DISTINCT pub) AS CollaborativePublications,
+       collect(DISTINCT auth1.name + ' & ' + auth2.name) AS ResearcherPairs,
+       collect(DISTINCT disease.name) AS DiseasesStudied
+ORDER BY CollaborativePublications DESC;
+----
+
+=== Find Key Opinion Leaders in a therapeutic area
+
+Identify the most influential researchers in a specific therapeutic area.
+
+[source, cypher, role=noheader]
+----
+MATCH (pub:Publication)-[:MENTIONS]->(gene:Gene {symbol: 'TREM2'})
+MATCH (pub)-[:MENTIONS]->(disease:Disease {name: "Alzheimer's Disease"})
+MATCH (pub)-[:HAS_AUTHOR]->(author:Author)
+RETURN author.name AS Author,
+       author.h_index AS H-Index,
+       count(DISTINCT pub) AS Publications
+ORDER BY Publications DESC, h_index DESC;
+----
+
+=== Find "bridge" researchers connecting different research themes
+Identify key opinion leaders who publish across multiple domains.
+
+[source, cypher, role=noheader]
+----
+MATCH (author:Author)<-[:HAS_AUTHOR]-(pub:Publication)-[:HAS_KEYWORD]->(keyword:Keyword)
+WITH author, collect(DISTINCT keyword.term) AS themes, count(DISTINCT pub) AS pubCount
+WHERE size(themes) >= 2
+MATCH (author)-[:AFFILIATED_WITH]->(inst:Institution)
+RETURN author.name AS Researcher,
+       inst.name AS Institution,
+       author.h_index AS HIndex,
+       themes AS ResearchThemes,
+       pubCount AS Publications
+ORDER BY size(themes) DESC, author.h_index DESC;
+----
+
+=== Discover multi-target research trends
+
+Find publications linking multiple genes to the same disease (systems biology approach).
+
+[source, cypher, role=noheader]
+----
+
+MATCH (pub:Publication)-[:MENTIONS]->(disease:Disease {name: "Alzheimer's Disease"})
+MATCH (pub)-[:MENTIONS]->(gene:Gene)
+MATCH (pub)-[:HAS_AUTHOR]->(author:Author)-[:AFFILIATED_WITH]->(inst:Institution)
+WITH pub, disease, collect(DISTINCT gene.symbol) AS genes, inst
+WHERE size(genes) >= 2  // Publications mentioning 2+ genes
+RETURN pub.title AS Publication,
+       pub.year AS Year,
+       inst.name AS Institution,
+       genes AS GenesStudied,
+       size(genes) AS NumberOfGenes,
+       pub.citations AS Citations
+ORDER BY NumberOfGenes DESC, Citations DESC
+LIMIT 10;
+----
+
+Publication-based competitive intelligence (CI) can be powerfully connected to patent-based CI by leveraging overlapping entities within both datasets. Scientific publications often provide the foundational knowledge that patents build upon, with many patents explicitly citing key publications during the patent application process. Entities such as genes, drug targets, and molecular variants commonly appear in both scholarly articles and patent claims, allowing for the mapping of innovation trajectories from basic research to intellectual property. Furthermore, authors of high-impact publications may also appear as inventors or advisors in patents, making them key opinion leaders and potential collaboration partners. Integrating publication and patent CI enables organizations to identify emerging hot spots, influential contributors, and the translation of novel scientific discoveries into protectable inventions.
+
+xref:life-sciences/competitive-intelligence/patent-intelligence.adoc[See also: Patent Intelligence]
+

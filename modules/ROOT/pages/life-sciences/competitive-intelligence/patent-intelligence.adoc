@@ -26,6 +26,9 @@ This dataset includes
 * 4 diseases (Alzheimer's, Parkinson's, Rheumatoid Arthritis, Crohn's)
 * Mechanism types and inventor networks
 
+Key Insights from the Data:
+The dataset reveals that Pfizer and Roche have direct competitive overlap on BACE1 inhibitors for Alzheimer's, while Pfizer and Biogen both explore TREM2-related neuroinflammation approaches. This type of analysis helps identify potential acquisition targets, patent challenges, or collaboration opportunities.
+
 The following Cypher statement will create the example graph in the Neo4j database:
 
 [source, cypher, role=noheader]
