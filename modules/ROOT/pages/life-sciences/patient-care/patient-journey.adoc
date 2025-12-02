@@ -329,11 +329,13 @@ MATCH (p:Provider {id: 'prov-002'})<-[:ATTENDED_BY]-(:Encounter)-[:PRESCRIBED]->
 RETURN d.code AS Code, d.name AS Name, count(*) AS Prescriptions
 ----
 
-==== 5.3.4. How are providers connected for a given `Patient`?
+==== 5.3.4. What are the providers for a given `Patient`?
 
 [source, cypher, role=noheader]
 ----
-//TODO: Need more data to demo this properly
+// Get the names of the providers a patient has seen
+MATCH (pat:Patient {id: '987-223-1345'})-[:HAS_ENCOUNTER]->(:Encounter)-[:ATTENDED_BY]->(provider:Provider)
+RETURN provider.name AS Provider
 ----
 
 == 6. Graph Data Science (GDS)
