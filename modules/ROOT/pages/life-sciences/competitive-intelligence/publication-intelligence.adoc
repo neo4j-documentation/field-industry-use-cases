@@ -262,7 +262,9 @@ MERGE (pub6)-[:CITES]->(pub3)
 ----
 == Cypher Queries
 
-=== 1. Which institutions are publishing on a drug target and a specific disease?
+=== Institutional Hotspots
+
+Which institutions are publishing on a drug target and a specific disease?
 
 Find competitive hotspots and potential collaboration partners.
 
@@ -292,7 +294,7 @@ RETURN author.name AS Author,
 ORDER BY Publications DESC, h_index DESC;
 ----
 
-=== Which keywords are associated with a drug target and a specific disease?
+==== Which keywords are associated with a drug target and a specific disease?
 
 [source, cypher, role=noheader]
 ----
@@ -304,7 +306,9 @@ RETURN keyword.term AS Keyword,
 ORDER BY Publications DESC;
 ----
 
-=== Find emerging gene-disease associations through clinical variants
+=== Clinical Validation
+
+Find emerging gene-disease associations through clinical variants
 
 Discover novel therapeutic targets validated by clinical evidence.
 
@@ -324,7 +328,9 @@ RETURN gene.symbol AS Gene,
 ORDER BY Publications DESC;
 ----
 
-=== Map research collaboration networks
+=== Collaboration Networks
+
+Map research collaboration networks
 
 
 [source, cypher, role=noheader]
@@ -344,7 +350,9 @@ RETURN inst1.name AS AcademicInstitution,
 ORDER BY CollaborativePublications DESC;
 ----
 
-=== Find Key Opinion Leaders in a therapeutic area
+=== Key Opinion Leaders
+
+Find Key Opinion Leaders in a therapeutic area
 
 Identify the most influential researchers in a specific therapeutic area.
 
@@ -359,7 +367,7 @@ RETURN author.name AS Author,
 ORDER BY Publications DESC, h_index DESC;
 ----
 
-=== Find "bridge" researchers connecting different research themes
+==== Find "bridge" researchers connecting different research themes
 Identify key opinion leaders who publish across multiple domains.
 
 [source, cypher, role=noheader]
@@ -376,7 +384,9 @@ RETURN author.name AS Researcher,
 ORDER BY size(themes) DESC, author.h_index DESC;
 ----
 
-=== Discover multi-target research trends
+=== Multi-target Research Trends
+
+Discover multi-target research trends
 
 Find publications linking multiple genes to the same disease (systems biology approach).
 

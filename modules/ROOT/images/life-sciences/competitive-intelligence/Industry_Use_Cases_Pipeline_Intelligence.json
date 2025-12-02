@@ -1,0 +1,224 @@
+{
+  "style": {
+    "font-family": "sans-serif",
+    "background-color": "#ffffff",
+    "background-image": "",
+    "background-size": "100%",
+    "node-color": "#ffffff",
+    "border-width": 4,
+    "border-color": "#000000",
+    "radius": 50,
+    "node-padding": 5,
+    "node-margin": 2,
+    "outside-position": "auto",
+    "node-icon-image": "",
+    "node-background-image": "",
+    "icon-position": "inside",
+    "icon-size": 64,
+    "caption-position": "inside",
+    "caption-max-width": 200,
+    "caption-color": "#000000",
+    "caption-font-size": 50,
+    "caption-font-weight": "normal",
+    "label-position": "inside",
+    "label-display": "pill",
+    "label-color": "#000000",
+    "label-background-color": "#ffffff",
+    "label-border-color": "#000000",
+    "label-border-width": 4,
+    "label-font-size": 40,
+    "label-padding": 5,
+    "label-margin": 4,
+    "directionality": "directed",
+    "detail-position": "inline",
+    "detail-orientation": "parallel",
+    "arrow-width": 5,
+    "arrow-color": "#000000",
+    "margin-start": 5,
+    "margin-end": 5,
+    "margin-peer": 20,
+    "attachment-start": "normal",
+    "attachment-end": "normal",
+    "relationship-icon-image": "",
+    "type-color": "#000000",
+    "type-background-color": "#ffffff",
+    "type-border-color": "#000000",
+    "type-border-width": 0,
+    "type-font-size": 16,
+    "type-padding": 5,
+    "property-position": "outside",
+    "property-alignment": "colon",
+    "property-color": "#000000",
+    "property-font-size": 16,
+    "property-font-weight": "normal"
+  },
+  "nodes": [
+    {
+      "id": "n0",
+      "position": {
+        "x": 22.428319968614346,
+        "y": -123.44899610313934
+      },
+      "caption": "",
+      "style": {},
+      "labels": [
+        "Company"
+      ],
+      "properties": {}
+    },
+    {
+      "id": "n1",
+      "position": {
+        "x": 617.6661880595968,
+        "y": 46.77433166365813
+      },
+      "caption": "",
+      "style": {},
+      "labels": [
+        "Drug"
+      ],
+      "properties": {}
+    },
+    {
+      "id": "n2",
+      "position": {
+        "x": 220.8409426656085,
+        "y": -293.6723238699368
+      },
+      "caption": "",
+      "style": {},
+      "labels": [
+        "Protein",
+        "Gene"
+      ],
+      "properties": {}
+    },
+    {
+      "id": "n3",
+      "position": {
+        "x": 613.9548790996662,
+        "y": -293.6723238699368
+      },
+      "caption": "",
+      "style": {},
+      "labels": [
+        "ClinicalTrial"
+      ],
+      "properties": {}
+    },
+    {
+      "id": "n4",
+      "position": {
+        "x": 899.6263467754292,
+        "y": -293.6723238699368
+      },
+      "caption": "",
+      "style": {},
+      "labels": [
+        "Phase"
+      ],
+      "properties": {}
+    },
+    {
+      "id": "n5",
+      "position": {
+        "x": 351.5539394959757,
+        "y": -67.27077215015117
+      },
+      "caption": "",
+      "style": {},
+      "labels": [
+        "Disease"
+      ],
+      "properties": {}
+    }
+  ],
+  "relationships": [
+    {
+      "id": "n0",
+      "type": "IN_PIPILINE",
+      "style": {
+        "attachment-start": "bottom",
+        "attachment-end": "bottom"
+      },
+      "properties": {},
+      "fromId": "n0",
+      "toId": "n1"
+    },
+    {
+      "id": "n1",
+      "type": "TARGETS",
+      "style": {
+        "attachment-start": "bottom",
+        "attachment-end": "bottom"
+      },
+      "properties": {},
+      "fromId": "n1",
+      "toId": "n2"
+    },
+    {
+      "id": "n2",
+      "type": "TARGETS",
+      "style": {},
+      "properties": {},
+      "fromId": "n0",
+      "toId": "n2"
+    },
+    {
+      "id": "n3",
+      "type": "INVESTIGATED_IN",
+      "style": {},
+      "properties": {},
+      "fromId": "n2",
+      "toId": "n3"
+    },
+    {
+      "id": "n4",
+      "type": "INVESTIGATED_IN",
+      "style": {},
+      "properties": {},
+      "fromId": "n1",
+      "toId": "n3"
+    },
+    {
+      "id": "n5",
+      "type": "HAS_PHASE",
+      "style": {},
+      "properties": {},
+      "fromId": "n3",
+      "toId": "n4"
+    },
+    {
+      "id": "n6",
+      "type": "ASSOCIATED_WITH",
+      "style": {},
+      "properties": {},
+      "fromId": "n2",
+      "toId": "n5"
+    },
+    {
+      "id": "n7",
+      "type": "TREATS",
+      "style": {},
+      "properties": {},
+      "fromId": "n1",
+      "toId": "n5"
+    },
+    {
+      "id": "n8",
+      "type": "FOR_DISEASE",
+      "style": {},
+      "properties": {},
+      "toId": "n5",
+      "fromId": "n3"
+    },
+    {
+      "id": "n9",
+      "type": "ASSOCIATED",
+      "style": {},
+      "properties": {},
+      "fromId": "n3",
+      "toId": "n5"
+    }
+  ]
+}

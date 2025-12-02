@@ -1,2 +1,608 @@
 = Pipeline Intelligence
 
+== Introduction
+
+Pharmaceutical pipeline intelligence tracks what drugs competitors are developing, at what 
+stage, for which diseases, and targeting which biological mechanisms. Public sources like 
+ClinicalTrials.gov, FDA databases, press releases, and company investor presentations provide 
+a wealth of information about competitors' strategic priorities and R&D investments. However, 
+analyzing this data across hundreds of companies, thousands of trials, and complex relationships 
+between drugs, targets, and diseases becomes nearly impossible with traditional tools. 
+
+Understanding the competitive pipeline landscape is critical for strategic decisions: identifying 
+crowded therapeutic areas to avoid, finding white space opportunities, assessing competitive 
+threats to your own pipeline, evaluating potential acquisition targets, and making informed 
+partnership decisions.
+
+== Scenario
+
+A pharmaceutical company's business development team is evaluating whether to advance their 
+BACE1 inhibitor for Alzheimer's disease into Phase 3 trials. They need to answer critical 
+questions: How many competitors are developing BACE1 inhibitors? What phases are they in? 
+Are competitors exploring alternative targets for Alzheimer's? Which companies have the most 
+advanced Alzheimer's programs? Are there any companies with promising early-stage assets that 
+might be acquisition targets? Traditional spreadsheet analysis requires manually connecting 
+information across multiple data sources and becomes outdated within weeks as trials progress.
+
+== Solution
+
+Neo4j's graph database naturally models the pharmaceutical pipeline as an interconnected 
+network of companies, drugs, targets, diseases, and clinical trials with phase information. 
+The graph structure enables instant traversal of complex relationships like "Show me all 
+companies developing drugs that target the same protein as our lead compound, and reveal 
+what other diseases they're pursuing with those targets" or "Find all Phase 2 Alzheimer's 
+programs from companies with less than $500M market cap that might be acquisition targets." 
+
+These multi-hop queries that would require complex SQL joins across multiple tables become 
+simple, intuitive graph patterns. The competitive intelligence team can rapidly analyze 
+competitive clusters, identify strategic opportunities, and track pipeline evolution in 
+real-time as new trial data emerges.
+
+== Data Model
+
+image::life-sciences/competitive-intelligence/Industry_Use_Cases_Competitive_Intelligence_Pipeline.png[Pipeline intelligence data model]
+
+== Demo Data
+
+* 7 companies from large pharma (Pfizer, Roche, Novartis) to small biotech (Alector, Denali)
+* 10+ drugs at various stages including approved, active, and discontinued programs
+10+ drugs at various stages including approved, active, and discontinued programs
+* Real-world dynamics: Roche's discontinued BACE1 program (safety issues), Biogen's approved Lecanemab
+* Multiple targets: BACE1, Amyloid-beta, Tau, TREM2, LRRK2, GBA
+* 3 diseases: Alzheimer's, Parkinson's, MS
+
+[source, cypher, role=noheader]
+----
+// ============================================
+// MERGE COMPANIES
+// ============================================
+
+MERGE (pfizer:Company {
+  name: 'Pfizer Inc.',
+  country: 'US',
+  type: 'Large Cap Pharma',
+  market_cap: 280000000000,
+  focus: 'Neuroscience, Oncology, Immunology'
+})
+
+MERGE (biogen:Company {
+  name: 'Biogen Inc.',
+  country: 'US',
+  type: 'Specialty Pharma',
+  market_cap: 35000000000,
+  focus: 'Neurology, Rare Disease'
+})
+
+MERGE (novartis:Company {
+  name: 'Novartis AG',
+  country: 'CH',
+  type: 'Large Cap Pharma',
+  market_cap: 220000000000,
+  focus: 'Cardiovascular, Oncology, Immunology'
+})
+
+MERGE (roche:Company {
+  name: 'Roche Holdings',
+  country: 'CH',
+  type: 'Large Cap Pharma',
+  market_cap: 265000000000,
+  focus: 'Oncology, Immunology, Neuroscience'
+})
+
+MERGE (eisai:Company {
+  name: 'Eisai Co.',
+  country: 'JP',
+  type: 'Mid Cap Pharma',
+  market_cap: 12000000000,
+  focus: 'Neurology, Oncology'
+})
+
+MERGE (alector:Company {
+  name: 'Alector Inc.',
+  country: 'US',
+  type: 'Biotech',
+  market_cap: 850000000,
+  focus: 'Neurodegeneration'
+})
+
+MERGE (denali:Company {
+  name: 'Denali Therapeutics',
+  country: 'US',
+  type: 'Biotech',
+  market_cap: 2100000000,
+  focus: 'Neurodegenerative diseases'
+})
+
+// ============================================
+// MERGE PHASES
+// ============================================
+
+MERGE (preclinical:Phase {name: 'Preclinical', number: 0})
+MERGE (phase1:Phase {name: 'Phase 1', number: 1})
+MERGE (phase2:Phase {name: 'Phase 2', number: 2})
+MERGE (phase3:Phase {name: 'Phase 3', number: 3})
+MERGE (approved:Phase {name: 'Approved', number: 4})
+MERGE (discontinued:Phase {name: 'Discontinued', number: -1})
+
+// ============================================
+// MERGE DISEASES
+// ============================================
+
+MERGE (alzheimers:Disease {
+  name: "Alzheimer's Disease",
+  icd10: 'G30',
+  prevalence: '6.7M US patients',
+  market_size: '13B USD'
+})
+
+MERGE (parkinsons:Disease {
+  name: "Parkinson's Disease",
+  icd10: 'G20',
+  prevalence: '1M US patients',
+  market_size: '5.2B USD'
+})
+
+MERGE (als:Disease {
+  name: 'ALS',
+  icd10: 'G12.21',
+  prevalence: '30K US patients',
+  market_size: '2.1B USD'
+})
+
+MERGE (ms:Disease {
+  name: 'Multiple Sclerosis',
+  icd10: 'G35',
+  prevalence: '1M US patients',
+  market_size: '25B USD'
+})
+
+// ============================================
+// MERGE GENES AND PROTEINS (TARGETS)
+// ============================================
+
+MERGE (bace1:Protein {
+  name: 'BACE1',
+  uniprot: 'P56817',
+  function: 'Beta-secretase',
+  type: 'Enzyme'
+})
+
+MERGE (apoe:Gene {
+  symbol: 'APOE',
+  name: 'Apolipoprotein E',
+  chromosome: '19',
+  type: 'Risk factor gene'
+})
+
+MERGE (trem2:Protein {
+  name: 'TREM2',
+  uniprot: 'Q9NZC2',
+  function: 'Immune receptor',
+  type: 'Receptor'
+})
+
+MERGE (amyloid:Protein {
+  name: 'Amyloid-beta',
+  uniprot: 'P05067',
+  function: 'Peptide fragment',
+  type: 'Peptide'
+})
+
+MERGE (tau:Protein {
+  name: 'Tau protein',
+  uniprot: 'P10636',
+  function: 'Microtubule-associated',
+  type: 'Structural protein'
+})
+
+MERGE (lrrk2:Gene {
+  symbol: 'LRRK2',
+  name: 'Leucine-rich repeat kinase 2',
+  chromosome: '12',
+  type: 'Kinase gene'
+})
+
+MERGE (gba:Gene {
+  symbol: 'GBA',
+  name: 'Glucocerebrosidase',
+  chromosome: '1',
+  type: 'Enzyme gene'
+})
+
+// Gene-Protein relationships
+MERGE (apoe)-[:CODES_FOR]->(:Protein {name: 'ApoE', uniprot: 'P02649'})
+MERGE (lrrk2)-[:CODES_FOR]->(:Protein {name: 'LRRK2', uniprot: 'Q5S007'})
+MERGE (gba)-[:CODES_FOR]->(:Protein {name: 'GCase', uniprot: 'P04062'})
+
+// Target-Disease associations
+MERGE (bace1)-[:ASSOCIATED_WITH]->(alzheimers)
+MERGE (trem2)-[:ASSOCIATED_WITH]->(alzheimers)
+MERGE (amyloid)-[:ASSOCIATED_WITH]->(alzheimers)
+MERGE (tau)-[:ASSOCIATED_WITH]->(alzheimers)
+MERGE (lrrk2)-[:ASSOCIATED_WITH]->(parkinsons)
+MERGE (gba)-[:ASSOCIATED_WITH]->(parkinsons)
+
+// ============================================
+// PFIZER PIPELINE - BACE1 Focus
+// ============================================
+
+MERGE (pf_bace_drug:Drug {
+  name: 'PF-06751979',
+  compound_id: 'PF-06751979',
+  mechanism: 'BACE1 Inhibitor',
+  administration: 'Oral',
+  status: 'Active'
+})
+
+MERGE (pf_trial1:ClinicalTrial {
+  nct_id: 'NCT03131453',
+  title: 'Safety and Efficacy of PF-06751979 in Early Alzheimers',
+  status: 'Completed',
+  start_date: '2021-06-15',
+  completion_date: '2024-03-10',
+  enrollment: 450
+})
+
+MERGE (pfizer)-[:IN_PIPELINE]->(pf_bace_drug)
+MERGE (pf_bace_drug)-[:TARGETS]->(bace1)
+MERGE (pf_bace_drug)-[:TREATS]->(alzheimers)
+MERGE (pf_bace_drug)-[:INVESTIGATED_IN]->(pf_trial1)
+MERGE (pf_trial1)-[:HAS_PHASE]->(phase2)
+MERGE (pf_trial1)-[:FOR_DISEASE]->(alzheimers)
+
+// ============================================
+// BIOGEN PIPELINE - Anti-Amyloid Focus
+// ============================================
+
+MERGE (bg_amyloid:Drug {
+  name: 'Lecanemab',
+  compound_id: 'BAN2401',
+  mechanism: 'Anti-amyloid antibody',
+  administration: 'IV infusion',
+  status: 'Approved'
+})
+
+MERGE (bg_trial1:ClinicalTrial {
+  nct_id: 'NCT03887455',
+  title: 'Lecanemab Phase 3 for Early Alzheimers',
+  status: 'Completed',
+  start_date: '2019-03-10',
+  completion_date: '2023-01-05',
+  enrollment: 1795
+})
+
+MERGE (biogen)-[:IN_PIPELINE]->(bg_amyloid)
+MERGE (bg_amyloid)-[:TARGETS]->(amyloid)
+MERGE (bg_amyloid)-[:TREATS]->(alzheimers)
+MERGE (bg_amyloid)-[:INVESTIGATED_IN]->(bg_trial1)
+MERGE (bg_trial1)-[:HAS_PHASE]->(approved)
+MERGE (bg_trial1)-[:FOR_DISEASE]->(alzheimers)
+
+// Biogen's second asset - early stage
+MERGE (bg_trem2:Drug {
+  name: 'AL002',
+  compound_id: 'AL002',
+  mechanism: 'TREM2 agonist antibody',
+  administration: 'IV infusion',
+  status: 'Active'
+})
+
+MERGE (bg_trial2:ClinicalTrial {
+  nct_id: 'NCT04592874',
+  title: 'AL002 in Frontotemporal Dementia',
+  status: 'Recruiting',
+  start_date: '2023-08-20',
+  enrollment: 180
+})
+
+MERGE (biogen)-[:IN_PIPELINE]->(bg_trem2)
+MERGE (bg_trem2)-[:TARGETS]->(trem2)
+MERGE (bg_trem2)-[:TREATS]->(alzheimers)
+MERGE (bg_trem2)-[:INVESTIGATED_IN]->(bg_trial2)
+MERGE (bg_trial2)-[:HAS_PHASE]->(phase2)
+MERGE (bg_trial2)-[:FOR_DISEASE]->(alzheimers)
+
+// ============================================
+// ROCHE PIPELINE - Multi-target approach
+// ============================================
+
+MERGE (roche_bace:Drug {
+  name: 'RG7129',
+  compound_id: 'RO7105705',
+  mechanism: 'BACE1 Inhibitor',
+  administration: 'Oral',
+  status: 'Discontinued'
+})
+
+MERGE (roche_trial_disc:ClinicalTrial {
+  nct_id: 'NCT03127657',
+  title: 'RG7129 Phase 2/3 in Alzheimers',
+  status: 'Terminated',
+  start_date: '2020-01-15',
+  completion_date: '2022-09-30',
+  enrollment: 520,
+  termination_reason: 'Safety concerns - cognitive worsening'
+})
+
+MERGE (roche)-[:IN_PIPELINE]->(roche_bace)
+MERGE (roche_bace)-[:TARGETS]->(bace1)
+MERGE (roche_bace)-[:TREATS]->(alzheimers)
+MERGE (roche_bace)-[:INVESTIGATED_IN]->(roche_trial_disc)
+MERGE (roche_trial_disc)-[:HAS_PHASE]->(discontinued)
+MERGE (roche_trial_disc)-[:FOR_DISEASE]->(alzheimers)
+
+// Roche's pivot to tau
+MERGE (roche_tau:Drug {
+  name: 'Semorinemab',
+  compound_id: 'RO7105705',
+  mechanism: 'Anti-tau antibody',
+  administration: 'IV infusion',
+  status: 'Active'
+})
+
+MERGE (roche_trial2:ClinicalTrial {
+  nct_id: 'NCT04828747',
+  title: 'Semorinemab in Mild-to-Moderate Alzheimers',
+  status: 'Active',
+  start_date: '2023-04-10',
+  enrollment: 780
+})
+
+MERGE (roche)-[:IN_PIPELINE]->(roche_tau)
+MERGE (roche_tau)-[:TARGETS]->(tau)
+MERGE (roche_tau)-[:TREATS]->(alzheimers)
+MERGE (roche_tau)-[:INVESTIGATED_IN]->(roche_trial2)
+MERGE (roche_trial2)-[:HAS_PHASE]->(phase3)
+MERGE (roche_trial2)-[:FOR_DISEASE]->(alzheimers)
+
+// ============================================
+// EISAI PIPELINE - Partnered with Biogen
+// ============================================
+
+MERGE (eisai)-[:IN_PIPELINE]->(bg_amyloid)  // Co-development
+
+// ============================================
+// ALECTOR - Small Biotech, TREM2 Specialist
+// ============================================
+
+MERGE (alector_trem2:Drug {
+  name: 'AL001',
+  compound_id: 'AL001',
+  mechanism: 'TREM2 agonist antibody',
+  administration: 'IV infusion',
+  status: 'Active'
+})
+
+MERGE (alector_trial1:ClinicalTrial {
+  nct_id: 'NCT04592315',
+  title: 'AL001 Phase 2 in Early Alzheimers',
+  status: 'Active',
+  start_date: '2022-11-10',
+  enrollment: 285
+})
+
+MERGE (alector)-[:IN_PIPELINE]->(alector_trem2)
+MERGE (alector_trem2)-[:TARGETS]->(trem2)
+MERGE (alector_trem2)-[:TREATS]->(alzheimers)
+MERGE (alector_trem2)-[:INVESTIGATED_IN]->(alector_trial1)
+MERGE (alector_trial1)-[:HAS_PHASE]->(phase2)
+MERGE (alector_trial1)-[:FOR_DISEASE]->(alzheimers)
+
+// Alector's Parkinson's program
+MERGE (alector_gba:Drug {
+  name: 'AL101',
+  compound_id: 'AL101',
+  mechanism: 'GBA gene therapy',
+  administration: 'Gene therapy',
+  status: 'Active'
+})
+
+MERGE (alector_trial2:ClinicalTrial {
+  nct_id: 'NCT05277558',
+  title: 'AL101 in Parkinsons with GBA mutations',
+  status: 'Recruiting',
+  start_date: '2024-01-15',
+  enrollment: 45
+})
+
+MERGE (alector)-[:IN_PIPELINE]->(alector_gba)
+MERGE (alector_gba)-[:TARGETS]->(gba)
+MERGE (alector_gba)-[:TREATS]->(parkinsons)
+MERGE (alector_gba)-[:INVESTIGATED_IN]->(alector_trial2)
+MERGE (alector_trial2)-[:HAS_PHASE]->(phase1)
+MERGE (alector_trial2)-[:FOR_DISEASE]->(parkinsons)
+
+// ============================================
+// DENALI THERAPEUTICS - BBB Platform
+// ============================================
+
+MERGE (denali_lrrk2:Drug {
+  name: 'DNL151',
+  compound_id: 'DNL151',
+  mechanism: 'LRRK2 inhibitor',
+  administration: 'Oral',
+  status: 'Active'
+})
+
+MERGE (denali_trial1:ClinicalTrial {
+  nct_id: 'NCT04551534',
+  title: 'DNL151 in Parkinsons Disease',
+  status: 'Active',
+  start_date: '2023-06-20',
+  enrollment: 600
+})
+
+MERGE (denali)-[:IN_PIPELINE]->(denali_lrrk2)
+MERGE (denali_lrrk2)-[:TARGETS]->(lrrk2)
+MERGE (denali_lrrk2)-[:TREATS]->(parkinsons)
+MERGE (denali_lrrk2)-[:INVESTIGATED_IN]->(denali_trial1)
+MERGE (denali_trial1)-[:HAS_PHASE]->(phase2)
+MERGE (denali_trial1)-[:FOR_DISEASE]->(parkinsons)
+
+// ============================================
+// NOVARTIS - MS Focus but exploring neuro
+// ============================================
+
+MERGE (novartis_ms:Drug {
+  name: 'Kesimpta',
+  compound_id: 'Ofatumumab',
+  mechanism: 'Anti-CD20 antibody',
+  administration: 'Subcutaneous',
+  status: 'Approved'
+})
+
+MERGE (novartis_trial_ms:ClinicalTrial {
+  nct_id: 'NCT02792218',
+  title: 'Ofatumumab vs Teriflunomide in MS',
+  status: 'Completed',
+  start_date: '2016-06-10',
+  completion_date: '2020-08-15',
+  enrollment: 946
+})
+
+MERGE (novartis)-[:IN_PIPELINE]->(novartis_ms)
+MERGE (novartis_ms)-[:TREATS]->(ms)
+MERGE (novartis_ms)-[:INVESTIGATED_IN]->(novartis_trial_ms)
+MERGE (novartis_trial_ms)-[:HAS_PHASE]->(approved)
+MERGE (novartis_trial_ms)-[:FOR_DISEASE]->(ms)
+----
+
+== Cypher Queries
+
+* Competitive Landscape for Target: Who else targets BACE1? (reveals direct competition)
+* Disease Pipeline Intensity: How crowded is Alzheimer's? (market saturation analysis)
+* Target Diversification: What alternative mechanisms are competitors exploring? (strategic pivots)
+* Acquisition Targets: Find small biotechs with Phase 1-2 assets (M&A opportunities)
+* Mechanism Analysis: Compare therapeutic approaches across companies (identify novel vs. crowded mechanisms)
+
+=== Competitive Landscape for Specific Target
+
+Who else is targeting BACE1? What stages are they in?
+This reveals direct competition and validates/invalidates a target based on competitor activity.
+
+[source, cypher, role=noheader]
+----
+MATCH (drug:Drug)-[:TARGETS]->(target:Protein {name: 'BACE1'})
+MATCH (drug)<-[:IN_PIPELINE]-(company:Company)
+MATCH (drug)-[:INVESTIGATED_IN]->(trial:ClinicalTrial)-[:HAS_PHASE]->(phase:Phase)
+MATCH (drug)-[:TREATS]->(disease:Disease)
+RETURN company.name AS Company,
+       drug.name AS Drug,
+       drug.mechanism AS Mechanism,
+       phase.name AS CurrentPhase,
+       trial.status AS TrialStatus,
+       disease.name AS Disease,
+       trial.nct_id AS ClinicalTrialID
+ORDER BY phase.number DESC;
+----
+
+=== Disease Pipeline Intensity Analysis
+
+How crowded is the Alzheimer's space? Who are the major players?
+This helps assess competitive intensity and market saturation.
+
+[source, cypher, role=noheader]
+----
+MATCH (disease:Disease {name: "Alzheimer's Disease"})<-[:TREATS]-(drug:Drug)
+MATCH (drug)<-[:IN_PIPELINE]-(company:Company)
+MATCH (drug)-[:INVESTIGATED_IN]->(trial:ClinicalTrial)-[:HAS_PHASE]->(phase:Phase)
+WITH disease, company, 
+     count(DISTINCT drug) AS DrugCount,
+     collect(DISTINCT phase.name) AS Phases,
+     max(phase.number) AS HighestPhase
+RETURN company.name AS Company,
+       company.type AS CompanyType,
+       company.market_cap AS MarketCap,
+       DrugCount AS PipelineAssets,
+       Phases AS DevelopmentPhases,
+       CASE HighestPhase
+         WHEN 4 THEN 'Approved'
+         WHEN 3 THEN 'Phase 3'
+         WHEN 2 THEN 'Phase 2'
+         WHEN 1 THEN 'Phase 1'
+         ELSE 'Preclinical'
+       END AS MostAdvancedPhase
+ORDER BY HighestPhase DESC, DrugCount DESC;
+----
+
+=== Target Diversification Strategy
+
+====How does a company diversify its target portfolio?
+This reveals strategic focus and potential for synergy.
+
+[source, cypher, role=noheader]
+----
+MATCH (company:Company)-[:IN_PIPELINE]->(drug:Drug)-[:TARGETS]->(target:Protein {name: 'BACE1'})
+MATCH (drug)-[:TREATS]->(disease:Disease {name: "Alzheimer's Disease"})
+RETURN company.name AS Company,
+       target.name AS Target,
+       count(DISTINCT drug) AS PipelineAssets
+ORDER BY PipelineAssets DESC;
+----
+
+==== What other targets are companies pursuing for Alzheimer's?
+Reveals strategic pivots and alternative approaches.
+
+[source, cypher, role=noheader]
+----
+MATCH (disease:Disease {name: "Alzheimer's Disease"})<-[:TREATS]-(drug:Drug)
+MATCH (drug)-[:TARGETS]->(target)
+MATCH (drug)<-[:IN_PIPELINE]-(company:Company)
+MATCH (drug)-[:INVESTIGATED_IN]->(trial:ClinicalTrial)-[:HAS_PHASE]->(phase:Phase)
+WHERE phase.number >= 2  // Phase 2 or later
+RETURN target.name AS Target,
+       target.function AS TargetFunction,
+       count(DISTINCT company) AS CompaniesTargeting,
+       collect(DISTINCT company.name) AS Companies,
+       count(DISTINCT drug) AS Drugs,
+       avg(phase.number) AS AvgPhase
+ORDER BY CompaniesTargeting DESC, AvgPhase DESC;
+----
+
+=== Acquisition Target Analysis
+
+==== Which companies have promising early-stage assets?
+Identifies potential acquisition targets and early-stage opportunities.
+
+
+[source, cypher, role=noheader]
+----
+MATCH (company:Company)
+WHERE company.market_cap < 5000000000  // Less than $5B market cap
+  AND company.type IN ['Biotech', 'Specialty Pharma']
+MATCH (company)-[:IN_PIPELINE]->(drug:Drug)
+MATCH (drug)-[:INVESTIGATED_IN]->(trial:ClinicalTrial)-[:HAS_PHASE]->(phase:Phase)
+MATCH (drug)-[:TREATS]->(disease:Disease)
+MATCH (drug)-[:TARGETS]->(target)
+WHERE phase.number >= 1 AND phase.number <= 2  // Phase 1 or 2
+RETURN company.name AS PotentialTarget,
+       company.market_cap / 1000000 AS MarketCapMillions,
+       company.focus AS Focus,
+       count(DISTINCT drug) AS PipelineSize,
+       collect(DISTINCT drug.name) AS Drugs,
+       collect(DISTINCT target.name) AS Targets,
+       collect(DISTINCT disease.name) AS Diseases,
+       max(phase.number) AS HighestPhase
+ORDER BY MarketCapMillions ASC, PipelineSize DESC;
+----
+
+=== Failed Programs Analysis
+Learn from competitor failures - what targets/mechanisms were discontinued?
+
+[source, cypher, role=noheader]
+----
+MATCH (trial:ClinicalTrial)-[:HAS_PHASE]->(phase:Phase {name: 'Discontinued'})
+MATCH (drug:Drug)-[:INVESTIGATED_IN]->(trial)
+MATCH (drug)-[:TARGETS]->(target)
+MATCH (drug)-[:TREATS]->(disease:Disease)
+MATCH (drug)<-[:IN_PIPELINE]-(company:Company)
+RETURN company.name AS Company,
+       drug.name AS FailedDrug,
+       target.name AS Target,
+       drug.mechanism AS Mechanism,
+       disease.name AS Disease,
+       trial.termination_reason AS ReasonForFailure,
+       trial.completion_date AS DiscontinuedDate
+ORDER BY trial.completion_date DESC;
+----
+
