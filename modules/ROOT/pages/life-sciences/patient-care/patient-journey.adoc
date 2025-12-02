@@ -12,7 +12,7 @@ Patient journey data is inherently both highly heterogeneous and deeply intercon
 
 A patient journey is a representation of the journey a patient takes through the healthcare system. It is a graph that represents the nodes and relationships between the nodes.
 
-.A walkthrough of Patient Journey use case
+.An example of a Patient Journey
 image::life-sciences/patient-journey/patient_journey.png[width=800]
 
 == 3. Solution
@@ -21,28 +21,53 @@ A patient journey use case tracks an individual's complete healthcare experience
 
 === 4.1. Data Model
 
-Neo4j's labeled property graph model naturally aligns with the OMOP Common Data Model by representing clinical concepts as nodes (Person, Condition, Drug, Procedure), their attributes as properties (dates, codes, values), and clinical events as relationships (HAS_CONDITION, PRESCRIBED_DRUG), enabling intuitive mapping of standardized observational health data while preserving the rich semantic connections between patients, diagnoses, treatments, and outcomes that OMOP vocabularies define.
+Neo4j's labeled property graph model naturally aligns with the https://www.ohdsi.org/data-standardization/[OMOP] Common Data Model by representing clinical concepts as nodes (`Person`, `Condition`, `Drug`, `Procedure`), their attributes as properties (dates, codes, values), and clinical events as relationships (`HAS_CONDITION`, `PRESCRIBED_DRUG`), enabling intuitive mapping of standardized observational health data while preserving the rich semantic connections between patients, diagnoses, treatments, and outcomes that OMOP vocabularies define.
 
-.Patient Journey overview
+==== 4.1.1 Overview
+
+.Patient Journey model overview
 image::life-sciences/patient-journey/Industry_Use_Cases_Patient_Journey.svg[width=800]
+
+==== 4.1.2 Nodes
+
+The following nodes are used in the Patient Journey data model:
+NB: What is _required_ for the queries to work is listed below, but in the example data you will see additional properties to make it clearer - e.g. `name` on the `Drug` node.
 
 `Patient` Node:
 
 - `id`: Unique identifier for the patient
+- `name`: Name of the patient
 
 `Encounter` Node:
 
+- `id`: Unique identifier for the encounter
+
 `Observation` Node:
+
+- `id`: Unique identifier for the observation
+- `code`: Standardized code for the observation (e.g., LOINC)
 
 `Provider` Node:
 
+- `id`: Unique identifier for the provider
+
 `Speciality` Node:
+
+- `name`: Name of the speciality
 
 `Organisation` Node:
 
+- `id`: Unique identifier for the organisation
+
 `Drug` Node:
 
+- `code`: Standardized code for the drug (e.g., RxNorm)
+- `name`: Name of the drug
+
 `Condition` Node:
+
+- `code`: Standardized code for the condition (e.g., SNOMED CT)
+- `description`: Description of the condition
 
 === 4.2. Demo Data
 
@@ -50,65 +75,158 @@ The following Cypher statement will create the example graph in the Neo4j databa
 
 [source, cypher, role=noheader]
 ----
-// Create patient
-CREATE (p:Patient {id: '987-223-1345', name: 'Alice Johnson', birthDate: date('1975-03-22')})
+// MERGE patients
+MERGE (pas:Patient {id: '987-223-1345', name: 'Alice Smith', birthDate: date('1975-03-22')})
+MERGE (pct:Patient {id: '987-223-1346', name: 'Charlotte Tegreba', birthDate: date('1992-03-22')})
+MERGE (paj:Patient {id: '987-783-1346', name: 'Alex Jerdaschl', birthDate: date('1986-11-14')})
 
-// CREATE providers, specialities and organisation
-CREATE (p1:Provider {id: 'prov-001', name: 'Dr. Emily Smith'})
-CREATE (sp1:Speciality {name: 'Cardiology'})
-CREATE (p2:Provider {id: 'prov-002', name: 'Dr. Anisha Jones'})
-CREATE (sp2:Speciality {name: 'General Practice'})
-CREATE (org:Organisation {id: 'org-001', name: 'City Health Clinic', address: '123 Main St, Metropolis'})
+// MERGE providers, specialities and organisation
+MERGE (p1:Provider {id: 'prov-001', name: 'Dr. Emily Smith'})
+MERGE (p2:Provider {id: 'prov-002', name: 'Dr. Anisha Jones'})
+MERGE (p3:Provider {id: 'prov-078', name: 'Dr. Paul Vionnet'})
 
-// Create encounter 1 and associated data
-CREATE (e1:Encounter {id: 'enc-aj75-001', date: date('2025-11-10'), type: 'Inpatient'})
-CREATE (o11:Observation {id: 'obs-aj75-011', code: '8320-2', value: '175/80', unit: 'mmHg'})
-CREATE (o12:Observation {id: 'obs-aj75-012', code: '29463-7', value: 68, unit: 'kg'})
-CREATE (dr1:Drug {id: 'pres-aj75-001', code:'386873009', name: 'Lisinopril', dosage: '10 mg', frequency: 'Once daily'})
-CREATE (con1:Condition {id: 'cond-aj75-001', code: '38341003', description: 'Hypertensive disorder, systemic arterial (disorder)'})
+MERGE (sp1:Speciality {name: 'Cardiology'})
+MERGE (sp2:Speciality {name: 'General Practice'})
+MERGE (sp3:Speciality {name: 'Nephrology'})
 
-// Create encounter 2 and associated data
-CREATE (e2:Encounter {id: 'enc-aj75-002', date: date('2025-11-12'), type: 'Outpatient'})
-CREATE (o21:Observation {id: 'obs-aj75-021', code: '8320-2', value: '140/80', unit: 'mmHg'})
-CREATE (o22:Observation {id: 'obs-aj75-022', code: '29463-7', value: 68.1, unit: 'kg'})
-CREATE (dr2:Drug {id: 'pres-aj75-002', code:'386873009', name: 'Lisinopril', dosage: '10 mg', frequency: 'Once daily'})
-CREATE (con2:Condition {id: 'cond-aj75-002', code: '44054006', description: 'Diabetes mellitus type 2 (disorder)'})
+MERGE (org1:Organisation {id: 'org-001', name: 'City Health Clinic', address: '123 Main St, Metropolis'})
+MERGE (org2:Organisation {id: 'org-002', name: 'Centre for Kidney Health', address: '498 Main St, Metropolis'})
 
-// Create encounter 3 and associated data
-CREATE (e3:Encounter {id: 'enc-aj75-003', date: date('2025-11-24'), type: 'Outpatient'})
-CREATE (o31:Observation {id: 'obs-aj75-031', code: '8320-2', value: '120/80', unit: 'mmHg'})
-CREATE (o32:Observation {id: 'obs-aj75-032', code: '29463-7', value: 69.6, unit: 'kg'})
+// MERGE provider relationships
+MERGE (p1)-[:HAS_SPECIALITY]->(sp1)
+MERGE (p2)-[:HAS_SPECIALITY]->(sp2)
+MERGE (p3)-[:HAS_SPECIALITY]->(sp3)
 
-// Create provider relationships
-CREATE (p1)-[:HAS_SPECIALITY]->(sp1)
-CREATE (p1)-[:BELONGS_TO]->(org)
-CREATE (p2)-[:HAS_SPECIALITY]->(sp2)
-CREATE (p2)-[:BELONGS_TO]->(org)
+MERGE (p1)-[:BELONGS_TO]->(org1)
+MERGE (p2)-[:BELONGS_TO]->(org1)
+MERGE (p3)-[:BELONGS_TO]->(org2)
 
-// Create encounter 1 relationships
-CREATE (p)-[:HAS_ENCOUNTER]->(e1)
-CREATE (e1)-[:HAS_OBSERVATION]->(o11)
-CREATE (e1)-[:HAS_OBSERVATION]->(o12)
-CREATE (e1)-[:PRESCRIBED]->(dr1)
-CREATE (e1)-[:DIAGNOSED]->(con1)
-CREATE (e1)-[:ATTENDED_BY]->(p1) //better?
+//// Alice Smith encounters and data ////
 
-// Create encounter 2 relationships
-CREATE (e1)-[:NEXT]->(e2)
-CREATE (p)-[:HAS_ENCOUNTER]->(e2)
-CREATE (e2)-[:HAS_OBSERVATION]->(o21)
-CREATE (e2)-[:HAS_OBSERVATION]->(o22)
-CREATE (e2)-[:DIAGNOSED]->(con1)
-CREATE (e2)-[:DIAGNOSED]->(con2)
-CREATE (e2)-[:PRESCRIBED]->(dr2)
-CREATE (e2)-[:ATTENDED_BY]->(p2)
+// MERGE encounter 1 and associated data
+MERGE (eas1:Encounter {id: 'enc-as75-001', date: date('2025-11-10'), type: 'Inpatient'})
+MERGE (oas11:Observation {id: 'obs-as75-011', code: '8320-2', value: '175/80', unit: 'mmHg'})
+MERGE (oas12:Observation {id: 'obs-as75-012', code: '29463-7', value: 68, unit: 'kg'})
+MERGE (dras1:Drug {code:'386873009', name: 'Lisinopril', dosage: '10 mg', frequency: 'Once daily'})
+MERGE (conas1:Condition {code: '38341003', description: 'Hypertensive disorder, systemic arterial (disorder)'})
 
-// Create encounter 3 relationships
-CREATE (e2)-[:NEXT]->(e3)
-CREATE (p)-[:HAS_ENCOUNTER]->(e3)
-CREATE (e3)-[:HAS_OBSERVATION]->(o31)
-CREATE (e3)-[:HAS_OBSERVATION]->(o32)
-CREATE (e3)-[:ATTENDED_BY]->(p2)
+// MERGE encounter 2 and associated data
+MERGE (eas2:Encounter {id: 'enc-as75-002', date: date('2025-11-12'), type: 'Outpatient'})
+MERGE (oas21:Observation {id: 'obs-as75-021', code: '8320-2', value: '140/80', unit: 'mmHg'})
+MERGE (oas22:Observation {id: 'obs-as75-022', code: '29463-7', value: 68.1, unit: 'kg'})
+MERGE (dras2:Drug {code:'386873009', name: 'Lisinopril', dosage: '10 mg', frequency: 'Once daily'})
+MERGE (conas2:Condition {code: '44054006', description: 'Diabetes mellitus type 2 (disorder)'})
+
+// MERGE encounter 3 and associated data
+MERGE (eas3:Encounter {id: 'enc-as75-003', date: date('2025-11-24'), type: 'Outpatient'})
+MERGE (oas31:Observation {id: 'obs-as75-031', code: '8320-2', value: '120/80', unit: 'mmHg'})
+MERGE (oas32:Observation {id: 'obs-as75-032', code: '29463-7', value: 69.6, unit: 'kg'})
+
+// MERGE encounter 1 relationships
+MERGE (pas)-[:HAS_ENCOUNTER]->(eas1)
+MERGE (eas1)-[:HAS_OBSERVATION]->(oas11)
+MERGE (eas1)-[:HAS_OBSERVATION]->(oas12)
+MERGE (eas1)-[:PRESCRIBED]->(dras1)
+MERGE (eas1)-[:DIAGNOSED]->(conas1)
+MERGE (eas1)-[:ATTENDED_BY]->(p1)
+
+// MERGE encounter 2 relationships
+MERGE (eas1)-[:NEXT]->(eas2)
+MERGE (pas)-[:HAS_ENCOUNTER]->(eas2)
+MERGE (eas2)-[:HAS_OBSERVATION]->(oas21)
+MERGE (eas2)-[:HAS_OBSERVATION]->(oas22)
+MERGE (eas2)-[:DIAGNOSED]->(conas1)
+MERGE (eas2)-[:DIAGNOSED]->(conas2)
+MERGE (eas2)-[:PRESCRIBED]->(dras2)
+MERGE (eas2)-[:ATTENDED_BY]->(p2)
+
+// MERGE encounter 3 relationships
+MERGE (eas2)-[:NEXT]->(eas3)
+MERGE (pas)-[:HAS_ENCOUNTER]->(eas3)
+MERGE (eas3)-[:HAS_OBSERVATION]->(oas31)
+MERGE (eas3)-[:HAS_OBSERVATION]->(oas32)
+MERGE (eas3)-[:ATTENDED_BY]->(p2)
+
+////  Charlotte Tegreba encounters and data ////
+
+// MERGE encounter 1 and associated data
+MERGE (ect1:Encounter {id: 'enc-ct92-001', date: date('2025-11-10'), type: 'Inpatient'})
+MERGE (oct11:Observation {id: 'obs-ct92-011', code: '8320-2', value: '175/80', unit: 'mmHg'})
+MERGE (oct12:Observation {id: 'obs-ct92-012', code: '29463-7', value: 68, unit: 'kg'})
+MERGE (drct1:Drug {code:'386873009', name: 'Lisinopril', dosage: '10 mg', frequency: 'Once daily'})
+MERGE (conct1:Condition {code: '38341003', description: 'Hypertensive disorder, systemic arterial (disorder)'})
+
+// MERGE encounter 2 and associated data
+MERGE (ect2:Encounter {id: 'enc-ct92-002', date: date('2025-11-12'), type: 'Outpatient'})
+MERGE (oct21:Observation {id: 'obs-ct92-021', code: '8320-2', value: '140/80', unit: 'mmHg'})
+MERGE (oct22:Observation {id: 'obs-ct92-022', code: '29463-7', value: 68.1, unit: 'kg'})
+MERGE (drct2:Drug {code:'386873009', name: 'Lisinopril', dosage: '10 mg', frequency: 'Once daily'})
+MERGE (conct2:Condition {code: '44054006', description: 'Diabetes mellitus type 2 (disorder)'})
+
+// MERGE encounter 3 and associated data
+MERGE (ect3:Encounter {id: 'enc-ct92-003', date: date('2025-11-24'), type: 'Outpatient'})
+MERGE (oct31:Observation {id: 'obs-ct92-031', code: '8320-2', value: '120/80', unit: 'mmHg'})
+MERGE (oct32:Observation {id: 'obs-ct92-032', code: '29463-7', value: 69.6, unit: 'kg'})
+
+// MERGE encounter 1 relationships
+MERGE (pct)-[:HAS_ENCOUNTER]->(ect1)
+MERGE (ect1)-[:HAS_OBSERVATION]->(oct11)
+MERGE (ect1)-[:HAS_OBSERVATION]->(oct12)
+MERGE (ect1)-[:PRESCRIBED]->(drct1)
+MERGE (ect1)-[:DIAGNOSED]->(conct1)
+MERGE (ect1)-[:ATTENDED_BY]->(p1) 
+
+// MERGE encounter 2 relationships
+MERGE (ect1)-[:NEXT]->(ect2)
+MERGE (pct)-[:HAS_ENCOUNTER]->(ect2)
+MERGE (ect2)-[:HAS_OBSERVATION]->(oct21)
+MERGE (ect2)-[:HAS_OBSERVATION]->(oct22)
+MERGE (ect2)-[:DIAGNOSED]->(coct1)
+MERGE (ect2)-[:DIAGNOSED]->(coct2)
+MERGE (ect2)-[:PRESCRIBED]->(dct2)
+MERGE (ect2)-[:ATTENDED_BY]->(p2)
+
+// MERGE encounter 3 relationships
+MERGE (e2ct)-[:NEXT]->(ect3)
+MERGE (pct)-[:HAS_ENCOUNTER]->(ect)
+MERGE (ect3)-[:HAS_OBSERVATION]->(oct31)
+MERGE (ect3)-[:HAS_OBSERVATION]->(oct32)
+MERGE (ect3)-[:ATTENDED_BY]->(p2)
+
+
+//// Alex Jerdaschl encounters and data ////
+
+// MERGE encounter 1 and associated data
+MERGE (eaj1:Encounter {id: 'enc-aj86-001', date: date('2025-11-10'), type: 'Inpatient'})
+MERGE (oaj11:Observation {id: 'obs-aj86-011', code: '8320-2', value: '173/80', unit: 'mmHg'})
+MERGE (oaj12:Observation {id: 'obs-aj86-012', code: '29463-7', value: 60, unit: 'kg'})
+MERGE (draj1:Drug {code:'703674001', name: 'Dapagliflozin', dosage: '10 mg', frequency: 'Once daily'})
+MERGE (conaj2:Condition {code: '38341003', description: 'Hypertensive disorder, systemic arterial (disorder)'})
+MERGE (con3:Condition {code: '709044004', description: 'Chronic kidney disease (disorder)'})
+
+// MERGE encounter 2 and associated data
+MERGE (eaj2:Encounter {id: 'enc-aj86-002', date: date('2025-11-12'), type: 'Outpatient'})
+MERGE (oaj21:Observation {id: 'obs-aj86-021', code: '8320-2', value: '140/80', unit: 'mmHg'})
+MERGE (oaj22:Observation {id: 'obs-aj86-022', code: '29463-7', value: 68.1, unit: 'kg'})
+MERGE (draj2:Drug {code:'386873009', name: 'Lisinopril', dosage: '10 mg', frequency: 'Once daily'})
+
+// MERGE encounter 1 relationships
+MERGE (paj)-[:HAS_ENCOUNTER]->(eaj1)
+MERGE (eaj1)-[:HAS_OBSERVATION]->(oaj11)
+MERGE (eaj1)-[:HAS_OBSERVATION]->(oaj12)
+MERGE (eaj1)-[:PRESCRIBED]->(draj1)
+MERGE (eaj1)-[:DIAGNOSED]->(conaj3)
+MERGE (eaj1)-[:ATTENDED_BY]->(p1) 
+
+// MERGE encounter 2 relationships
+MERGE (eaj1)-[:NEXT]->(eaj2)
+MERGE (paj)-[:HAS_ENCOUNTER]->(eaj2)
+MERGE (eaj2)-[:HAS_OBSERVATION]->(oaj21)
+MERGE (eaj2)-[:HAS_OBSERVATION]->(oaj22)
+MERGE (eaj2)-[:DIAGNOSED]->(conaj3)
+MERGE (eaj2)-[:DIAGNOSED]->(conaj2)
+MERGE (eaj2)-[:PRESCRIBED]->(draj2)
+MERGE (eaj2)-[:ATTENDED_BY]->(p3)
 ----
 
 === 4.3. Schema
@@ -155,7 +273,12 @@ RETURN p.name AS Name, collect(DISTINCT c.description) AS conditions;
 
 [source, cypher, role=noheader]
 ----
-//TODO: Need more data to demo this properly
+MATCH 
+    (p:Patient {id: '987-223-1345'})-[:HAS_ENCOUNTER]->(:Encounter)-[:DIAGNOSED]->(c:Condition),
+    (c)<-[:DIAGNOSED]-(:Encounter)<-[:HAS_ENCOUNTER]-(other:Patient)-[:HAS_ENCOUNTER]->(:Encounter)-[:DIAGNOSED]->(c2:Condition)
+WHERE c <> c2
+RETURN c2.code AS Code, c2.description AS Description, count(DISTINCT other) AS PatientCount
+ORDER BY PatientCount DESC;
 ----
 
 === 5.2. Condition based queries

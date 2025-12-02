@@ -40,5 +40,5 @@ What do we mean by 'Patient Care' Is that even a valid title????
 
 The patient journey encompasses all the interactions a patient has with the healthcare system, from initial contact through treatment and follow-up care. Understanding this journey is critical for improving patient outcomes and enhancing the overall healthcare experience. It can help identify gaps in care, streamline processes, and ensure that patients receive the right care at the right time. Saving time, resources and improving patient outcomes.
 
-* xref:healthcare/patient-care/patient-journey.adoc[Patient Journey] 
+* xref:life-sciences/patient-care/patient-journey.adoc[Patient Journey] 
 
