@@ -76,7 +76,7 @@ In our testing using historical equity data, the Graph Data Science approach dem
 * **Lift:** ~3.48x
 
 // PLACEHOLDER: Image of Training Results / ROC Curve / Feature Importance
-image::training_results_placeholder.png[Model Performance Metrics and Feature Importance Chart]
+image::finserv/fs-link-prediction-results.png[Model Performance Metrics]
 
 A lift of **3.48x** indicates that incorporating graph topology provides a significant signal advantage. The model successfully identified pairs of stocks that were not previously correlated but were structurally predisposed to synchronize.
 
