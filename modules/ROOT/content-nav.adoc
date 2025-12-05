@@ -38,6 +38,8 @@
 ** xref:whitepapers/finserv/index.adoc[Financial Services]
 *** xref:whitepapers/finserv/fraud/index.adoc[Fraud]
 **** xref:whitepapers/finserv/fraud/mule-account-mitigation.adoc[Mule Account Mitigation]
+*** xref:whitepapers/finserv/asset-management/index.adoc[Asset Management]
+**** xref:whitepapers/finserv/asset-management/enhancing-portfolio-diversification-link-prediction.adoc[Enhancing Portfolio Diversification with Link Prediction: A Graph Data Science Approach]
 
 * xref:data-models/index.adoc[]
 ** xref:data-models/transaction-graph/index.adoc[]

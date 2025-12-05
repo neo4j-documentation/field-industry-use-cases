@@ -1,0 +1,11 @@
+= Asset Management Whitepapers
+
+Modern asset management has evolved far beyond simple stock selection. It now encompasses the strategic oversight of complex investment portfolios, requiring a continuous balance between maximizing value and mitigating risk. As global markets become increasingly volatile and intertwined, asset managers face the challenge of analyzing vast, disparate datasets—from market indices and supply chain logistics to alternative data sources—to maintain a competitive edge and ensure portfolio health.
+
+The primary limitation of traditional financial modeling is the tendency to view assets in isolation. However, financial markets behave like vast, living networks where a localized event in one sector can trigger systemic effects across the entire ecosystem. When data is siloed in rows and columns, these critical dependencies and hidden correlations are often lost, leading to blind spots in risk assessment and missed opportunities for alpha generation.
+
+This section explores how Graph Data Science and Network Theory are transforming asset management. By treating financial entities and their relationships as first-class citizens, firms can model the complex web of market interactions with greater fidelity. The whitepapers below demonstrate how mapping these connections allows for more robust hedging strategies, improved correlation prediction, and deeper insights into portfolio diversification.
+
+== Use Cases
+
+* xref:whitepapers/finserv/asset-management/enhancing-portfolio-diversification-link-prediction.adoc[Enhancing Portfolio Diversification with Link Prediction]

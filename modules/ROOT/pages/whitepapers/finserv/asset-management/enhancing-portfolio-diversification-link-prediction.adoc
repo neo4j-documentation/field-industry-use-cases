@@ -1,0 +1,93 @@
+= Enhancing Portfolio Diversification with Link Prediction: A Graph Data Science Approach
+:author: Pedro Leitao, Senior AI Solutions Architect, Neo4j
+:email: pedro.leitao@neo4j.com
+:toc: macro
+
+[abstract]
+--
+Traditional asset management relies heavily on historical correlation matrices to assess risk and diversification. However, these methods often fail to capture the dynamic, non-linear, and interconnected nature of modern financial markets. This paper explores a novel approach using Neo4j Graph Data Science (GDS) to move beyond descriptive analytics. By modeling equities as a dynamic network and applying Link Prediction algorithms, we demonstrate how to predict *future* correlations, revealing hidden risks and opportunities for statistical arbitrage before they manifest in standard models.
+--
+
+toc::[]
+
+== The Challenge: The Illusion of Diversification
+
+"Diversification is the only free lunch in investing." This adage relies on the assumption that assets in a portfolio are uncorrelated. However, financial history—from the 2008 crisis to the 2020 pandemic—has taught us that during periods of market stress, correlations often converge to one. Assets that appeared distinct suddenly move in lockstep.
+
+The fundamental limitation of traditional risk modeling is its reliance on 2D data structures (rows and columns). A standard correlation matrix can tell you that Stock A and Stock B moved together in the past, but it struggles to answer the critical questions:
+
+* *Why* are they correlated?
+* Is this relationship stable, or is it a temporary anomaly?
+* Which uncorrelated pair is *about* to become correlated?
+
+To answer these questions, we must stop viewing stocks as isolated entities and start viewing the market as what it truly is: a complex, evolving network.
+
+== The Solution: The Financial Knowledge Graph
+
+By shifting from a tabular view to a graph-based view, we can model the market topology directly. In this model, stocks are **Nodes**, and their correlations are **Relationships**. This allows us to apply Network Theory to financial data.
+
+=== Data Modeling and Schema
+The foundation of this approach is a schema that captures both the static identity of an asset and its dynamic behavior over time. We ingest historical price data and segment it into "Time Windows" (e.g., rolling 30-day periods).
+
+// PLACEHOLDER: Image of the Graph Schema
+image::finserv/fs-portfolio-diversification-link-prediction-schema.svg[Neo4j Graph Schema showing Stock, StockWindow, and Correlation relationships]
+
+In this schema:
+1.  **Stock Nodes:** Represent the entity (e.g., "ABT", "AAPL").
+2.  **Relationships:** A `CO_MOVES_WITH` relationship is created between two stocks if their correlation coefficient exceeds a specific threshold (e.g., 0.85) during a specific time window.
+
+This structure transforms a static list of tickers into a rich web of interactions.
+
+== Methodology: From Rolling Windows to Graph Features
+
+The core of our predictive engine involves transforming raw time-series data into graph features that a Machine Learning model can understand.
+
+=== 1. The Correlation Engine
+We calculate rolling correlations over sliding time windows. Unlike a standard matrix which is often static or backward-looking, this approach generates a unique graph for every window. This allows us to observe the *evolution* of the network topology.
+
+// PLACEHOLDER: Image of a Correlation Matrix (The "Old View")
+image::finserv/fs-correlation-matrix.png[Traditional Heatmap Correlation Matrix]
+
+=== 2. Graph Feature Engineering
+Once the graph is built, we do not simply look at price movement. We analyze the *structure* of the network using Neo4j Graph Data Science algorithms. For every stock in every time window, we extract:
+
+* **Degree Centrality:** How many other stocks is this asset correlated with? A spike in degree often precedes a high-volatility event.
+* **PageRank:** Is this stock correlated with "influential" stocks? This helps identify market leaders versus followers.
+* **Betweenness Centrality:** Does this stock act as a bridge between two otherwise unconnected sectors? These "bridge" nodes are critical vectors for sector contagion.
+* **Node2Vec Embeddings:** A neural embedding technique that learns a low-dimensional representation of a node's "neighborhood." This captures subtle structural similarities that human analysts might miss.
+* **Jaccard Similarity:** Measures the overlap of neighbors. If Stock A and Stock B share 90% of the same "friends" (correlations), they are likely to become correlated themselves.
+
+// PLACEHOLDER: Image of an example section of the graph (The "New View")
+image::finserv/fs-abt-correlation.png[Graph visualization of a specific stock and its correlations]
+
+== Predictive Modeling: Link Prediction
+
+The ultimate goal is not to describe the past, but to predict the future. We formulate this as a **Link Prediction** problem.
+
+Using the features derived above (PageRank, Embeddings, Centrality) for time windows `t-1` and `t`, we train an **XGBoost** classifier to predict whether a link (correlation > 0.85) will exist in time window `t+1`.
+
+This allows us to answer: *"Given the current structure of the market, which two assets will move together next month?"*
+
+=== Model Performance
+In our testing using historical equity data, the Graph Data Science approach demonstrated significant predictive power over random guessing.
+
+* **Baseline (Random Chance):** ~1.18%
+* **Model Average Precision:** ~4.12%
+* **Lift:** ~3.48x
+
+// PLACEHOLDER: Image of Training Results / ROC Curve / Feature Importance
+image::training_results_placeholder.png[Model Performance Metrics and Feature Importance Chart]
+
+A lift of **3.48x** indicates that incorporating graph topology provides a significant signal advantage. The model successfully identified pairs of stocks that were not previously correlated but were structurally predisposed to synchronize.
+
+== Strategic Implications for Asset Management
+
+Implementing this graph-based predictor offers distinct competitive advantages:
+
+1.  **True Diversification:** By predicting future correlations, managers can rebalance portfolios *before* assets lock together, ensuring true risk mitigation.
+2.  **Statistical Arbitrage:** Traders can identify "pairs trade" opportunities early. If the model predicts a strong link forming between Stock A and Stock B, but their prices currently diverge, a mean-reversion trade becomes viable.
+3.  **Contagion Analysis:** By monitoring Betweenness Centrality, risk managers can identify "Super-Hubs" of risk—assets that, if they fail, will transmit volatility across the entire market.
+
+== Conclusion
+
+Financial markets are complex, adaptive networks. Analyzing them using linear, two-dimensional tools ignores the rich connectivity that drives systemic risk and return. By utilizing Neo4j and Graph Data Science, asset managers can operationalize these connections, moving from reactive historical analysis to proactive, predictive market intelligence.
