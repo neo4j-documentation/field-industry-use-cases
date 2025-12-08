@@ -9,3 +9,4 @@ These whitepapers combine theoretical frameworks with practical implementations,
 Explore comprehensive whitepapers focused on fraud detection and prevention strategies:
 
 * xref:whitepapers/finserv/fraud/index.adoc[]
+* xref:whitepapers/finserv/asset-management/index.adoc[]
