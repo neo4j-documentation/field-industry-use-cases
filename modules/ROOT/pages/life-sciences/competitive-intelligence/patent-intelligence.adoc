@@ -200,7 +200,7 @@ CREATE (p5)-[:BELONGS_TO]->(fam2)
 
 == Cypher Queries
 
-=== 1. What diseases is a company working on based on their patents?
+=== What diseases is a company working on based on their patents?
 
 [source, cypher, role=noheader]
 ----
@@ -208,7 +208,7 @@ MATCH (company:Owner {name: 'Pfizer Inc.'})<-[:HAS_OWNER]-(patent:Patent)-[:TREA
 RETURN company.name, collect(DISTINCT disease.name) AS diseases
 ----
 
-=== 2. Which companies are targeting the same gene/protein for the same disease?
+=== Which companies are targeting the same gene/protein for the same disease?
 
 [source, cypher, role=noheader]
 ----
@@ -223,7 +223,7 @@ RETURN target.name AS SharedTarget,
        count(DISTINCT competitorPatent) AS CompetingPatents
 ----
 
-=== 3. Find all companies working on BACE1 inhibitors and what diseases they target
+=== 3. Find all companies working on the same target and what diseases they target
 
 [source, cypher, role=noheader]
 ----

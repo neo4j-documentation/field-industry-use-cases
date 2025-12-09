@@ -116,9 +116,9 @@ MERGE (rs63750847:SNP {
 })
 
 // SNP-Gene associations
-MERGE (rs75932628)-[:VARIANT_IN]->(trem2_gene)
-MERGE (rs429358)-[:VARIANT_IN]->(apoe_gene)
-MERGE (rs63750847)-[:VARIANT_IN]->(app_gene)
+MERGE (rs75932628)-[:ASSOCIATED_WITH]->(trem2_gene)
+MERGE (rs429358)-[:ASSOCIATED_WITH]->(apoe_gene)
+MERGE (rs63750847)-[:ASSOCIATED_WITH]->(app_gene)
 
 // ============================================
 // MERGE KEYWORDS (Research Themes)
@@ -266,8 +266,6 @@ MERGE (pub6)-[:CITES]->(pub3)
 
 Which institutions are publishing on a drug target and a specific disease?
 
-Find competitive hotspots and potential collaboration partners.
-
 [source, cypher, role=noheader]
 ----
 MATCH (pub:Publication)-[:MENTIONS]->(gene:Gene {symbol: 'TREM2'})
@@ -281,7 +279,23 @@ RETURN inst.name AS Institution,
 ORDER BY Publications DESC, AvgCitations DESC;
 ----
 
-==== Which authors are publishing on a drug target and a specific disease?
+Which institutions collaborate most frequently on publications for a target and disease?
+
+[source, cypher, role=noheader]
+----
+MATCH (pub:Publication)-[:MENTIONS]->(gene:Gene {symbol: 'TREM2'})
+MATCH (pub)-[:MENTIONS]->(disease:Disease {name: "Alzheimer's Disease"})
+MATCH (pub)-[:HAS_AUTHOR]->(a1:Author)-[:AFFILIATED_WITH]->(inst1:Institution)
+MATCH (pub)-[:HAS_AUTHOR]->(a2:Author)-[:AFFILIATED_WITH]->(inst2:Institution)
+WHERE inst1.name < inst2.name
+RETURN inst1.name AS Institution1,
+       inst2.name AS Institution2,
+       count(DISTINCT pub) AS SharedPublications,
+       collect(DISTINCT pub.pmid) AS PMIDs
+ORDER BY SharedPublications DESC, Institution1, Institution2
+----
+
+Which authors are publishing on a drug target and a specific disease?
 
 [source, cypher, role=noheader]
 ----
@@ -289,12 +303,12 @@ MATCH (pub:Publication)-[:MENTIONS]->(gene:Gene {symbol: 'TREM2'})
 MATCH (pub)-[:MENTIONS]->(disease:Disease {name: "Alzheimer's Disease"})
 MATCH (pub)-[:HAS_AUTHOR]->(author:Author)
 RETURN author.name AS Author,
-       author.h_index AS H-Index,
+       author.h_index AS `H-Index`,
        count(DISTINCT pub) AS Publications
-ORDER BY Publications DESC, h_index DESC;
+ORDER BY Publications DESC, `H-Index` DESC;
 ----
 
-==== Which keywords are associated with a drug target and a specific disease?
+Which keywords are associated with a drug target and a specific disease?
 
 [source, cypher, role=noheader]
 ----
@@ -310,11 +324,9 @@ ORDER BY Publications DESC;
 
 Find emerging gene-disease associations through clinical variants
 
-Discover novel therapeutic targets validated by clinical evidence.
-
 [source, cypher, role=noheader]
 ----
-MATCH (snp:SNP)-[:VARIANT_IN]->(gene:Gene)
+MATCH (snp:SNP)-[:ASSOCIATED_WITH]->(gene:Gene)
 MATCH (pub:Publication)-[:MENTIONS_VARIANT]->(snp)
 MATCH (pub)-[:MENTIONS]->(disease:Disease)
 WHERE snp.clinical_significance IN ['Pathogenic', 'Likely pathogenic']
@@ -328,10 +340,24 @@ RETURN gene.symbol AS Gene,
 ORDER BY Publications DESC;
 ----
 
+Find publications that mention a clinical variant and a disease.
+
+[source, cypher, role=noheader]
+----
+MATCH (snp:SNP)-[:ASSOCIATED_WITH]->(gene:Gene)
+MATCH (pub:Publication)-[:MENTIONS_VARIANT]->(snp)
+MATCH (pub)-[:MENTIONS]->(disease:Disease)
+RETURN pub.title AS Publications,
+       pub.year AS Year,
+       snp.rsid AS ClinicalVariant,
+       snp.variant AS Mutation,
+       disease.name AS Disease
+ORDER BY Publications DESC;
+----
+
 === Collaboration Networks
 
 Map research collaboration networks
-
 
 [source, cypher, role=noheader]
 ----
@@ -352,8 +378,6 @@ ORDER BY CollaborativePublications DESC;
 
 === Key Opinion Leaders
 
-Find Key Opinion Leaders in a therapeutic area
-
 Identify the most influential researchers in a specific therapeutic area.
 
 [source, cypher, role=noheader]
@@ -362,23 +386,23 @@ MATCH (pub:Publication)-[:MENTIONS]->(gene:Gene {symbol: 'TREM2'})
 MATCH (pub)-[:MENTIONS]->(disease:Disease {name: "Alzheimer's Disease"})
 MATCH (pub)-[:HAS_AUTHOR]->(author:Author)
 RETURN author.name AS Author,
-       author.h_index AS H-Index,
+       author.h_index AS `H-Index`,
        count(DISTINCT pub) AS Publications
-ORDER BY Publications DESC, h_index DESC;
+ORDER BY Publications DESC, `H-Index` DESC;
 ----
 
-==== Find "bridge" researchers connecting different research themes
-Identify key opinion leaders who publish across multiple domains.
+Find "bridge" researchers connecting different research themes
+(Identify key opinion leaders who publish across multiple domains.)
 
 [source, cypher, role=noheader]
 ----
-MATCH (author:Author)<-[:HAS_AUTHOR]-(pub:Publication)-[:HAS_KEYWORD]->(keyword:Keyword)
-WITH author, collect(DISTINCT keyword.term) AS themes, count(DISTINCT pub) AS pubCount
+MATCH (author:Author)<-[:HAS_AUTHOR]-(pub:Publication)-[:HAS_KEYWORD]->(keyword:Keyword) 
+WITH author, collect(DISTINCT keyword.term) AS themes, count(DISTINCT pub) AS pubCount, size(collect(DISTINCT keyword.term)) > 1 AS hasMultipleThemes
 WHERE size(themes) >= 2
 MATCH (author)-[:AFFILIATED_WITH]->(inst:Institution)
 RETURN author.name AS Researcher,
        inst.name AS Institution,
-       author.h_index AS HIndex,
+       author.h_index AS `H-Index`,
        themes AS ResearchThemes,
        pubCount AS Publications
 ORDER BY size(themes) DESC, author.h_index DESC;
@@ -399,8 +423,10 @@ MATCH (pub)-[:HAS_AUTHOR]->(author:Author)-[:AFFILIATED_WITH]->(inst:Institution
 WITH pub, disease, collect(DISTINCT gene.symbol) AS genes, inst
 WHERE size(genes) >= 2  // Publications mentioning 2+ genes
 RETURN pub.title AS Publication,
+       pub.pmid AS PMID,
        pub.year AS Year,
        inst.name AS Institution,
+       disease.name AS Disease,
        genes AS GenesStudied,
        size(genes) AS NumberOfGenes,
        pub.citations AS Citations
