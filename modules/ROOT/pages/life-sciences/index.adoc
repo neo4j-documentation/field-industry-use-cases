@@ -1,40 +1,16 @@
 = Healthcare & Life Sciences
 
-If you work in systems biology, you're tasked with understanding the connections between genes, proteins, cells and tissues. If you work in chemistry, each individual molecule renders its own graph. Even healthcare organizations must map patient journeys to better understand disease progression or prevent poor outcomes. In each of these cases, you’re solving problems naturally represented by interconnected data.
+If you work in systems biology, you're tasked with understanding the connections between genes, proteins, cells and tissues. If you work in chemistry, each individual molecule renders its own graph. Even healthcare organizations must map patient journeys to better understand disease progression or prevent poor outcomes. In each of these cases, you're solving problems naturally represented by interconnected data.
 
 That's why life sciences users - pharmaceutical companies, chemical manufacturers, agriculture companies, biotech startups and healthcare providers - are leveraging Neo4j to analyze their connected data in ways not possible without graphs. Neo4j, a native graph database specifically designed to store and process your connected data, helps solve complicated life sciences problems at every scale.
 
 Life science companies - dealing with everything from patients to molecules - understand the value of graphs for R&D, privacy and regulatory compliance, medical equipment manufacturing and affiliation management between healthcare providers (HCPs), patients and organizations. Neo4j has enabled companies like Novartis and ChemAxon to extract novel insights about relationships between biological and chemical data to accelerate drug discovery. We've also empowered companies like Monsanto to track genetic relationships in corn to breed better crops and feed the world's growing population.
 
-:toc:
-
-Sections for the broad strokes, so I guess (?)
-
-* Pharmaceuticals
-    - Target Identification
-    - Clinical Trials
-    - Competitive Intelligence
-
-* Medical Devices
-    - Electronic Health Records (EHR)
-    - Telemedicine
-    - Health Data Analytics
-
-* Patient Care
-    - Patient Journey
-    - Care Coordination
-    - Hospital Management
-    - Patient Engagement
-
-* Healthcare Providers
-    - Hospitals
-    - Clinics
-    - Home Healthcare
-
+Healthcare and life sciences are ideal domains for graph databases because they involve deeply interconnected data that relational systems handle poorly. Key use cases include drug discovery (modeling molecular interactions and compound pathways), clinical trials (connecting patients, protocols, and outcomes), supply chain management (tracking products from manufacturers through distribution networks), epidemiology (tracing disease transmission and contact networks), knowledge graphs (linking research literature with clinical guidelines and patient data), and regulatory compliance (traversing complex approval pathways and audit trails). The technical advantage is significant: queries requiring 10+ SQL joins—like finding trial-eligible patients while checking drug contraindications across their medication history and genetic markers—become simple graph traversals. Graph databases excel at "360-degree view" problems common in healthcare, letting you instantly see everything connected to a patient, drug, provider, or facility. The schema flexibility also accommodates healthcare's rapidly evolving data landscape, from genomic data integration to new telehealth relationships, without the disruptive schema migrations that plague hospital production systems.
 
 == Patient Care
 
-What do we mean by 'Patient Care' Is that even a valid title????
+Patient care isn't just about individual records—it's about relationships. A patient interacts with multiple providers, receives various diagnoses, takes medications that may interact with each other, has allergies that contraindicate certain treatments, and belongs to family units with shared genetic risks. These connections are first-class citizens in graph databases, making queries about relationships fast and intuitive.
 
 === Patient Journey
 

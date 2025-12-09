@@ -2,10 +2,6 @@
 
 * xref:index.adoc[Overview]
 
-* xref:life-sciences/index.adoc[]
-** xref:life-sciences/patient-care/index.adoc[]
-*** xref:life-sciences/patient-care/patient-journey.adoc[]
-
 * xref:finserv/index.adoc[]
 ** xref:finserv/investment-banking/index.adoc[]
 *** xref:finserv/investment-banking/mutual-fund-dependency.adoc[]
@@ -24,6 +20,10 @@
 * xref:insurance/index.adoc[]
 ** xref:insurance/claims-fraud.adoc[]
 ** xref:insurance/quote-fraud.adoc[]
+
+* xref:life-sciences/index.adoc[]
+** xref:life-sciences/patient-care/index.adoc[]
+*** xref:life-sciences/patient-care/patient-journey.adoc[]
 
 * xref:manufacturing/index.adoc[]
 ** xref:manufacturing/supply-chain-management/index.adoc[]
