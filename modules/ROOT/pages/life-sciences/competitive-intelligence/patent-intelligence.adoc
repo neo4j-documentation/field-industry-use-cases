@@ -6,7 +6,7 @@ Patent-based competitive intelligence reveals critical insights into competitors
 
 == 2. Scenario
 
-Consider a pharma company's competitive intelligence team trying to understand the competitive landscape for Alzheimer's disease treatments—they need to connect fragmented information across thousands of patents to identify which competitors are targeting specific genes (like APOE or TREM2), what mechanisms of action are being explored, and which companies might have overlapping or complementary approaches. Traditional relational databases struggle with this because the relationships between patents, genes, diseases, drug mechanisms, companies, and inventors create a complex, interconnected web that's difficult to query efficiently.
+Consider a pharma company's competitive intelligence team trying to understand the competitive landscape for Alzheimer's disease treatments—they need to connect fragmented information across thousands of patents to identify which competitors are targeting specific genes (like APOE or TREM2), what mechanisms of action are being explored, and which companies might have overlapping or complementary approaches. Traditional relational databases struggle with this because the relationships between patents, genes, diseases, drug mechanisms, companies, and inventors MERGE a complex, interconnected web that's difficult to query efficiently.
 
 == 3. Solution
 
@@ -29,173 +29,173 @@ This dataset includes
 Key Insights from the Data:
 The dataset reveals that Pfizer and Roche have direct competitive overlap on BACE1 inhibitors for Alzheimer's, while Pfizer and Biogen both explore TREM2-related neuroinflammation approaches. This type of analysis helps identify potential acquisition targets, patent challenges, or collaboration opportunities.
 
-The following Cypher statement will create the example graph in the Neo4j database:
+The following Cypher statement will MERGE the example graph in the Neo4j database:
 
 [source, cypher, role=noheader]
 ----
-// Create Companies (Owners/Applicants)
-CREATE (pfizer:Owner {name: 'Pfizer Inc.', country: 'US'})
-CREATE (novartis:Owner {name: 'Novartis AG', country: 'CH'})
-CREATE (roche:Owner {name: 'Roche Holdings', country: 'CH'})
-CREATE (biogen:Owner {name: 'Biogen Inc.', country: 'US'})
+// MERGE Companies (Owners/Applicants)
+MERGE (pfizer:Owner {name: 'Pfizer Inc.', country: 'US'})
+MERGE (novartis:Owner {name: 'Novartis AG', country: 'CH'})
+MERGE (roche:Owner {name: 'Roche Holdings', country: 'CH'})
+MERGE (biogen:Owner {name: 'Biogen Inc.', country: 'US'})
 
-// Create Drug Targets (Genes/Proteins)
-CREATE (bace1:Target {name: 'BACE1', type: 'Protein', function: 'Beta-secretase enzyme'})
-CREATE (apoe:Target {name: 'APOE', type: 'Gene', function: 'Apolipoprotein E'})
-CREATE (trem2:Target {name: 'TREM2', type: 'Gene', function: 'Immune receptor'})
-CREATE (tau:Target {name: 'MAPT', type: 'Gene', function: 'Tau protein'})
-CREATE (tnf:Target {name: 'TNF-alpha', type: 'Protein', function: 'Inflammatory cytokine'})
-CREATE (il6:Target {name: 'IL-6', type: 'Protein', function: 'Interleukin-6'})
+// MERGE Drug Targets (Genes/Proteins)
+MERGE (bace1:Target {name: 'BACE1', type: 'Protein', function: 'Beta-secretase enzyme'})
+MERGE (apoe:Target {name: 'APOE', type: 'Gene', function: 'Apolipoprotein E'})
+MERGE (trem2:Target {name: 'TREM2', type: 'Gene', function: 'Immune receptor'})
+MERGE (tau:Target {name: 'MAPT', type: 'Gene', function: 'Tau protein'})
+MERGE (tnf:Target {name: 'TNF-alpha', type: 'Protein', function: 'Inflammatory cytokine'})
+MERGE (il6:Target {name: 'IL-6', type: 'Protein', function: 'Interleukin-6'})
 
-// Create Diseases
-CREATE (alzheimers:Disease {name: "Alzheimer's Disease", icd10: 'G30'})
-CREATE (parkinsons:Disease {name: "Parkinson's Disease", icd10: 'G20'})
-CREATE (ra:Disease {name: 'Rheumatoid Arthritis', icd10: 'M05'})
-CREATE (crohns:Disease {name: "Crohn's Disease", icd10: 'K50'})
+// MERGE Diseases
+MERGE (alzheimers:Disease {name: "Alzheimer's Disease", icd10: 'G30'})
+MERGE (parkinsons:Disease {name: "Parkinson's Disease", icd10: 'G20'})
+MERGE (ra:Disease {name: 'Rheumatoid Arthritis', icd10: 'M05'})
+MERGE (crohns:Disease {name: "Crohn's Disease", icd10: 'K50'})
 
-// Create Drug Mechanisms
-CREATE (baceInhibitor:Mechanism {name: 'BACE Inhibition', class: 'Small molecule'})
-CREATE (antiInflammatory:Mechanism {name: 'Anti-inflammatory', class: 'Biologic'})
-CREATE (immunomodulator:Mechanism {name: 'Immune modulation', class: 'Antibody'})
-CREATE (tauAggregation:Mechanism {name: 'Tau aggregation inhibitor', class: 'Small molecule'})
+// MERGE Drug Mechanisms
+MERGE (baceInhibitor:Mechanism {name: 'BACE Inhibition', class: 'Small molecule'})
+MERGE (antiInflammatory:Mechanism {name: 'Anti-inflammatory', class: 'Biologic'})
+MERGE (immunomodulator:Mechanism {name: 'Immune modulation', class: 'Antibody'})
+MERGE (tauAggregation:Mechanism {name: 'Tau aggregation inhibitor', class: 'Small molecule'})
 
-// Create Inventors
-CREATE (smith:Inventor {name: 'Dr. Sarah Smith', expertise: 'Neuroscience'})
-CREATE (zhang:Inventor {name: 'Dr. Wei Zhang', expertise: 'Medicinal Chemistry'})
-CREATE (mueller:Inventor {name: 'Dr. Klaus Mueller', expertise: 'Immunology'})
-CREATE (patel:Inventor {name: 'Dr. Raj Patel', expertise: 'Structural Biology'})
+// MERGE Inventors
+MERGE (smith:Inventor {name: 'Dr. Sarah Smith', expertise: 'Neuroscience'})
+MERGE (zhang:Inventor {name: 'Dr. Wei Zhang', expertise: 'Medicinal Chemistry'})
+MERGE (mueller:Inventor {name: 'Dr. Klaus Mueller', expertise: 'Immunology'})
+MERGE (patel:Inventor {name: 'Dr. Raj Patel', expertise: 'Structural Biology'})
 
 // ============================================
 // PFIZER PATENTS - Alzheimer's Focus
 // ============================================
 
 // Patent 1: Pfizer BACE inhibitor for Alzheimer's
-CREATE (p1:Patent {
+MERGE (p1:Patent {
   id: 'US10123456',
   title: 'Novel BACE1 inhibitors for treatment of neurodegenerative diseases',
   filing_date: '2022-03-15',
   status: 'Active'
 })
-CREATE (p1_claim1:Claim {number: 1, text: 'A compound that inhibits BACE1 activity', independent: true})
-CREATE (p1_claim2:Claim {number: 2, text: 'The compound of claim 1 for treating Alzheimers', independent: false})
-CREATE (p1_desc:Description {text: 'Small molecule inhibitors targeting BACE1 with improved brain penetration'})
+MERGE (p1_claim1:Claim {number: 1, text: 'A compound that inhibits BACE1 activity', independent: true})
+MERGE (p1_claim2:Claim {number: 2, text: 'The compound of claim 1 for treating Alzheimers', independent: false})
+MERGE (p1_desc:Description {text: 'Small molecule inhibitors targeting BACE1 with improved brain penetration'})
 
-CREATE (p1)-[:HAS_OWNER]->(pfizer)
-CREATE (p1)-[:HAS_INVENTOR]->(smith)
-CREATE (p1)-[:HAS_INVENTOR]->(zhang)
-CREATE (p1)-[:HAS_CLAIM]->(p1_claim1)
-CREATE (p1)-[:HAS_CLAIM]->(p1_claim2)
-CREATE (p1_claim2)-[:HAS_SUBCLAIM]->(p1_claim1)
-CREATE (p1)-[:HAS_DESCRIPTION]->(p1_desc)
-CREATE (p1)-[:TARGETS]->(bace1)
-CREATE (p1)-[:MENTIONS_TARGET]->(apoe)
-CREATE (p1)-[:TREATS]->(alzheimers)
-CREATE (p1)-[:USES_MECHANISM]->(baceInhibitor)
+MERGE (p1)-[:HAS_OWNER]->(pfizer)
+MERGE (p1)-[:HAS_INVENTOR]->(smith)
+MERGE (p1)-[:HAS_INVENTOR]->(zhang)
+MERGE (p1)-[:HAS_CLAIM]->(p1_claim1)
+MERGE (p1)-[:HAS_CLAIM]->(p1_claim2)
+MERGE (p1_claim2)-[:HAS_SUBCLAIM]->(p1_claim1)
+MERGE (p1)-[:HAS_DESCRIPTION]->(p1_desc)
+MERGE (p1)-[:TARGETS]->(bace1)
+MERGE (p1)-[:MENTIONS_TARGET]->(apoe)
+MERGE (p1)-[:TREATS]->(alzheimers)
+MERGE (p1)-[:USES_MECHANISM]->(baceInhibitor)
 
 // Patent 2: Pfizer inflammation-related AD patent
-CREATE (p2:Patent {
+MERGE (p2:Patent {
   id: 'US10234567',
   title: 'Anti-inflammatory compounds for cognitive disorders',
   filing_date: '2023-01-20',
   status: 'Active'
 })
-CREATE (p2)-[:HAS_OWNER]->(pfizer)
-CREATE (p2)-[:HAS_INVENTOR]->(smith)
-CREATE (p2)-[:TARGETS]->(trem2)
-CREATE (p2)-[:TARGETS]->(tnf)
-CREATE (p2)-[:TREATS]->(alzheimers)
-CREATE (p2)-[:USES_MECHANISM]->(immunomodulator)
+MERGE (p2)-[:HAS_OWNER]->(pfizer)
+MERGE (p2)-[:HAS_INVENTOR]->(smith)
+MERGE (p2)-[:TARGETS]->(trem2)
+MERGE (p2)-[:TARGETS]->(tnf)
+MERGE (p2)-[:TREATS]->(alzheimers)
+MERGE (p2)-[:USES_MECHANISM]->(immunomodulator)
 
 // ============================================
 // NOVARTIS PATENTS - Multi-disease approach
 // ============================================
 
 // Patent 3: Novartis tau-targeting therapy
-CREATE (p3:Patent {
+MERGE (p3:Patent {
   id: 'EP3456789',
   title: 'Tau protein aggregation inhibitors',
   filing_date: '2022-08-10',
   status: 'Active'
 })
-CREATE (p3)-[:HAS_OWNER]->(novartis)
-CREATE (p3)-[:HAS_INVENTOR]->(mueller)
-CREATE (p3)-[:TARGETS]->(tau)
-CREATE (p3)-[:TREATS]->(alzheimers)
-CREATE (p3)-[:TREATS]->(parkinsons)
-CREATE (p3)-[:USES_MECHANISM]->(tauAggregation)
+MERGE (p3)-[:HAS_OWNER]->(novartis)
+MERGE (p3)-[:HAS_INVENTOR]->(mueller)
+MERGE (p3)-[:TARGETS]->(tau)
+MERGE (p3)-[:TREATS]->(alzheimers)
+MERGE (p3)-[:TREATS]->(parkinsons)
+MERGE (p3)-[:USES_MECHANISM]->(tauAggregation)
 
 // Patent 4: Novartis anti-inflammatory
-CREATE (p4:Patent {
+MERGE (p4:Patent {
   id: 'EP3567890',
   title: 'IL-6 antagonists for autoimmune diseases',
   filing_date: '2023-02-15',
   status: 'Active'
 })
-CREATE (p4)-[:HAS_OWNER]->(novartis)
-CREATE (p4)-[:HAS_INVENTOR]->(mueller)
-CREATE (p4)-[:TARGETS]->(il6)
-CREATE (p4)-[:TREATS]->(ra)
-CREATE (p4)-[:TREATS]->(crohns)
-CREATE (p4)-[:USES_MECHANISM]->(antiInflammatory)
+MERGE (p4)-[:HAS_OWNER]->(novartis)
+MERGE (p4)-[:HAS_INVENTOR]->(mueller)
+MERGE (p4)-[:TARGETS]->(il6)
+MERGE (p4)-[:TREATS]->(ra)
+MERGE (p4)-[:TREATS]->(crohns)
+MERGE (p4)-[:USES_MECHANISM]->(antiInflammatory)
 
 // ============================================
 // ROCHE PATENTS - Competitive overlap
 // ============================================
 
 // Patent 5: Roche BACE inhibitor (competitive with Pfizer)
-CREATE (p5:Patent {
+MERGE (p5:Patent {
   id: 'WO2022123456',
   title: 'Beta-secretase inhibitors with enhanced selectivity',
   filing_date: '2022-06-01',
   status: 'Active'
 })
-CREATE (p5)-[:HAS_OWNER]->(roche)
-CREATE (p5)-[:HAS_INVENTOR]->(patel)
-CREATE (p5)-[:TARGETS]->(bace1)
-CREATE (p5)-[:MENTIONS_TARGET]->(trem2)
-CREATE (p5)-[:TREATS]->(alzheimers)
-CREATE (p5)-[:USES_MECHANISM]->(baceInhibitor)
+MERGE (p5)-[:HAS_OWNER]->(roche)
+MERGE (p5)-[:HAS_INVENTOR]->(patel)
+MERGE (p5)-[:TARGETS]->(bace1)
+MERGE (p5)-[:MENTIONS_TARGET]->(trem2)
+MERGE (p5)-[:TREATS]->(alzheimers)
+MERGE (p5)-[:USES_MECHANISM]->(baceInhibitor)
 
 // ============================================
 // BIOGEN PATENTS - Neuroinflammation focus
 // ============================================
 
 // Patent 6: Biogen neuroinflammation
-CREATE (p6:Patent {
+MERGE (p6:Patent {
   id: 'US10345678',
   title: 'Immune checkpoint modulation in neurodegenerative diseases',
   filing_date: '2023-03-10',
   status: 'Active'
 })
-CREATE (p6)-[:HAS_OWNER]->(biogen)
-CREATE (p6)-[:HAS_INVENTOR]->(patel)
-CREATE (p6)-[:TARGETS]->(trem2)
-CREATE (p6)-[:TARGETS]->(tnf)
-CREATE (p6)-[:TREATS]->(alzheimers)
-CREATE (p6)-[:TREATS]->(parkinsons)
-CREATE (p6)-[:USES_MECHANISM]->(immunomodulator)
+MERGE (p6)-[:HAS_OWNER]->(biogen)
+MERGE (p6)-[:HAS_INVENTOR]->(patel)
+MERGE (p6)-[:TARGETS]->(trem2)
+MERGE (p6)-[:TARGETS]->(tnf)
+MERGE (p6)-[:TREATS]->(alzheimers)
+MERGE (p6)-[:TREATS]->(parkinsons)
+MERGE (p6)-[:USES_MECHANISM]->(immunomodulator)
 
 // ============================================
 // PATENT CITATIONS (showing prior art connections)
 // ============================================
 
-CREATE (pub1:Publication {id: 'PMID12345678', title: 'BACE1 structure and function'})
-CREATE (pub2:Publication {id: 'PMID23456789', title: 'TREM2 role in Alzheimers'})
+MERGE (pub1:Publication {id: 'PMID12345678', title: 'BACE1 structure and function'})
+MERGE (pub2:Publication {id: 'PMID23456789', title: 'TREM2 role in Alzheimers'})
 
-CREATE (p1)-[:CITES]->(pub1)
-CREATE (p5)-[:CITES]->(pub1)
-CREATE (p2)-[:CITES]->(pub2)
-CREATE (p6)-[:CITES]->(pub2)
+MERGE (p1)-[:CITES]->(pub1)
+MERGE (p5)-[:CITES]->(pub1)
+MERGE (p2)-[:CITES]->(pub2)
+MERGE (p6)-[:CITES]->(pub2)
 
 // ============================================
 // PATENT FAMILIES
 // ============================================
 
-CREATE (fam1:Family {id: 'FAM001', priority_date: '2022-03-15'})
-CREATE (fam2:Family {id: 'FAM002', priority_date: '2022-06-01'})
+MERGE (fam1:Family {id: 'FAM001', priority_date: '2022-03-15'})
+MERGE (fam2:Family {id: 'FAM002', priority_date: '2022-06-01'})
 
-CREATE (p1)-[:BELONGS_TO]->(fam1)
-CREATE (p5)-[:BELONGS_TO]->(fam2)
+MERGE (p1)-[:BELONGS_TO]->(fam1)
+MERGE (p5)-[:BELONGS_TO]->(fam2)
 ----
 
 == Cypher Queries
