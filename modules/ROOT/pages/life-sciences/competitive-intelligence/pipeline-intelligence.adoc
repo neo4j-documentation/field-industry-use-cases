@@ -40,7 +40,8 @@ real-time as new trial data emerges.
 
 == Data Model
 
-image::life-sciences/competitive-intelligence/Industry_Use_Cases_Competitive_Intelligence_Pipeline.png[Pipeline intelligence data model]
+image:life-sciences/competitive-intelligence/Industry_Use_Cases_Pipeline_Intelligence.png[Pipeline intelligence data model]
+
 
 == Demo Data
 
