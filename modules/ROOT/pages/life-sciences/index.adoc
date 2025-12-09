@@ -1,6 +1,6 @@
 = Healthcare & Life Sciences
 
-# Managing Complexity Through Connections
+== Managing Complexity Through Connections
 
 The pharmaceutical and life sciences industry faces a unique data challenge: *information that is simultaneously extremely heterogeneous yet profoundly interconnected by its very nature*. This paradox stems from the scientific foundation of the field:from molecular structures and genomic sequences to clinical observations and patient outcomes, life sciences data spans an extraordinary range of formats and types. Yet despite this diversity, these disparate elements are bound together by fundamental biological, chemical, and clinical relationships.
 
