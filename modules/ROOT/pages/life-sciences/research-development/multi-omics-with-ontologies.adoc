@@ -11,7 +11,7 @@ This ontology-driven approach allows researchers to query molecular data in conc
 This data model extends the xref:life-sciences/research-development/single-omics.adoc[Single OMICs Data Integration] and xref:life-sciences/research-development/multi-omics.adoc[Multi-OMICs Data Integration] pages by adding ontology information to the nodes and relationships.
 
 .Multi-OMICs data model with ontologies
-image:life-sciences/research-development/Industry_Use_Cases_multi-OMICs_and_Ontologies.svg[Multi-OMICs data model with ontologies]
+image:images/life-sciences/research-development/Industry_Use_Cases_multi-omics_with_ontologies.png[Multi-OMICs data model with ontologies]
 
 For multi-omics integration only, see the xref:life-sciences/research-development/multi-omics.adoc[Multi-OMICs Data Integration] page.
 

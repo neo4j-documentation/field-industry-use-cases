@@ -69,25 +69,7 @@
         "symbol": "string"
       },
       "style": {
-        "node-color": "#fe9200"
-      }
-    },
-    {
-      "id": "n2",
-      "position": {
-        "x": 1435.0697494253018,
-        "y": 322.5174373563258
-      },
-      "caption": "",
-      "labels": [
-        "Protein"
-      ],
-      "properties": {
-        "sid": "string",
-        "source": "string"
-      },
-      "style": {
-        "node-color": "#fe9200"
+        "node-color": "#ffffff"
       }
     },
     {
@@ -105,43 +87,7 @@
         "sid": "string"
       },
       "style": {
-        "node-color": "#e27300"
-      }
-    },
-    {
-      "id": "n4",
-      "position": {
-        "x": 1761.5871867816272,
-        "y": 322.5174373563258
-      },
-      "caption": "",
-      "labels": [
-        "GO"
-      ],
-      "properties": {
-        "name": "string",
-        "sid": "string"
-      },
-      "style": {
-        "node-color": "#73d8ff"
-      }
-    },
-    {
-      "id": "n5",
-      "position": {
-        "x": 1108.5523120689763,
-        "y": -4
-      },
-      "caption": "",
-      "labels": [
-        "Disease"
-      ],
-      "properties": {
-        "name": "string",
-        "sid": "string"
-      },
-      "style": {
-        "node-color": "#73d8ff"
+        "node-color": "#ffffff"
       }
     },
     {
@@ -159,7 +105,7 @@
         "sid": "string"
       },
       "style": {
-        "node-color": "#fda1ff"
+        "node-color": "#ffffff"
       }
     },
     {
@@ -177,7 +123,7 @@
         "sid": "string"
       },
       "style": {
-        "node-color": "#fda1ff"
+        "node-color": "#ffffff"
       }
     },
     {
@@ -195,49 +141,13 @@
         "sid": "string"
       },
       "style": {
-        "node-color": "#fda1ff"
-      }
-    },
-    {
-      "id": "n9",
-      "position": {
-        "x": 455.51743735632544,
-        "y": 322.51743735632635
-      },
-      "caption": "",
-      "labels": [
-        "Tissue"
-      ],
-      "properties": {
-        "name": "string",
-        "sid": "string"
-      },
-      "style": {
-        "node-color": "#73d8ff"
-      }
-    },
-    {
-      "id": "n10",
-      "position": {
-        "x": 455.51743735632544,
-        "y": 975.5523120689772
-      },
-      "caption": "",
-      "labels": [
-        "EFO"
-      ],
-      "properties": {
-        "name": "string",
-        "sid": "string"
-      },
-      "style": {
-        "node-color": "#73d8ff"
+        "node-color": "#ffffff"
       }
     },
     {
       "id": "n11",
       "position": {
-        "x": 781.9280299999641,
+        "x": 970.5497949726922,
         "y": 975.5522945878387
       },
       "caption": "",
@@ -245,57 +155,114 @@
         "Comparison"
       ],
       "properties": {},
-      "style": {}
+      "style": {
+        "node-color": "#ffffff"
+      }
     },
     {
       "id": "n12",
       "position": {
-        "x": 1243.8002629732741,
+        "x": 455.51743735632544,
+        "y": 345.0358745729801
+      },
+      "caption": "",
+      "style": {
+        "node-color": "#ffffff"
+      },
+      "labels": [
+        "Tissue"
+      ],
+      "properties": {}
+    },
+    {
+      "id": "n13",
+      "position": {
+        "x": 1347.5796354927747,
+        "y": 975.5522945878387
+      },
+      "caption": "",
+      "style": {
+        "node-color": "#ffffff"
+      },
+      "labels": [
+        "Disease"
+      ],
+      "properties": {}
+    },
+    {
+      "id": "n14",
+      "position": {
+        "x": 1406.2507256169838,
+        "y": 322.5174548374652
+      },
+      "caption": "",
+      "style": {
+        "node-color": "#ffffff"
+      },
+      "labels": [
+        "Protein"
+      ],
+      "properties": {}
+    },
+    {
+      "id": "n15",
+      "position": {
+        "x": 1406.2507256169838,
         "y": 649.0348747126518
       },
       "caption": "",
-      "style": {},
+      "style": {
+        "node-color": "#ffffff",
+        "border-color": "#cccccc",
+        "label-color": "#cccccc",
+        "label-border-color": "#cccccc"
+      },
       "labels": [
-        "Metabolite"
+        "Molecule"
+      ],
+      "properties": {}
+    },
+    {
+      "id": "n16",
+      "position": {
+        "x": 1406.2507256169838,
+        "y": 24.819041289457232
+      },
+      "caption": "",
+      "style": {
+        "node-color": "#ffffff"
+      },
+      "labels": [
+        "GO"
+      ],
+      "properties": {}
+    },
+    {
+      "id": "n17",
+      "position": {
+        "x": 455.51743735632544,
+        "y": 975.5522945878387
+      },
+      "caption": "",
+      "style": {
+        "node-color": "#ffffff",
+        "border-color": "#cccccc",
+        "label-color": "#cccccc",
+        "label-border-color": "#cccccc"
+      },
+      "labels": [
+        "EFO"
       ],
       "properties": {}
     }
   ],
   "relationships": [
     {
-      "id": "n0",
-      "fromId": "n1",
-      "toId": "n2",
-      "type": "CODES",
-      "properties": {},
-      "style": {}
-    },
-    {
       "id": "n1",
       "fromId": "n1",
       "toId": "n3",
       "type": "MAPPED",
       "properties": {},
-      "style": {}
-    },
-    {
-      "id": "n2",
-      "fromId": "n2",
-      "toId": "n4",
-      "type": "ASSOCIATED_WITH",
-      "properties": {
-        "source": "string"
-      },
-      "style": {}
-    },
-    {
-      "id": "n3",
-      "fromId": "n1",
-      "toId": "n5",
-      "type": "RELATED_TO",
-      "properties": {
-        "source": "string"
-      },
       "style": {}
     },
     {
@@ -311,22 +278,6 @@
       "fromId": "n7",
       "toId": "n8",
       "type": "HAS_EXPERIMENT",
-      "properties": {},
-      "style": {}
-    },
-    {
-      "id": "n6",
-      "fromId": "n7",
-      "toId": "n9",
-      "type": "TAKEN_FROM",
-      "properties": {},
-      "style": {}
-    },
-    {
-      "id": "n7",
-      "fromId": "n7",
-      "toId": "n10",
-      "type": "HAS_PHENOTYPE",
       "properties": {},
       "style": {}
     },
@@ -348,19 +299,111 @@
     },
     {
       "id": "n10",
-      "type": "HAS_VALUE",
+      "type": "TAKEN_FROM",
       "style": {},
       "properties": {},
-      "fromId": "n8",
-      "toId": "n2"
+      "fromId": "n7",
+      "toId": "n12"
     },
     {
       "id": "n11",
-      "type": "HAS_VALUE",
+      "type": "INCLUDES_CASE",
       "style": {},
       "properties": {},
+      "fromId": "n11",
+      "toId": "n7"
+    },
+    {
+      "id": "n12",
+      "type": "INCLUDES_CONTROL",
+      "style": {},
+      "properties": {},
+      "fromId": "n11",
+      "toId": "n7"
+    },
+    {
+      "id": "n13",
+      "type": "STUDIES_DISEASE",
+      "style": {},
+      "properties": {},
+      "fromId": "n11",
+      "toId": "n13"
+    },
+    {
+      "id": "n14",
+      "type": "RELATED_TO",
+      "style": {},
+      "properties": {},
+      "toId": "n13",
+      "fromId": "n1"
+    },
+    {
+      "id": "n15",
+      "type": "FOUND_DIFFERENTIAL",
+      "style": {},
+      "properties": {},
+      "fromId": "n11",
+      "toId": "n1"
+    },
+    {
+      "id": "n16",
+      "type": "CODES",
+      "style": {},
+      "properties": {},
+      "fromId": "n1",
+      "toId": "n14"
+    },
+    {
+      "id": "n17",
+      "type": "INTERACTS_WITH",
+      "style": {
+        "attachment-start": "bottom",
+        "attachment-end": "right"
+      },
+      "properties": {},
+      "fromId": "n14",
+      "toId": "n14"
+    },
+    {
+      "id": "n18",
+      "type": "HAS_VALUE",
+      "style": {
+        "arrow-color": "#cccccc",
+        "type-color": "#cccccc"
+      },
+      "properties": {},
       "fromId": "n8",
-      "toId": "n12"
+      "toId": "n14"
+    },
+    {
+      "id": "n19",
+      "type": "HAS_VALUE",
+      "style": {
+        "arrow-color": "#cccccc",
+        "type-color": "#cccccc"
+      },
+      "properties": {},
+      "fromId": "n8",
+      "toId": "n15"
+    },
+    {
+      "id": "n20",
+      "type": "ASSOCIATED_WITH",
+      "style": {},
+      "properties": {},
+      "fromId": "n14",
+      "toId": "n16"
+    },
+    {
+      "id": "n21",
+      "type": "HAS_PHENOTYPE",
+      "style": {
+        "arrow-color": "#cccccc",
+        "type-color": "#cccccc"
+      },
+      "properties": {},
+      "fromId": "n7",
+      "toId": "n17"
     }
   ]
 }
