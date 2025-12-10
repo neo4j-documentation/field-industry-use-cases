@@ -19,7 +19,11 @@ image::life-sciences/patient-journey/patient_journey.png[width=800]
 
 == Solution
 
-A patient journey tracks an individual's complete healthcare experience across multiple touchpoints, providers, and treatments over time. Neo4j's graph database excels at connecting fragmented patient data from disparate EHRs, lab results, prescriptions, and specialist visits into a unified, relationship-rich model. This approach enables healthcare organizations to visualize complex care pathways, identify treatment gaps, understand how different interventions impact outcomes and optimise patient welfare. Graph queries can in real time traverse a patient's entire medical history to surface patterns like medication interactions, referral bottlenecks, or care coordination issues that traditional databases struggle to uncover. Ultimately, Neo4j empowers clinicians and administrators to deliver more personalized, continuous care while optimizing resource allocation across the healthcare network.
+A patient journey tracks an individual's complete healthcare experience across multiple touchpoints, providers, and treatments over time. Neo4j's graph database excels at connecting fragmented patient data from disparate EHRs, lab results, prescriptions, and specialist visits into a unified, relationship-rich model. 
+
+This approach enables healthcare organizations to visualize complex care pathways, identify treatment gaps, understand how different interventions impact outcomes and optimise patient welfare. 
+
+Graph queries can in real time traverse a patient's entire medical history to surface patterns like medication interactions, referral bottlenecks, or care coordination issues that traditional databases struggle to uncover. Ultimately, Neo4j empowers clinicians and administrators to deliver more personalized, continuous care while optimizing resource allocation across the healthcare network.
 
 == Modelling
 

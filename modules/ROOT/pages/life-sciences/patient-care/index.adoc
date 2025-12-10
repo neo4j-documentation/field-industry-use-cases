@@ -10,4 +10,7 @@ Patient care can be broken down into a variety of use cases that leverage the po
 
 === Patient Journey
 
+A Patient Journey encompasses the interactions a patient has with a healthcare system, and can be viewed from a holistic 'lifetime' perspective through
+to individual episodes of care.
+
 * xref:life-sciences/patient-care/patient-journey.adoc[]
