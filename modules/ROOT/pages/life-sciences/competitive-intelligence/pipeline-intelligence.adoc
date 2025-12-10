@@ -45,9 +45,9 @@ image:life-sciences/competitive-intelligence/Industry_Use_Cases_Pipeline_Intelli
 
 == Demo Data
 
+This demo data includes:
 * 7 companies from large pharma (Pfizer, Roche, Novartis) to small biotech (Alector, Denali)
-* 10+ drugs at various stages including approved, active, and discontinued programs
-10+ drugs at various stages including approved, active, and discontinued programs
+* 10+ drugs at various stages including approved, active, and discontinued programs (Pfizer's BACE1 inhibitor, Biogen's Lecanemab, Roche's Semorinemab, etc.)
 * Real-world dynamics: Roche's discontinued BACE1 program (safety issues), Biogen's approved Lecanemab
 * Multiple targets: BACE1, Amyloid-beta, Tau, TREM2, LRRK2, GBA
 * 3 diseases: Alzheimer's, Parkinson's, MS
@@ -478,8 +478,8 @@ MERGE (novartis_trial_ms)-[:FOR_DISEASE]->(ms)
 
 === Competitive Landscape for Specific Target
 
-Who else is targeting BACE1? What stages are they in?
-This reveals direct competition and validates/invalidates a target based on competitor activity.
+Who else is targeting a specific drugtarget? What stages are they in?
+This reveals direct competition and validates/invalidates a drug target based on competitor activity.
 
 [source, cypher, role=noheader]
 ----
@@ -499,7 +499,7 @@ ORDER BY phase.number DESC;
 
 === Disease Pipeline Intensity Analysis
 
-How crowded is the Alzheimer's space? Who are the major players?
+How crowded is a specific disease space? Who are the major players?
 This helps assess competitive intensity and market saturation.
 
 [source, cypher, role=noheader]
@@ -528,7 +528,7 @@ ORDER BY HighestPhase DESC, DrugCount DESC;
 
 === Target Diversification Strategy
 
-====How does a company diversify its target portfolio?
+==== How does a company diversify its target portfolio?
 This reveals strategic focus and potential for synergy.
 
 [source, cypher, role=noheader]
@@ -541,7 +541,7 @@ RETURN company.name AS Company,
 ORDER BY PipelineAssets DESC;
 ----
 
-==== What other targets are companies pursuing for Alzheimer's?
+==== What other targets are companies pursuing for a specific disease?
 Reveals strategic pivots and alternative approaches.
 
 [source, cypher, role=noheader]
