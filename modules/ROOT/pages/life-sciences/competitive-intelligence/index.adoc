@@ -2,6 +2,15 @@
 
 Competitive intelligence is the process of gathering, analyzing, and using information to gain a competitive advantage. It is a key part of business intelligence and is used to make informed decisions about market trends and customer needs.
 
+Key sources for competitive intelligence in life sciences include 
+* patent filings 
+* scientific publications
+* publicly available information about company drug pipelines 
+
+Integrating insights from these data streams enables organizations to monitor competitor activity, identify emerging trends, and make better-informed strategic decisions.
+
+Together, patent, publication, and pipeline intelligence each offer a unique graph view of the competitive landscape. By merging these graphs into a unified knowledge graph, organizations can connect patents, published research, and drug pipeline activity into a single, integrated source of truth—enabling advanced queries, richer insights, and a holistic perspective on life sciences innovation and competition.
+
 == Patent Intelligence
 
 * xref:life-sciences/competitive-intelligence/patent-intelligence.adoc[]

@@ -18,6 +18,24 @@ image::life-sciences/competitive-intelligence/Industry_Use_Cases_Competitive_Int
 
 == Demo Data
 
+This demo dataset includes:
+
+* 6 academic and industry institutions
+* 6 authors (with h-index and expertise)
+* 6 top journals
+* major neurodegenerative diseases
+* 6 genes and proteins
+* 6 SNPs (clinical variants from ClinVar)
+* 6 keywords (research themes)
+* 6 publications
+* 6 citations
+* 6 clinical variants
+* 6 diseases
+* 6 genes
+* 6 proteins
+* 6 SNPs
+* 6 keywords
+
 [source, cypher, role=noheader]
 ----
 

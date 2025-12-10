@@ -6,7 +6,7 @@ Patent-based competitive intelligence reveals critical insights into competitors
 
 == 2. Scenario
 
-Consider a pharma company's competitive intelligence team trying to understand the competitive landscape for Alzheimer's disease treatments—they need to connect fragmented information across thousands of patents to identify which competitors are targeting specific genes (like APOE or TREM2), what mechanisms of action are being explored, and which companies might have overlapping or complementary approaches. Traditional relational databases struggle with this because the relationships between patents, genes, diseases, drug mechanisms, companies, and inventors MERGE a complex, interconnected web that's difficult to query efficiently.
+Consider a pharma company's competitive intelligence team trying to understand the competitive landscape for Alzheimer's disease treatments—they need to connect fragmented information across thousands of patents to identify which competitors are targeting specific genes (like APOE or TREM2), what mechanisms of action are being explored, and which companies might have overlapping or complementary approaches. Traditional relational databases struggle with this because the relationships between patents, genes, diseases, drug mechanisms, companies, and inventors create a complex, interconnected web that's difficult to query efficiently.
 
 == 3. Solution
 

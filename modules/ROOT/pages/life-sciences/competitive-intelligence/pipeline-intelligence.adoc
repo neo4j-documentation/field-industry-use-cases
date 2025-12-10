@@ -46,6 +46,7 @@ image:life-sciences/competitive-intelligence/Industry_Use_Cases_Pipeline_Intelli
 == Demo Data
 
 This demo data includes:
+
 * 7 companies from large pharma (Pfizer, Roche, Novartis) to small biotech (Alector, Denali)
 * 10+ drugs at various stages including approved, active, and discontinued programs (Pfizer's BACE1 inhibitor, Biogen's Lecanemab, Roche's Semorinemab, etc.)
 * Real-world dynamics: Roche's discontinued BACE1 program (safety issues), Biogen's approved Lecanemab
