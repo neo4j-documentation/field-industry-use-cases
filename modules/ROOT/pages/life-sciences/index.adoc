@@ -27,3 +27,18 @@ The patient journey encompasses all the interactions a patient has with the heal
 
 * xref:life-sciences/medical-care/patient-journey.adoc[Patient Journey] 
 
+== Competitive Intelligence
+
+Competitive intelligence is the process of gathering, analyzing, and using information to gain a competitive advantage. It is a key part of business intelligence and is used to make informed decisions about market trends and customer needs.
+
+== Patent Intelligence
+
+* xref:life-sciences/competitive-intelligence/patent-intelligence.adoc[]
+
+== Publication Intelligence
+
+* xref:life-sciences/competitive-intelligence/publication-intelligence.adoc[]
+
+== Pipeline Intelligence    
+
+* xref:life-sciences/competitive-intelligence/pipeline-intelligence.adoc[]
