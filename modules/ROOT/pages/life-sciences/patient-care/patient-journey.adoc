@@ -2,7 +2,7 @@
 
 A patient journey is the journey a patient takes through a healthcare system. It could be for a particular condition, or over a lifetime.
 
-== 1. Introduction
+== Introduction
 
 Patient journey data is inherently both highly heterogeneous and deeply interconnected, spanning clinical records, laboratory results, medications, imaging, lifestyle factors, and social determinants of health. 
 
@@ -10,31 +10,33 @@ By definition, these diverse data points form a complex web of relationships, i.
 
 Neo4j's flexible, schema-optional graph database model excels in this domain by naturally representing patients, conditions, treatments, and lifestyle factors as nodes with relationships that mirror real-world clinical causality and correlation. This approach enables healthcare organizations to seamlessly integrate disparate data sources while maintaining the semantic richness essential for comprehensive patient journey analytics.
 
-== 2. Scenario
+== Scenario
 
 In this scenario, we explore how Neo4j can be utilized to model and analyze several journeys through the healthcare system by different patients. This includes tracking interactions with various healthcare providers, diagnoses received, and treatments administered. It is by no means an exhaustive example, but rather a starting point to illustrate how Neo4j can be applied to patient journey use cases.
 
 .An example of a Patient Journey
 image::life-sciences/patient-journey/patient_journey.png[width=800]
 
-== 3. Solution
+== Solution
 
 A patient journey tracks an individual's complete healthcare experience across multiple touchpoints, providers, and treatments over time. Neo4j's graph database excels at connecting fragmented patient data from disparate EHRs, lab results, prescriptions, and specialist visits into a unified, relationship-rich model. This approach enables healthcare organizations to visualize complex care pathways, identify treatment gaps, understand how different interventions impact outcomes and optimise patient welfare. Graph queries can in real time traverse a patient's entire medical history to surface patterns like medication interactions, referral bottlenecks, or care coordination issues that traditional databases struggle to uncover. Ultimately, Neo4j empowers clinicians and administrators to deliver more personalized, continuous care while optimizing resource allocation across the healthcare network.
 
-== 4. Modelling
+== Modelling
 
-=== 4.1. Data Model
+Modelling a patient journey in Neo4j involves defining nodes and relationships that represent the key entities and interactions within a patient's healthcare experience.
+
+=== Data Model
 
 Neo4j's labelled property graph model naturally aligns with the https://www.ohdsi.org/data-standardization/[OMOP] Common Data Model by representing clinical concepts as nodes (`Person`, `Condition`, `Drug`, `Procedure`), their attributes as properties (dates, codes, values), and clinical events as relationships (`HAS_CONDITION`, `PRESCRIBED_DRUG`), enabling intuitive mapping of standardized observational health data while preserving the rich semantic connections between patients, diagnoses, treatments, and outcomes that OMOP vocabularies define.
 
-==== 4.1.1 Overview
+==== Overview
 
 This model captures a simplified patient journey, showing how it could be represented.
 
 .Patient Journey model overview
 image::life-sciences/patient-journey/FIUC-BLS-PatientJourney-Simple.svg[width=800]
 
-==== 4.1.2 Nodes
+==== Nodes
 
 These nodes are used in the Patient Journey data model:
 
@@ -47,7 +49,7 @@ These nodes are used in the Patient Journey data model:
 * `Drug` - a medication prescribed to a patient during an encounter. Drugs are uniquely identified by a code (e.g. SNOMED CT, RxNorm) in combination with dosage.
 * `Condition` - a medical diagnosis or health condition identified during an encounter.
 
-==== 4.1.3 Relationships
+==== Relationships
 
 The below relationships are used in the Patient Journey data model:
 
@@ -60,7 +62,7 @@ The below relationships are used in the Patient Journey data model:
 * `BELONGS_TO` - connects a `Provider` to the `Organisation` they are affiliated with.
 * `NEXT` - connects sequential `Encounter`pass:[s] in a `Patient`pass:['s] journey.
 
-=== 4.2. Demo Data
+=== Demo Data
 
 This Cypher statement will create the example graph in the Neo4j database:
 
@@ -220,7 +222,7 @@ MERGE (eaj2)-[:PRESCRIBED]->(draj2)
 MERGE (eaj2)-[:ATTENDED_BY]->(p3)
 ----
 
-=== 4.3. Schema
+=== Schema
 
 If you call:
 
@@ -235,15 +237,15 @@ You will see the following response:
 .The Schema of the Patient Journey model
 image::life-sciences/patient-journey/patient-journey-schema.svg["8 nodes connected with relationships",width=800]
 
-== 5. Cypher Queries
+== Cypher Queries
 
 This section provides a set of example Cypher queries that can be used to explore the patient journey graph from different perspectives.
 
-=== 5.1. Patient based queries
+=== Patient based queries
 
 These queries are focused on retrieving information from a patient-centric perspective.
 
-==== 5.1.1. Given a `Patient` what `Drug`pass:[s] were `PRESCRIBED`?
+==== Given a `Patient` what `Drug`pass:[s] were `PRESCRIBED`?
 
 This query gets you every drug prescribed to the patient with ID `987-223-1345` across their entire journey.
 
@@ -254,7 +256,7 @@ MATCH (p:Patient {id: '987-223-1345'})-[:HAS_ENCOUNTER]->(:Encounter)-[:PRESCRIB
 RETURN p.name AS Name, collect(DISTINCT d.name) AS `Prescribed Drugs`;
 ----
 
-==== 5.1.2. Given a `Patient` what `Condition`pass:[s] were `DIAGNOSED`?
+==== Given a `Patient` what `Condition`pass:[s] were `DIAGNOSED`?
 
 For the patient with ID `987-223-1345`, this query retrieves all the conditions they have been diagnosed with during their healthcare journey.
 
@@ -265,10 +267,9 @@ MATCH (p:Patient {id: '987-223-1345'})-[:HAS_ENCOUNTER]->(:Encounter)-[:DIAGNOSE
 RETURN p.name AS Name, collect(DISTINCT c.description) AS conditions;
 ----
 
-==== 5.1.3. Given a `Patient` and their `Condition` - what are the comorbidities of other `Patient`pass:[s] with the same `Condition`?
+==== Given a `Patient` and their `Condition` - what are the comorbidities of other `Patient`pass:[s] with the same `Condition`?
 
-In this query, we want to find out all the comorbidities for the conditions that _other_ patients have. As a healthcare provider, this information could prove useful
-to be able to target potential investigations or treatments.
+In this query, we want to find out all the comorbidities for the conditions that _other_ patients have. As a healthcare provider, this information could prove useful to be able to target potential investigations or treatments.
 
 [source, cypher, role=noheader]
 ----
@@ -280,13 +281,13 @@ RETURN c2.code AS Code, c2.description AS Description, count(DISTINCT other) AS 
 ORDER BY PatientCount DESC;
 ----
 
-=== 5.2. Condition based queries
+=== Condition based queries
 
 These queries are focused on retrieving information from a condition-centric perspective.
 
-==== 5.2.1. What comorbidities are associated with a particular `Condition`pass:[?]
+==== What comorbidities are associated with a particular `Condition`pass:[?]
 
-Here we're just getting all the comorbidities associated with a particular condition. 
+Here we're getting all the comorbidities associated with a particular condition. 
 This could be useful for clinical decision support systems to identify common co-occurring conditions.
 By ordering by occurrences, we can see which comorbidities are most frequently associated with the given condition.
 
@@ -299,11 +300,11 @@ RETURN c2.code AS Code, c2.description AS Description, count(*) AS Occurrences
 ORDER BY Occurrences DESC;
 ----
 
-=== 5.3. Provider based queries
+=== Provider based queries
 
 These queries are focused on retrieving information from a provider-centric perspective.
 
-==== 5.3.1. Given a `Provider` what `Patient`pass:[s] have they seen, and how often?
+==== Given a `Provider` what `Patient`pass:[s] have they seen, and how often?
 
 This query allows a healthcare organization to analyze provider workloads and patient distribution by identifying which patients a specific provider has seen and the frequency of those encounters.
 
@@ -315,7 +316,7 @@ RETURN pt.id AS PatientId, pt.name AS `Patient Name`, count(*) AS Encounters
 ORDER BY Encounters DESC;
 ----
 
-==== 5.3.2. Given a `Provider` what `Condition`pass:[s] have they `DIAGNOSED`?
+==== Given a `Provider` what `Condition`pass:[s] have they `DIAGNOSED`?
 
 This would be useful to understand the case mix a provider is handling, which can inform resource allocation, training needs, and quality improvement initiatives.
 
@@ -327,7 +328,7 @@ RETURN c.code AS Code, c.description AS Description, count(*) AS Diagnoses
 ORDER BY Diagnoses DESC;
 ----
 
-==== 5.3.3. Given a `Provider` what `Drug`pass:[s] have they `PRESCRIBED`?
+==== Given a `Provider` what `Drug`pass:[s] have they `PRESCRIBED`?
 
 This can be used to see if a given provider is following prescribing guidelines, or to identify patterns in medication use that may warrant further investigation.
 
@@ -338,7 +339,7 @@ MATCH (p:Provider {id: 'prov-002'})<-[:ATTENDED_BY]-(:Encounter)-[:PRESCRIBED]->
 RETURN d.code AS Code, d.name AS Name, count(*) AS Prescriptions
 ----
 
-==== 5.3.4. What are the providers for a given `Patient`?
+==== What are the providers for a given `Patient`?
 
 Has a patient had a consistent care provider, or have they seen many different providers? This query helps to identify all the healthcare providers that a specific patient has interacted with during their healthcare journey, and can be useful for care coordination and understanding the patient's care network.
 
@@ -349,7 +350,7 @@ MATCH (pat:Patient {id: '987-223-1345'})-[:HAS_ENCOUNTER]->(:Encounter)-[:ATTEND
 RETURN provider.name AS Provider
 ----
 
-== 6. Graph Data Science (https://neo4j.com/docs/graph-data-science/current/introduction/[GDS])
+== Graph Data Science (https://neo4j.com/docs/graph-data-science/current/introduction/[GDS])
 
 Neo4j's Graph Data Science library enables sophisticated patient journey analytics using the information of the relationships. 
 
@@ -358,11 +359,11 @@ Neo4j's Graph Data Science library enables sophisticated patient journey analyti
 - https://neo4j.com/docs/graph-data-science/current/algorithms/pathfinding/[Path finding] algorithms can reveal optimal treatment sequences by analysing successful care pathways across similar patient cohorts, while https://neo4j.com/docs/graph-data-science/current/algorithms/similarity/[Similarity] algorithms identify patients with comparable conditions for comparative effectiveness research. 
 - https://neo4j.com/docs/graph-data-science/current/machine-learning/linkprediction-pipelines/link-prediction/[Link prediction] capabilities can forecast potential complications or disease progressions based on relationship patterns observed in historical patient data, enabling proactive intervention strategies.
 
-== 7. Real World Examples
+== Real World Examples
 
 It's not just theory, there are real world examples of Neo4j being used to analyse patient journeys.
 
-=== 7.1. AstraZeneca
+=== AstraZeneca
 
 AstraZeneca is using Neo4j to improve patient outcomes by analysing patient journeys.
 

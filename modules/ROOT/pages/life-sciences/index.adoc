@@ -1,8 +1,10 @@
 = Healthcare & Life Sciences
 
+Healthcare and Life Sciences is a sector encompassing medical care delivery, pharmaceutical development, biotechnology research, medical devices, and related services focused on improving human health and treating disease.
+
 == Managing Complexity Through Connections
 
-The pharmaceutical and life sciences industry faces a unique data challenge: *information that is simultaneously extremely heterogeneous yet profoundly interconnected by its very nature*. This paradox stems from the scientific foundation of the field: from molecular structures and genomic sequences to clinical observations and patient outcomes, life sciences data spans an extraordinary range of formats and types. Yet despite this diversity, these disparate elements are bound together by fundamental biological, chemical, and clinical relationships.
+The healthcare and life sciences industry faces a unique data challenge: *information that is simultaneously extremely heterogeneous yet profoundly interconnected by its very nature*. This paradox stems from the scientific foundation of the field: from molecular structures and genomic sequences to clinical observations and patient outcomes, life sciences data spans an extraordinary range of formats and types. Yet despite this diversity, these disparate elements are bound together by fundamental biological, chemical, and clinical relationships.
 
 Consider the following examples:
 
@@ -17,7 +19,7 @@ Neo4j, specifically designed to store and process connected data, enables life s
 
 == Patient Care
 
-Patient care isn't just about individual records—it's about relationships. A patient interacts with multiple providers, receives various diagnoses, takes medications that may interact with each other, has allergies that contraindicate certain treatments, and belongs to family units with shared genetic risks. These connections are first-class citizens in graph databases, making queries about relationships fast and intuitive.
+Patient care isn't just about individual records, it's about relationships. A patient interacts with multiple providers, receives various diagnoses, takes medications that may interact with each other, has allergies that contraindicate certain treatments, and belongs to family units with shared genetic risks. These connections are first-class citizens in graph databases, making queries about relationships fast and intuitive.
 
 === Patient Journey
 
