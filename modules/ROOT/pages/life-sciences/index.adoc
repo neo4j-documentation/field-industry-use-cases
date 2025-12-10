@@ -2,9 +2,10 @@
 
 == Managing Complexity Through Connections
 
-The pharmaceutical and life sciences industry faces a unique data challenge: *information that is simultaneously extremely heterogeneous yet profoundly interconnected by its very nature*. This paradox stems from the scientific foundation of the field:from molecular structures and genomic sequences to clinical observations and patient outcomes, life sciences data spans an extraordinary range of formats and types. Yet despite this diversity, these disparate elements are bound together by fundamental biological, chemical, and clinical relationships.
+The pharmaceutical and life sciences industry faces a unique data challenge: *information that is simultaneously extremely heterogeneous yet profoundly interconnected by its very nature*. This paradox stems from the scientific foundation of the field: from molecular structures and genomic sequences to clinical observations and patient outcomes, life sciences data spans an extraordinary range of formats and types. Yet despite this diversity, these disparate elements are bound together by fundamental biological, chemical, and clinical relationships.
 
 Consider the following examples:
+
 * Genes encode proteins that interact within cellular pathways, manifesting as tissue-level phenotypes that influence disease progression and treatment response. 
 * A patient's dietary habits connect to metabolic pathways, genetic variants link to drug metabolism, and molecular interactions determine therapeutic efficacy. 
 
@@ -13,6 +14,7 @@ If you work in systems biology, understanding connections between genes, protein
 Traditional relational databases struggle with this duality—they store heterogeneous data across tables but falter when navigating the complex, multi-hop relationships characterizing biological systems. This is where graph databases like Neo4j excel, treating relationships as first-class citizens alongside entities themselves.
 
 Neo4j, specifically designed to store and process connected data, enables life sciences users from pharmaceutical companies, chemical manufacturers, biotech startups, and healthcare providers—to analyze their connected data in ways impossible without graphs. The technology solves complicated problems at every scale, from atomic interactions to population health. Leading organizations have demonstrated this power. 
+
 == Patient Care
 
 Patient care isn't just about individual records—it's about relationships. A patient interacts with multiple providers, receives various diagnoses, takes medications that may interact with each other, has allergies that contraindicate certain treatments, and belongs to family units with shared genetic risks. These connections are first-class citizens in graph databases, making queries about relationships fast and intuitive.

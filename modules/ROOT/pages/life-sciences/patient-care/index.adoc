@@ -1,9 +1,12 @@
 = Patient Care
 
-Patient journey data is inherently both highly heterogeneous and deeply interconnected, spanning clinical records, laboratory results, medications, imaging, lifestyle factors, and social determinants of health. By definition, these diverse data points form a complex web of relationships for example a patient's dietary habits influence metabolic conditions, exercise patterns correlate with cardiovascular outcomes, and environmental exposures connect to respiratory diseases. Traditional relational databases struggle to capture and query these intricate, multi-dimensional connections efficiently, often requiring complex joins across dozens of tables.
-Neo4j's flexible, schema-optional graph database model excels by naturally representing patients, conditions, treatments, and lifestyle factors as nodes with relationships mirroring real-world clinical causality and correlation. This approach enables healthcare organizations to seamlessly integrate disparate data sources while maintaining the semantic richness essential for comprehensive patient journey analytics. Neo4j's labeled property graph model aligns with the OMOP Common Data Model by representing clinical concepts as nodes (Person, Condition, Drug, Procedure), their attributes as properties, and clinical events as relationships, enabling intuitive mapping of standardized observational health data.
+Patient journey data is highly heterogeneous and interconnected, spanning clinical records, laboratory results, medications, imaging, lifestyle factors, and social determinants of health. Traditional relational databases struggle to capture these complex, multi-dimensional relationships efficiently, often requiring numerous complex joins across tables.
+
+Neo4j's graph database model naturally represents patients, conditions, treatments, and lifestyle factors as nodes with relationships mirroring real-world clinical causality. This enables healthcare organizations to integrate disparate data sources while maintaining semantic richness. Neo4j's labeled property graph model aligns with the OMOP Common Data Model by representing clinical concepts as nodes, attributes as properties, and clinical events as relationships.
 
 == Use Cases
+
+Patient care can be broken down into a variety of use cases that leverage the power of graph databases to garner better insights and improve patient outcomes.
 
 === Patient Journey
 
