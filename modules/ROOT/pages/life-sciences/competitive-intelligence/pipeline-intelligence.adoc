@@ -4,31 +4,37 @@
 
 Pharmaceutical pipeline intelligence tracks what drugs competitors are developing, at what 
 stage, for which diseases, and targeting which biological mechanisms. Public sources like 
-ClinicalTrials.gov, FDA databases, press releases, and company investor presentations provide 
+https://clinicaltrials.gov/[ClinicalTrials.gov], https://www.fda.gov/drugs/development-approval-process-drugs[FDA databases], 
+press releases, and company investor presentations provide 
 a wealth of information about competitors' strategic priorities and R&D investments. However, 
-analyzing this data across hundreds of companies, thousands of trials, and complex relationships 
+analysing this data across hundreds of companies, thousands of trials, and complex relationships 
 between drugs, targets, and diseases becomes nearly impossible with traditional tools. 
 
-Understanding the competitive pipeline landscape is critical for strategic decisions: identifying 
-crowded therapeutic areas to avoid, finding white space opportunities, assessing competitive 
-threats to your own pipeline, evaluating potential acquisition targets, and making informed 
-partnership decisions.
+Understanding the competitive pipeline landscape is critical for strategic decisions such as: 
+identifying crowded therapeutic areas to avoid, finding white space opportunities, assessing 
+competitive threats to your own pipeline, evaluating potential acquisition targets, and making 
+informed partnership decisions.
 
 == Scenario
 
 A pharmaceutical company's business development team is evaluating whether to advance their 
-BACE1 inhibitor for Alzheimer's disease into Phase 3 trials. They need to answer critical 
-questions: How many competitors are developing BACE1 inhibitors? What phases are they in? 
-Are competitors exploring alternative targets for Alzheimer's? Which companies have the most 
-advanced Alzheimer's programs? Are there any companies with promising early-stage assets that 
-might be acquisition targets? Traditional spreadsheet analysis requires manually connecting 
+https://en.wikipedia.org/wiki/Beta-secretase_1[BACE1] inhibitor for Alzheimer's disease into Phase 3 trials. 
+They need to answer critical questions: 
+
+* How many competitors are developing BACE1 inhibitors?
+* What phases are they in? 
+* Are competitors exploring alternative targets for Alzheimer's? 
+* Which companies have the most advanced Alzheimer's programs? 
+* Are there any companies with promising early-stage assets that might be acquisition targets? 
+
+Traditional spreadsheet analysis requires manually connecting 
 information across multiple data sources and becomes outdated within weeks as trials progress.
 
 == Solution
 
 Neo4j's graph database naturally models the pharmaceutical pipeline as an interconnected 
 network of companies, drugs, targets, diseases, and clinical trials with phase information. 
-The graph structure enables instant traversal of complex relationships like "Show me all 
+The graph structure enables fast traversal of complex relationships like "Show me all 
 companies developing drugs that target the same protein as our lead compound, and reveal 
 what other diseases they're pursuing with those targets" or "Find all Phase 2 Alzheimer's 
 programs from companies with less than $500M market cap that might be acquisition targets." 
@@ -41,7 +47,6 @@ real-time as new trial data emerges.
 == Data Model
 
 image:life-sciences/competitive-intelligence/Industry_Use_Cases_Pipeline_Intelligence.png[Pipeline intelligence data model]
-
 
 == Demo Data
 
@@ -471,16 +476,12 @@ MERGE (novartis_trial_ms)-[:FOR_DISEASE]->(ms)
 
 == Cypher Queries
 
-* Competitive Landscape for Target: Who else targets BACE1? (reveals direct competition)
-* Disease Pipeline Intensity: How crowded is Alzheimer's? (market saturation analysis)
-* Target Diversification: What alternative mechanisms are competitors exploring? (strategic pivots)
-* Acquisition Targets: Find small biotechs with Phase 1-2 assets (M&A opportunities)
-* Mechanism Analysis: Compare therapeutic approaches across companies (identify novel vs. crowded mechanisms)
+This section provides a set of example Cypher queries that can be used to explore the potential uses of a Competitive Intelligence knowledge graph from different perspectives.
 
 === Competitive Landscape for Specific Target
 
-Who else is targeting a specific drugtarget? What stages are they in?
-This reveals direct competition and validates/invalidates a drug target based on competitor activity.
+Who else is targeting a specific drug target? What stages are they in?
+This reveals *direct competition* and validates/invalidates a drug target based on competitor activity.
 
 [source, cypher, role=noheader]
 ----
@@ -501,56 +502,85 @@ ORDER BY phase.number DESC;
 === Disease Pipeline Intensity Analysis
 
 How crowded is a specific disease space? Who are the major players?
-This helps assess competitive intensity and market saturation.
+This helps assess *competitive intensity* and market saturation.
 
 [source, cypher, role=noheader]
 ----
-MATCH (disease:Disease {name: "Alzheimer's Disease"})<-[:TREATS]-(drug:Drug)
-MATCH (drug)<-[:IN_PIPELINE]-(company:Company)
-MATCH (drug)-[:INVESTIGATED_IN]->(trial:ClinicalTrial)-[:HAS_PHASE]->(phase:Phase)
-WITH disease, company, 
-     count(DISTINCT drug) AS DrugCount,
-     collect(DISTINCT phase.name) AS Phases,
-     max(phase.number) AS HighestPhase
-RETURN company.name AS Company,
-       company.type AS CompanyType,
-       company.market_cap AS MarketCap,
-       DrugCount AS PipelineAssets,
-       Phases AS DevelopmentPhases,
-       CASE HighestPhase
-         WHEN 4 THEN 'Approved'
-         WHEN 3 THEN 'Phase 3'
-         WHEN 2 THEN 'Phase 2'
-         WHEN 1 THEN 'Phase 1'
-         ELSE 'Preclinical'
-       END AS MostAdvancedPhase
+MATCH 
+  (disease:Disease {name: "Alzheimer's Disease"})<-[:TREATS]-(drug:Drug),
+  (drug)<-[:IN_PIPELINE]-(company:Company),
+  (drug)-[:INVESTIGATED_IN]->(trial:ClinicalTrial)-[:HAS_PHASE]->(phase:Phase)
+WITH 
+  disease, company, 
+  count(DISTINCT drug) AS DrugCount,
+  collect(DISTINCT phase.name) AS Phases,
+  max(phase.number) AS HighestPhase
+RETURN 
+  company.name AS Company,
+  company.type AS CompanyType,
+  company.market_cap AS MarketCap,
+  DrugCount AS PipelineAssets,
+  Phases AS DevelopmentPhases,
+  CASE HighestPhase
+    WHEN 4 THEN 'Approved'
+    WHEN 3 THEN 'Phase 3'
+    WHEN 2 THEN 'Phase 2'
+    WHEN 1 THEN 'Phase 1'
+    ELSE 'Preclinical'
+  END AS MostAdvancedPhase
 ORDER BY HighestPhase DESC, DrugCount DESC;
 ----
 
 === Target Diversification Strategy
 
-==== How does a company diversify its target portfolio?
-This reveals strategic focus and potential for synergy.
+==== How does a company diversify it's target portfolio?
+
+This reveals the strategic focus of a company and the potential for cooperation.
+
+Given a disease, find out which companies are pursuing drugs that aim to treat that disease, and what proteins
+those drugs are targetting.
 
 [source, cypher, role=noheader]
 ----
-MATCH (company:Company)-[:IN_PIPELINE]->(drug:Drug)-[:TARGETS]->(target:Protein {name: 'BACE1'})
-MATCH (drug)-[:TREATS]->(disease:Disease {name: "Alzheimer's Disease"})
-RETURN company.name AS Company,
-       target.name AS Target,
-       count(DISTINCT drug) AS PipelineAssets
+WITH "Alzheimer's Disease" AS diseaseName
+MATCH 
+  (company:Company)-[:IN_PIPELINE]->(drug:Drug)-[:TARGETS]->(target:Protein),
+  (drug)-[:TREATS]->(disease:Disease {name: diseaseName})
+RETURN 
+  company.name AS Company,
+  target.name AS Target,
+  count(DISTINCT drug) AS PipelineAssets
+ORDER BY PipelineAssets DESC;
+----
+
+[source, cypher, role=noheader]
+----
+WITH "Alzheimer's Disease" AS diseaseName
+MATCH 
+  (company:Company)-[:IN_PIPELINE]->(drug:Drug)-[:TARGETS]->(target:Protein),
+  (drug)-[:TREATS]->(disease:Disease {name: diseaseName})
+WITH 
+  company.name AS Company,
+  collect({Drug: drug.name, Target: target.name}) AS DrugTargetting
+RETURN 
+  Company, DrugTargetting, size(DrugTargetting) AS PipelineAssets
 ORDER BY PipelineAssets DESC;
 ----
 
 ==== What other targets are companies pursuing for a specific disease?
+
 Reveals strategic pivots and alternative approaches.
+
+In this query we're looking for all the companies that are pursuing drugs for Alzheimer's disease
+that are in clinical phase 2 or later and what targets those drugs are aiming at. 
 
 [source, cypher, role=noheader]
 ----
-MATCH (disease:Disease {name: "Alzheimer's Disease"})<-[:TREATS]-(drug:Drug)
-MATCH (drug)-[:TARGETS]->(target)
-MATCH (drug)<-[:IN_PIPELINE]-(company:Company)
-MATCH (drug)-[:INVESTIGATED_IN]->(trial:ClinicalTrial)-[:HAS_PHASE]->(phase:Phase)
+MATCH 
+  (disease:Disease {name: "Alzheimer's Disease"})<-[:TREATS]-(drug:Drug),
+  (drug)-[:TARGETS]->(target),
+  (drug)<-[:IN_PIPELINE]-(company:Company),
+  (drug)-[:INVESTIGATED_IN]->(trial:ClinicalTrial)-[:HAS_PHASE]->(phase:Phase)
 WHERE phase.number >= 2  // Phase 2 or later
 RETURN target.name AS Target,
        target.function AS TargetFunction,
@@ -563,20 +593,26 @@ ORDER BY CompaniesTargeting DESC, AvgPhase DESC;
 
 === Acquisition Target Analysis
 
+It is often strategic to acquire smaller companies with promising early-stage assets instead of
+developing new drugs in-house. Smaller companies tend to be more agile and focused on innovative
+approaches making them attractive acquisition targets.
+
 ==== Which companies have promising early-stage assets?
+
 Identifies potential acquisition targets and early-stage opportunities.
 
+In this query we find companies with a market cap under $5B that have drugs in phase 1 or 2 of a clinical trial.
 
 [source, cypher, role=noheader]
 ----
 MATCH (company:Company)
 WHERE company.market_cap < 5000000000  // Less than $5B market cap
-  AND company.type IN ['Biotech', 'Specialty Pharma']
-MATCH (company)-[:IN_PIPELINE]->(drug:Drug)
-MATCH (drug)-[:INVESTIGATED_IN]->(trial:ClinicalTrial)-[:HAS_PHASE]->(phase:Phase)
-MATCH (drug)-[:TREATS]->(disease:Disease)
-MATCH (drug)-[:TARGETS]->(target)
-WHERE phase.number >= 1 AND phase.number <= 2  // Phase 1 or 2
+MATCH 
+  (company)-[:IN_PIPELINE]->(drug:Drug),
+  (drug)-[:INVESTIGATED_IN]->(trial:ClinicalTrial)-[:HAS_PHASE]->(phase:Phase),
+  (drug)-[:TREATS]->(disease:Disease),
+  (drug)-[:TARGETS]->(target)
+WHERE 1 <= phase.number <= 2 // Phase 1 or 2
 RETURN company.name AS PotentialTarget,
        company.market_cap / 1000000 AS MarketCapMillions,
        company.focus AS Focus,
@@ -589,15 +625,19 @@ ORDER BY MarketCapMillions ASC, PipelineSize DESC;
 ----
 
 === Failed Programs Analysis
+
 Learn from competitor failures - what targets/mechanisms were discontinued?
+Understanding why competitors' drugs failed can provide valuable insights to avoid similar pitfalls, and 
+potentially identify situations where we might want to re-evaluate our own pipelines.
 
 [source, cypher, role=noheader]
 ----
-MATCH (trial:ClinicalTrial)-[:HAS_PHASE]->(phase:Phase {name: 'Discontinued'})
-MATCH (drug:Drug)-[:INVESTIGATED_IN]->(trial)
-MATCH (drug)-[:TARGETS]->(target)
-MATCH (drug)-[:TREATS]->(disease:Disease)
-MATCH (drug)<-[:IN_PIPELINE]-(company:Company)
+MATCH 
+  (trial:ClinicalTrial)-[:HAS_PHASE]->(phase:Phase {name: 'Discontinued'}),
+  (drug:Drug)-[:INVESTIGATED_IN]->(trial),
+  (drug)-[:TARGETS]->(target),
+  (drug)-[:TREATS]->(disease:Disease),
+  (drug)<-[:IN_PIPELINE]-(company:Company)
 RETURN company.name AS Company,
        drug.name AS FailedDrug,
        target.name AS Target,

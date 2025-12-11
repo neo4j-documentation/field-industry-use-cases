@@ -1,24 +1,31 @@
 = Competitive Intelligence
 
-Competitive intelligence is the process of gathering, analyzing, and using information to gain a competitive advantage. It is a key part of business intelligence and is used to make informed decisions about market trends and customer needs.
+Competitive intelligence is the process of gathering, analysing, and using information to gain a competitive advantage. It is a key part of business intelligence and is used to make informed decisions about market trends and customer needs.
 
-Key sources for competitive intelligence in life sciences include 
-* patent filings 
-* scientific publications
-* publicly available information about company drug pipelines 
+Competitive intelligence in the life sciences domain can comes from some Key sources:
+
+* Publicly available information about company drug pipelines 
+* Scientific publications
+* Patent filings 
 
 Integrating insights from these data streams enables organizations to monitor competitor activity, identify emerging trends, and make better-informed strategic decisions.
 
-Together, patent, publication, and pipeline intelligence each offer a unique graph view of the competitive landscape. By merging these graphs into a unified knowledge graph, organizations can connect patents, published research, and drug pipeline activity into a single, integrated source of truth—enabling advanced queries, richer insights, and a holistic perspective on life sciences innovation and competition.
+Together, pipeline, publication and patent intelligence each offer a unique graph view of the competitive landscape. By merging these graphs into a unified knowledge graph, organizations can connect patents, published research, and drug pipeline activity into a single, integrated source of truth—enabling advanced queries, richer insights, and a holistic perspective on life sciences innovation and competition.
 
-== Patent Intelligence
+== Pipeline Intelligence
 
-* xref:life-sciences/competitive-intelligence/patent-intelligence.adoc[]
+What drugs competitors are developing, at what stage, for which diseases, and targeting which biological mechanisms?
+
+* xref:life-sciences/competitive-intelligence/pipeline-intelligence.adoc[]
 
 == Publication Intelligence
 
+Scientific publications reveal competitive research directions years before patents or clinical trials appear.
+
 * xref:life-sciences/competitive-intelligence/publication-intelligence.adoc[]
 
-== Pipeline Intelligence    
+== Patent Intelligence
 
-* xref:life-sciences/competitive-intelligence/pipeline-intelligence.adoc[]
+Patent-based competitive intelligence reveals critical insights into competitors' R&D pipelines, therapeutic strategies, and potential market moves .
+
+* xref:life-sciences/competitive-intelligence/patent-intelligence.adoc[]

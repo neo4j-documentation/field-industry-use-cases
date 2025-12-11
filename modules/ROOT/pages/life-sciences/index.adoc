@@ -31,14 +31,20 @@ The patient journey encompasses all the interactions a patient has with the heal
 
 Competitive intelligence is the process of gathering, analyzing, and using information to gain a competitive advantage. It is a key part of business intelligence and is used to make informed decisions about market trends and customer needs.
 
-== Patent Intelligence
+== Pipeline Intelligence    
 
-* xref:life-sciences/competitive-intelligence/patent-intelligence.adoc[]
+What drugs competitors are developing, at what stage, for which diseases, and targeting which biological mechanisms?
+
+* xref:life-sciences/competitive-intelligence/pipeline-intelligence.adoc[]
 
 == Publication Intelligence
 
+Scientific publications reveal competitive research directions years before patents or clinical trials appear.
+
 * xref:life-sciences/competitive-intelligence/publication-intelligence.adoc[]
 
-== Pipeline Intelligence    
+== Patent Intelligence
 
-* xref:life-sciences/competitive-intelligence/pipeline-intelligence.adoc[]
+Patent-based competitive intelligence reveals critical insights into competitors' R&D pipelines, therapeutic strategies, and potential market moves .
+
+* xref:life-sciences/competitive-intelligence/patent-intelligence.adoc[]
