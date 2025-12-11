@@ -36,10 +36,6 @@ The following Cypher statements will create the example graph in the Neo4j datab
 
 [source, cypher, role=noheader]
 ----
-// ============================================
-// EXTENDED OMICS DATASET WITH COMPARISON NODES
-// ============================================
-
 // MERGE Projects
 MERGE (p1:Project {sid: "PROJ001", name: "Liver Disease Study"});
 MERGE (p2:Project {sid: "PROJ002", name: "Diabetes Research"});
@@ -981,438 +977,215 @@ MERGE (p1)-[:INTERACTS_WITH {source: "STRING", score: 0.78}]->(p2);
 
 MATCH (p1:Protein {sid: "P16671"}), (p2:Protein {sid: "P48736"})
 MERGE (p1)-[:INTERACTS_WITH {source: "STRING", score: 0.65}]->(p2);
+
+// Extended PPI network for neighborhood analysis
+MATCH (p1:Protein {sid: "P48736"}), (p2:Protein {sid: "P42345"})
+MERGE (p1)-[:INTERACTS_WITH {source: "STRING", score: 0.72, evidence: "experimental"}]->(p2);
+
+MATCH (p1:Protein {sid: "P42345"}), (p2:Protein {sid: "P37231"})
+MERGE (p1)-[:INTERACTS_WITH {source: "STRING", score: 0.81, evidence: "experimental"}]->(p2);
+
+MATCH (p1:Protein {sid: "P31749"}), (p2:Protein {sid: "P01308"})
+MERGE (p1)-[:INTERACTS_WITH {source: "STRING", score: 0.88, evidence: "experimental"}]->(p2);
+
+MATCH (p1:Protein {sid: "P37231"}), (p2:Protein {sid: "P01308"})
+MERGE (p1)-[:INTERACTS_WITH {source: "STRING", score: 0.76, evidence: "database"}]->(p2);
+
+MATCH (p1:Protein {sid: "P16671"}), (p2:Protein {sid: "P31749"})
+MERGE (p1)-[:INTERACTS_WITH {source: "STRING", score: 0.68, evidence: "experimental"}]->(p2);
+
+MATCH (p1:Protein {sid: "P16671"}), (p2:Protein {sid: "P37231"})
+MERGE (p1)-[:INTERACTS_WITH {source: "STRING", score: 0.55, evidence: "co-expression"}]->(p2);
+
+MATCH (p1:Protein {sid: "P02778"}), (p2:Protein {sid: "P01375"})
+MERGE (p1)-[:INTERACTS_WITH {source: "STRING", score: 0.82, evidence: "experimental"}]->(p2);
+
+MATCH (p1:Protein {sid: "P01375"}), (p2:Protein {sid: "P35354"})
+MERGE (p1)-[:INTERACTS_WITH {source: "STRING", score: 0.91, evidence: "experimental"}]->(p2);
+
+MATCH (p1:Protein {sid: "P02778"}), (p2:Protein {sid: "P35354"})
+MERGE (p1)-[:INTERACTS_WITH {source: "STRING", score: 0.73, evidence: "co-expression"}]->(p2);
+
+MATCH (p1:Protein {sid: "P48736"}), (p2:Protein {sid: "P02768"})
+MERGE (p1)-[:INTERACTS_WITH {source: "STRING", score: 0.42, evidence: "text-mining"}]->(p2);
+
+MATCH (p1:Protein {sid: "P05067"}), (p2:Protein {sid: "P10636"})
+MERGE (p1)-[:INTERACTS_WITH {source: "STRING", score: 0.85, evidence: "experimental"}]->(p2);
+
+MATCH (p1:Protein {sid: "P31749"}), (p2:Protein {sid: "P05067"})
+MERGE (p1)-[:INTERACTS_WITH {source: "STRING", score: 0.67, evidence: "database"}]->(p2);
+
+MATCH (p1:Protein {sid: "P42345"}), (p2:Protein {sid: "P05067"})
+MERGE (p1)-[:INTERACTS_WITH {source: "STRING", score: 0.71, evidence: "database"}]->(p2);
+
+// Bidirectional interactions (making network undirected)
+MATCH (p1:Protein {sid: "P31749"}), (p2:Protein {sid: "P48736"})
+MERGE (p2)-[:INTERACTS_WITH {source: "STRING", score: 0.9}]->(p1);
+
+MATCH (p1:Protein {sid: "P42345"}), (p2:Protein {sid: "P31749"})
+MERGE (p2)-[:INTERACTS_WITH {source: "STRING", score: 0.95}]->(p1);
+
+MATCH (p1:Protein {sid: "P37231"}), (p2:Protein {sid: "P31749"})
+MERGE (p2)-[:INTERACTS_WITH {source: "STRING", score: 0.78}]->(p1);
+
+MATCH (p1:Protein {sid: "P48736"}), (p2:Protein {sid: "P16671"})
+MERGE (p2)-[:INTERACTS_WITH {source: "STRING", score: 0.65}]->(p1);
 ----
 
 == Cypher Queries
 
+=== Proteomics-only changes - Identify post-transcriptional regulation
+
+Find proteins that change significantly without corresponding mRNA changes
+
+[source, cypher, role=noheader]
+----
+// Proteomics-only changes - Identify post-transcriptional regulation
+MATCH (exp:Experiment {type: "Proteomics"})-[r:HAS_VALUE]->(protein:Protein)
+WHERE r.pValue < 0.05 AND abs(r.foldChange) > 1.5
+MATCH (protein)<-[:CODES]-(gene:Gene)
+WHERE r.regulated = "up"
+RETURN protein.name AS Protein,
+       gene.symbol AS Gene,
+       r.foldChange AS FoldChange,
+       r.pValue AS PValue,
+       r.regulated AS Direction;
+----
+
 === Which genes are overexpressed at both the mRNA (transcript) and protein levels in a given disease?
+
+[source, cypher, role=noheader]
+----
+// Which genes are overexpressed at both the mRNA (transcript) and protein levels in a given disease?
+MATCH (disease:Disease {name: "Non-alcoholic fatty liver disease"})
+MATCH (comp:Comparison)-[:STUDIES_DISEASE]->(disease)
+MATCH (comp)-[rnaR:FOUND_DIFFERENTIAL]->(gene:Gene)
+WHERE rnaR.regulated = "up"
+RETURN DISTINCT disease.name AS Disease,
+       gene.symbol AS Gene,
+       gene.name AS GeneName,
+       rnaR.logFC AS mRNA_FoldChange,
+       rnaR.adjPValue AS mRNA_AdjPValue;
+----
+
 
 
 === Which proteins are in the network neighborhood of a candidate target?
 
+[source, cypher, role=noheader]
+----
+// Which proteins are in the network neighborhood of a candidate target?
+MATCH (gene:Gene {symbol: "PIK3CG"})-[:CODES]->(p:Protein)-[i:INTERACTS_WITH]-(neighbor:Protein)<-[:CODES]-(ng:Gene)
+RETURN gene.symbol AS TargetGene,
+       ng.symbol AS NeighborGene,
+       neighbor.sid AS NeighborProtein,
+       i.score AS InteractionScore;
+----
+
 === What are the protein-protein interactions in 1–2 hops of my overexpressed genes from my RNA-seq?
 
+[source, cypher, role=noheader]
+----
+// What are the protein-protein interactions in 1–2 hops of my overexpressed genes from my RNA-seq?
+MATCH path=(gene:Gene {symbol: "PIK3CG"})-[:CODES]->(p:Protein)-[i:INTERACTS_WITH*1..2]-(neighbor:Protein)<-[:CODES]-(ng:Gene)
+RETURN gene.symbol AS TargetGene,
+       ng.symbol AS NeighborGene,
+       neighbor.sid AS NeighborProtein,
+       length(path) AS Distance
+ORDER BY Distance;
+----
 
-5 New Proteomics Queries Added
-Query 6: Multi-omics correlation - Find genes with matching mRNA and protein changes
-Query 7: Proteomics-only changes - Identify post-transcriptional regulation
-Query 8: Data quality metrics - Assess proteomics coverage and peptide counts
-Query 9: Cross-platform comparison - Compare same proteins across different MS platforms
-Query 10: Multi-omics pathway enrichment - GO terms enriched in both omics layers
-This extended dataset now enables sophisticated competitive intelligence analyses like comparing target validation across genomic and proteomic evidence, identifying discordant regulation (mRNA vs protein), and assessing data quality across different proteomics platforms!
+=== Multi-omics correlation - genes with matching transcriptomics and proteomics changes
+[source, cypher, role=noheader]
+----
+// Multi-omics correlation - genes with matching transcriptomics and proteomics changes
+MATCH (comp:Comparison {sid: "COMP001"})-[r1:FOUND_DIFFERENTIAL]->(gene:Gene)
+MATCH (gene)-[:CODES]->(protein:Protein)
+MATCH (comp)-[r2:FOUND_DIFFERENTIAL]->(protein)
+WHERE r1.significance = "significant" AND r2.significance = "significant" AND r1.regulated = r2.regulated
+RETURN gene.symbol AS Gene,
+       protein.name AS Protein,
+       r1.logFC AS mRNA_LogFC,
+       r2.logFC AS Protein_LogFC,
+       r1.regulated AS Direction,
+       abs(r1.logFC - r2.logFC) AS Correlation_Delta
+ORDER BY Correlation_Delta;
+----
 
-
-/*
-QUERY 1: Find all differentially expressed genes in a specific comparison
-*/
-// MATCH (comp:Comparison {sid: "COMP001"})-[r:FOUND_DIFFERENTIAL]->(gene:Gene)
-// WHERE r.adjPValue < 0.05
-// RETURN gene.symbol AS Gene, 
-//        r.logFC AS LogFoldChange,
-//        r.pValue AS PValue,
-//        r.adjPValue AS AdjustedPValue,
-//        r.regulated AS Direction
-// ORDER BY r.adjPValue;
-
-/*
-QUERY 2: Compare gene signatures between two diseases
-*/
-// MATCH (comp1:Comparison)-[:STUDIES_DISEASE]->(d1:Disease {name: "Non-alcoholic fatty liver disease"})
-// MATCH (comp1)-[r1:FOUND_DIFFERENTIAL]->(gene:Gene)
-// MATCH (comp2:Comparison)-[:STUDIES_DISEASE]->(d2:Disease {name: "Type 2 Diabetes"})
-// MATCH (comp2)-[r2:FOUND_DIFFERENTIAL]->(gene)
-// WHERE r1.significance = "significant" AND r2.significance = "significant"
-// RETURN gene.symbol AS SharedGene,
-//        r1.logFC AS NAFLD_LogFC,
-//        r2.logFC AS T2D_LogFC,
-//        r1.regulated AS NAFLD_Direction,
-//        r2.regulated AS T2D_Direction;
-
-/*
-QUERY 3: Find enriched pathways in a comparison through GO terms
-*/
-// MATCH (comp:Comparison {sid: "COMP001"})-[:FOUND_DIFFERENTIAL]->(gene:Gene)
-// MATCH (gene)-[:CODES]->(protein:Protein)-[:ASSOCIATED_WITH]->(go:GO)
-// WITH go, count(DISTINCT gene) AS geneCount
-// WHERE geneCount >= 2
-// RETURN go.name AS Pathway,
-//        go.sid AS GO_ID,
-//        geneCount AS GenesInPathway
-// ORDER BY geneCount DESC;
-
-/*
-QUERY 4: Trace from comparison to protein interactions
-*/
-// MATCH (comp:Comparison {sid: "COMP001"})-[:FOUND_DIFFERENTIAL]->(g1:Gene)
-// MATCH (g1)-[:CODES]->(p1:Protein)-[i:INTERACTS_WITH]->(p2:Protein)
-// MATCH (p2)<-[:CODES]-(g2:Gene)
-// RETURN g1.symbol AS Gene1,
-//        g2.symbol AS Gene2,
-//        p1.name AS Protein1,
-//        p2.name AS Protein2,
-//        i.score AS InteractionScore;
-
-/*
-QUERY 5: Meta-analysis - genes found in multiple comparisons
-*/
-// MATCH (gene:Gene)<-[r:FOUND_DIFFERENTIAL]-(comp:Comparison)
-// WHERE r.significance = "significant"
-// WITH gene, count(DISTINCT comp) AS compCount, collect(comp.name) AS comparisons
-// WHERE compCount >= 2
-// RETURN gene.symbol AS Gene,
-//        compCount AS TimesFound,
-//        comparisons AS FoundInComparisons
-// ORDER BY compCount DESC;
-
-// ============================================
-// PROTEOMICS-SPECIFIC QUERIES
-// ============================================
-
-/*
-QUERY 6: Multi-omics correlation - genes with matching transcriptomics and proteomics changes
-Find genes/proteins with concordant changes at both mRNA and protein level
-*/
-// MATCH (comp:Comparison {sid: "COMP001"})-[r1:FOUND_DIFFERENTIAL]->(gene:Gene)
-// MATCH (gene)-[:CODES]->(protein:Protein)
-// MATCH (comp)-[r2:FOUND_DIFFERENTIAL]->(protein)
-// WHERE r1.significance = "significant" 
-//   AND r2.significance = "significant"
-//   AND r1.regulated = r2.regulated
-// RETURN gene.symbol AS Gene,
-//        protein.name AS Protein,
-//        r1.logFC AS mRNA_LogFC,
-//        r2.logFC AS Protein_LogFC,
-//        r1.regulated AS Direction,
-//        abs(r1.logFC - r2.logFC) AS Correlation_Delta
-// ORDER BY Correlation_Delta;
-
-/*
-QUERY 7: Proteomics-only changes - post-transcriptional regulation
-Find proteins that change significantly without corresponding mRNA changes
-*/
-// MATCH (exp:Experiment {type: "Proteomics"})-[r:HAS_VALUE]->(protein:Protein)
-// WHERE r.pValue < 0.05 AND abs(r.foldChange) > 1.5
-// MATCH (protein)<-[:CODES]-(gene:Gene)
-// OPTIONAL MATCH (rnaExp:Experiment {type: "RNA-seq"})-[rnaR:HAS_VALUE]->(gene)
-// WHERE rnaR.pValue < 0.05
-// WITH protein, gene, r, rnaR
-// WHERE rnaR IS NULL OR abs(rnaR.foldChange) < 1.3
-// RETURN protein.name AS Protein,
-//        gene.symbol AS Gene,
-//        r.foldChange AS Protein_FC,
-//        r.pValue AS Protein_PValue,
-//        COALESCE(rnaR.foldChange, 0) AS mRNA_FC,
-//        "Post-transcriptional regulation" AS Note
-// ORDER BY r.foldChange DESC;
-
-/*
-QUERY 8: Proteomics data quality metrics
+=== Proteomics data quality metrics
 Assess proteomics experiment quality based on coverage and peptide counts
-*/
-// MATCH (exp:Experiment {type: "Proteomics"})-[r:HAS_VALUE]->(protein:Protein)
-// WITH exp, 
-//      count(protein) AS ProteinsDetected,
-//      avg(r.coverage) AS AvgCoverage,
-//      avg(r.peptides) AS AvgPeptides,
-//      avg(r.intensity) AS AvgIntensity
-// RETURN exp.sid AS Experiment,
-//        exp.platform AS Platform,
-//        exp.method AS Method,
-//        ProteinsDetected,
-//        round(AvgCoverage, 1) AS AvgCoverage_Percent,
-//        round(AvgPeptides, 1) AS AvgPeptides,
-//        AvgIntensity AS AvgIntensity
-// ORDER BY ProteinsDetected DESC;
+[source, cypher, role=noheader]
+----
+// Proteomics data quality metrics
+MATCH (exp:Experiment {type: "Proteomics"})-[r:HAS_VALUE]->(protein:Protein)
+WITH exp, 
+     count(protein) AS ProteinsDetected,
+     avg(r.coverage) AS AvgCoverage,
+     avg(r.peptides) AS AvgPeptides,
+     avg(r.intensity) AS AvgIntensity
+RETURN exp.sid AS Experiment,
+       exp.platform AS Platform,
+       exp.method AS Method,
+       ProteinsDetected,
+       round(AvgCoverage, 1) AS AvgCoverage_Percent,
+       round(AvgPeptides, 1) AS AvgPeptides,
+       AvgIntensity AS AvgIntensity
+ORDER BY ProteinsDetected DESC;
+----
 
-/*
-QUERY 9: Cross-platform proteomics comparison
+=== Cross-platform proteomics comparison
 Compare same proteins across different proteomics platforms
-*/
-// MATCH (p:Protein {sid: "P48736"})
-// MATCH (exp:Experiment {type: "Proteomics"})-[r:HAS_VALUE]->(p)
-// RETURN p.name AS Protein,
-//        exp.sid AS Experiment,
-//        exp.platform AS Platform,
-//        exp.method AS Method,
-//        r.foldChange AS FoldChange,
-//        r.pValue AS PValue,
-//        r.peptides AS Peptides,
-//        r.coverage AS Coverage
-// ORDER BY exp.sid;
+[source, cypher, role=noheader]
+----
+// Cross-platform proteomics comparison
+MATCH (p:Protein {sid: "P48736"})
+MATCH (exp:Experiment {type: "Proteomics"})-[r:HAS_VALUE]->(p)
+RETURN p.name AS Protein,
+       exp.sid AS Experiment,
+       exp.platform AS Platform,
+       exp.method AS Method,
+       r.foldChange AS FoldChange,
+       r.pValue AS PValue,
+       r.peptides AS Peptides,
+       r.coverage AS Coverage
+ORDER BY exp.sid;
+----
 
-/*
-QUERY 10: Multi-omics integration pathway analysis
+=== Multi-omics integration pathway analysis
 Find GO pathways enriched across both transcriptomics and proteomics
-*/
+[source, cypher, role=noheader]
+----
 // MATCH (comp:Comparison {sid: "COMP009"})-[:FOUND_DIFFERENTIAL]->(gene:Gene)
-// MATCH (gene)-[:CODES]->(protein:Protein)-[:ASSOCIATED_WITH]->(go:GO)
-// WITH go, 
-//      count(DISTINCT gene) AS GeneCount,
-//      collect(DISTINCT gene.symbol) AS Genes
-// WHERE GeneCount >= 2
-// RETURN go.name AS Pathway,
-//        go.sid AS GO_ID,
-//        GeneCount AS GenesInPathway,
-//        Genes
-// ORDER BY GeneCount DESC;
+MATCH (gene)-[:CODES]->(protein:Protein)-[:ASSOCIATED_WITH]->(go:GO)
+WITH go, 
+     count(DISTINCT gene) AS GeneCount,
+     collect(DISTINCT gene.symbol) AS Genes
+WHERE GeneCount >= 2
+RETURN go.name AS Pathway,
+       go.sid AS GO_ID,
+       GeneCount AS GenesInPathway,
+       Genes
+ORDER BY GeneCount DESC;
+----
 
-// ============================================
-// DISEASE-SPECIFIC MULTI-OMICS QUERY
-// ============================================
+=== Genes overexpressed at both mRNA and protein levels give a disease-specific signature
+[source, cypher, role=noheader]
+----
+MATCH (disease:Disease {sid: "MONDO:0005359"})  // Can change disease here
+MATCH (comp:Comparison)-[:STUDIES_DISEASE]->(disease)
+MATCH (comp)-[rnaR:FOUND_DIFFERENTIAL]->(gene:Gene)
+WHERE rnaR.regulated = "up" AND rnaR.data_type = "transcriptomics"
+MATCH (gene)-[:CODES]->(protein:Protein)
+MATCH (comp)-[protR:FOUND_DIFFERENTIAL]->(protein)
+WHERE protR.regulated = "up" AND protR.data_type = "proteomics"
+RETURN disease.name AS Disease,
+       gene.symbol AS Gene,
+       rnaR.logFC AS Transcript_FC,
+       protR.logFC AS Protein_FC,
+       (rnaR.logFC + protR.logFC) / 2 AS Avg_FoldChange,
+       abs(rnaR.logFC - protR.logFC) AS mRNA_Protein_Correlation_Delta
+ORDER BY Avg_FoldChange DESC;
+----
 
-/*
-QUERY 11: CRITICAL QUERY - Genes overexpressed at both mRNA and protein levels in a disease
-This answers: "Which genes are overexpressed at both the mRNA (transcript) and 
-protein levels in a given disease?"
-
-This query is essential for target validation - it identifies genes with concordant 
-upregulation at both transcriptional and translational levels, indicating strong 
-therapeutic target candidates with consistent molecular evidence.
-*/
-
-// Example 1: Find genes overexpressed in NAFLD at both transcript and protein level
-// MATCH (disease:Disease {name: "Non-alcoholic fatty liver disease"})
-// MATCH (comp:Comparison)-[:STUDIES_DISEASE]->(disease)
-// MATCH (comp)-[rnaR:FOUND_DIFFERENTIAL]->(gene:Gene)
-// WHERE rnaR.regulated = "up" 
-//   AND rnaR.significance = "significant"
-//   AND rnaR.data_type = "transcriptomics"
-// MATCH (gene)-[:CODES]->(protein:Protein)
-// MATCH (comp)-[protR:FOUND_DIFFERENTIAL]->(protein)
-// WHERE protR.regulated = "up" 
-//   AND protR.significance = "significant"
-//   AND protR.data_type = "proteomics"
-// RETURN DISTINCT disease.name AS Disease,
-//        gene.symbol AS Gene,
-//        gene.name AS GeneName,
-//        protein.sid AS ProteinID,
-//        rnaR.logFC AS mRNA_FoldChange,
-//        rnaR.adjPValue AS mRNA_AdjPValue,
-//        protR.logFC AS Protein_FoldChange,
-//        protR.adjPValue AS Protein_AdjPValue,
-//        comp.name AS Comparison,
-//        "Concordant overexpression" AS ValidationStatus
-// ORDER BY rnaR.logFC DESC;
-
-// Example 2: Generic query for any disease
-// MATCH (disease:Disease {sid: "MONDO:0005359"})  // Can change disease here
-// MATCH (comp:Comparison)-[:STUDIES_DISEASE]->(disease)
-// MATCH (comp)-[rnaR:FOUND_DIFFERENTIAL]->(gene:Gene)
-// WHERE rnaR.regulated = "up" AND rnaR.data_type = "transcriptomics"
-// MATCH (gene)-[:CODES]->(protein:Protein)
-// MATCH (comp)-[protR:FOUND_DIFFERENTIAL]->(protein)
-// WHERE protR.regulated = "up" AND protR.data_type = "proteomics"
-// RETURN disease.name AS Disease,
-//        gene.symbol AS Gene,
-//        rnaR.logFC AS Transcript_FC,
-//        protR.logFC AS Protein_FC,
-//        (rnaR.logFC + protR.logFC) / 2 AS Avg_FoldChange,
-//        abs(rnaR.logFC - protR.logFC) AS mRNA_Protein_Correlation_Delta
-// ORDER BY Avg_FoldChange DESC;
-
-// Example 3: Multi-disease comparison - shared overexpressed targets
-// MATCH (comp:Comparison)-[:STUDIES_DISEASE]->(disease:Disease)
-// MATCH (comp)-[rnaR:FOUND_DIFFERENTIAL {regulated: "up", data_type: "transcriptomics"}]->(gene:Gene)
-// MATCH (gene)-[:CODES]->(protein:Protein)
-// MATCH (comp)-[protR:FOUND_DIFFERENTIAL {regulated: "up", data_type: "proteomics"}]->(protein)
-// WITH gene, 
-//      collect(DISTINCT disease.name) AS Diseases,
-//      count(DISTINCT disease) AS DiseaseCount,
-//      avg(rnaR.logFC) AS Avg_mRNA_FC,
-//      avg(protR.logFC) AS Avg_Protein_FC
-// WHERE DiseaseCount >= 2
-// RETURN gene.symbol AS Gene,
-//        Diseases,
-//        DiseaseCount AS FoundInNDiseases,
-//        round(Avg_mRNA_FC, 2) AS Avg_Transcript_FC,
-//        round(Avg_Protein_FC, 2) AS Avg_Protein_FC,
-//        "Pan-disease overexpression target" AS TargetType
-// ORDER BY DiseaseCount DESC, Avg_Protein_FC DESC;
-
-// Example 4: With pathway enrichment context
-// MATCH (disease:Disease {name: "Non-alcoholic fatty liver disease"})
-// MATCH (comp:Comparison)-[:STUDIES_DISEASE]->(disease)
-// MATCH (comp)-[rnaR:FOUND_DIFFERENTIAL {regulated: "up", data_type: "transcriptomics"}]->(gene:Gene)
-// MATCH (gene)-[:CODES]->(protein:Protein)
-// MATCH (comp)-[protR:FOUND_DIFFERENTIAL {regulated: "up", data_type: "proteomics"}]->(protein)
-// MATCH (protein)-[:ASSOCIATED_WITH]->(go:GO)
-// RETURN disease.name AS Disease,
-//        gene.symbol AS Gene,
-//        rnaR.logFC AS mRNA_FC,
-//        protR.logFC AS Protein_FC,
-//        collect(DISTINCT go.name) AS EnrichedPathways,
-//        "Validated therapeutic target" AS Status
-// ORDER BY protR.logFC DESC;
-
-// ============================================
-// PROTEIN NETWORK NEIGHBORHOOD QUERIES
-// ============================================
-
-/*
-QUERY 12: Network neighborhood of a candidate target
-Answers: "Which proteins are in the network neighborhood of a candidate target?"
-
-This query finds all proteins that directly interact with your target of interest
-(1-hop neighbors), which is critical for understanding drug mechanism of action,
-off-target effects, and pathway context.
-*/
-
-// Example 1: Find direct interactors of PIK3CG (candidate target)
-// MATCH (target:Protein {gene_name: "PIK3CG"})
-// MATCH (target)-[i:INTERACTS_WITH]-(neighbor:Protein)
-// RETURN target.name AS CandidateTarget,
-//        target.sid AS Target_UniProt,
-//        neighbor.name AS InteractingProtein,
-//        neighbor.sid AS Neighbor_UniProt,
-//        i.score AS InteractionScore,
-//        i.evidence AS EvidenceType,
-//        i.source AS Source
-// ORDER BY i.score DESC;
-
-// Example 2: Find 2-hop neighborhood (extended network)
-// MATCH (target:Protein {gene_name: "PIK3CG"})
-// MATCH path = (target)-[:INTERACTS_WITH*1..2]-(neighbor:Protein)
-// WITH target, neighbor, 
-//      length(path) AS Hops,
-//      relationships(path) AS rels
-// WHERE target <> neighbor
-// RETURN DISTINCT target.name AS CandidateTarget,
-//        neighbor.name AS NetworkNeighbor,
-//        Hops,
-//        [r IN rels | r.score] AS InteractionScores,
-//        avg([r IN rels | r.score]) AS AvgPathScore
-// ORDER BY Hops, AvgPathScore DESC
-// LIMIT 20;
-
-// Example 3: Network neighborhood with functional annotation
-// MATCH (target:Protein {gene_name: "PIK3CG"})
-// MATCH (target)-[:INTERACTS_WITH]-(neighbor:Protein)
-// OPTIONAL MATCH (neighbor)-[:ASSOCIATED_WITH]->(go:GO)
-// RETURN target.name AS CandidateTarget,
-//        neighbor.name AS Interactor,
-//        collect(DISTINCT go.name) AS Functions
-// ORDER BY neighbor.name;
-
-/*
-QUERY 13: Protein-protein interactions in 1-2 hops of overexpressed genes from RNA-seq
-Answers: "What are the protein-protein interactions in 1–2 hops of my overexpressed 
-genes from my RNA-seq?"
-
-This is the KEY query for network pharmacology - it connects your RNA-seq hits to
-their protein interaction networks, revealing druggable nodes and pathway hubs.
-*/
-
-// Example 1: 1-hop PPI network of upregulated genes in NAFLD
-// MATCH (exp:Experiment {sid: "EXP001", type: "RNA-seq"})-[r:HAS_VALUE]->(gene:Gene)
-// WHERE r.regulated = "up" AND r.pValue < 0.05
-// MATCH (gene)-[:CODES]->(protein:Protein)
-// MATCH (protein)-[i:INTERACTS_WITH]-(neighbor:Protein)
-// RETURN gene.symbol AS UpregulatedGene,
-//        r.foldChange AS RNA_FoldChange,
-//        protein.name AS QueryProtein,
-//        neighbor.name AS InteractingProtein,
-//        i.score AS InteractionScore,
-//        i.evidence AS Evidence
-// ORDER BY r.foldChange DESC, i.score DESC;
-
-// Example 2: 2-hop PPI network with path details
-// MATCH (exp:Experiment {sid: "EXP001", type: "RNA-seq"})-[r:HAS_VALUE]->(gene:Gene)
-// WHERE r.regulated = "up" AND r.pValue < 0.05
-// MATCH (gene)-[:CODES]->(protein:Protein)
-// MATCH path = (protein)-[:INTERACTS_WITH*1..2]-(neighbor:Protein)
-// WHERE protein <> neighbor
-// WITH gene, r, protein, neighbor, 
-//      length(path) AS Hops,
-//      relationships(path) AS rels,
-//      nodes(path) AS pathNodes
-// RETURN DISTINCT gene.symbol AS UpregulatedGene,
-//        r.foldChange AS mRNA_FC,
-//        protein.name AS StartProtein,
-//        neighbor.name AS TargetProtein,
-//        Hops,
-//        [n IN pathNodes | n.name] AS PathProteins,
-//        avg([rel IN rels | rel.score]) AS AvgInteractionScore
-// ORDER BY r.foldChange DESC, Hops, AvgInteractionScore DESC
-// LIMIT 30;
-
-// Example 3: Network hub analysis - find proteins with most connections to RNA-seq hits
-// MATCH (exp:Experiment {sid: "EXP001", type: "RNA-seq"})-[r:HAS_VALUE]->(gene:Gene)
-// WHERE r.regulated = "up" AND r.pValue < 0.05
-// MATCH (gene)-[:CODES]->(protein:Protein)
-// MATCH (protein)-[:INTERACTS_WITH*1..2]-(hub:Protein)
-// WITH hub, 
-//      count(DISTINCT protein) AS ConnectionsToUpregulatedProteins,
-//      collect(DISTINCT protein.name) AS ConnectedProteins
-// WHERE ConnectionsToUpregulatedProteins >= 2
-// OPTIONAL MATCH (hub)-[:ASSOCIATED_WITH]->(go:GO)
-// RETURN hub.name AS NetworkHub,
-//        hub.sid AS UniProt,
-//        ConnectionsToUpregulatedProteins AS Degree,
-//        ConnectedProteins,
-//        collect(DISTINCT go.name)[0..3] AS Functions
-// ORDER BY Degree DESC
-// LIMIT 10;
-
-// Example 4: Multi-omics validated PPI network
-// Find interactions where BOTH proteins are overexpressed at mRNA level
-// MATCH (exp:Experiment {sid: "EXP001", type: "RNA-seq"})-[r1:HAS_VALUE]->(g1:Gene)
-// WHERE r1.regulated = "up" AND r1.pValue < 0.05
-// MATCH (g1)-[:CODES]->(p1:Protein)
-// MATCH (exp)-[r2:HAS_VALUE]->(g2:Gene)
-// WHERE r2.regulated = "up" AND r2.pValue < 0.05
-// MATCH (g2)-[:CODES]->(p2:Protein)
-// MATCH (p1)-[i:INTERACTS_WITH]-(p2)
-// WHERE g1.symbol < g2.symbol  // Avoid duplicates
-// RETURN g1.symbol AS Gene1,
-//        g2.symbol AS Gene2,
-//        r1.foldChange AS Gene1_FC,
-//        r2.foldChange AS Gene2_FC,
-//        p1.name AS Protein1,
-//        p2.name AS Protein2,
-//        i.score AS InteractionScore,
-//        i.evidence AS Evidence,
-//        "Both proteins overexpressed" AS Status
-// ORDER BY i.score DESC;
-
-// Example 5: Cross-omics PPI validation
-// Find PPIs where both proteins show concordant mRNA and protein upregulation
-// MATCH (comp:Comparison {sid: "COMP001"})
-// MATCH (comp)-[r1:FOUND_DIFFERENTIAL {regulated: "up", data_type: "transcriptomics"}]->(g1:Gene)
-// MATCH (g1)-[:CODES]->(p1:Protein)
-// MATCH (comp)-[p1r:FOUND_DIFFERENTIAL {regulated: "up", data_type: "proteomics"}]->(p1)
-// MATCH (comp)-[r2:FOUND_DIFFERENTIAL {regulated: "up", data_type: "transcriptomics"}]->(g2:Gene)
-// MATCH (g2)-[:CODES]->(p2:Protein)
-// MATCH (comp)-[p2r:FOUND_DIFFERENTIAL {regulated: "up", data_type: "proteomics"}]->(p2)
-// MATCH (p1)-[i:INTERACTS_WITH]-(p2)
-// WHERE g1.symbol < g2.symbol
-// RETURN g1.symbol AS Gene1,
-//        g2.symbol AS Gene2,
-//        r1.logFC AS Gene1_mRNA_FC,
-//        p1r.logFC AS Gene1_Protein_FC,
-//        r2.logFC AS Gene2_mRNA_FC,
-//        p2r.logFC AS Gene2_Protein_FC,
-//        i.score AS PPI_Score,
-//        "Multi-omics validated interaction" AS ValidationLevel
-// ORDER BY i.score DESC;
-
-/*
-QUERY 14: Druggable proteins in the PPI neighborhood
-Find proteins in your RNA-seq network that are already drug targets
-*/
-
-// MATCH (exp:Experiment {sid: "EXP001", type: "RNA-seq"})-[r:HAS_VALUE]->(gene:Gene)
-// WHERE r.regulated = "up" AND r.pValue < 0.05
-// MATCH (gene)-[:CODES]->(protein:Protein)
-// MATCH (protein)-[:INTERACTS_WITH*1..2]-(neighbor:Protein)
-// MATCH (neighbor)<-[:CODES]-(neighborGene:Gene)
-// OPTIONAL MATCH (neighborGene)-[:RELATED_TO]->(disease:Disease)
-// WITH DISTINCT neighbor, 
-//      count(DISTINCT disease) AS DiseaseAssociations,
-//      collect(DISTINCT disease.name) AS AssociatedDiseases
-// WHERE DiseaseAssociations > 0
-// RETURN neighbor.name AS PotentialDrugTarget,
-//        neighbor.sid AS UniProt,
-//        DiseaseAssociations,
-//        AssociatedDiseases,
-//        "Druggable neighbor" AS TargetClass
-// ORDER BY DiseaseAssociations DESC;
+=== Network neighborhood of a candidate target
+[source, cypher, role=noheader]

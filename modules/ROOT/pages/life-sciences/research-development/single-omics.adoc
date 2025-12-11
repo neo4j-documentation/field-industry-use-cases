@@ -595,6 +595,22 @@ RETURN gene.symbol AS Gene,
 ORDER BY r.adjPValue;
 ----
 
+=== Compare gene signatures between two diseases
+[source, cypher, role=noheader]
+----
+// Compare gene signatures between two diseases
+MATCH (comp1:Comparison)-[:STUDIES_DISEASE]->(d1:Disease {name: "Non-alcoholic fatty liver disease"})
+MATCH (comp1)-[r1:FOUND_DIFFERENTIAL]->(gene:Gene)
+MATCH (comp2:Comparison)-[:STUDIES_DISEASE]->(d2:Disease {name: "Type 2 Diabetes"})
+MATCH (comp2)-[r2:FOUND_DIFFERENTIAL]->(gene)
+WHERE r1.significance = "significant" AND r2.significance = "significant"
+RETURN gene.symbol AS SharedGene,
+       r1.logFC AS NAFLD_LogFC,
+       r2.logFC AS T2D_LogFC,
+       r1.regulated AS NAFLD_Direction,
+       r2.regulated AS T2D_Direction;
+----
+
 === Find all genes overexpressed in a given comparison?
 [source, cypher, role=noheader]
 ----
