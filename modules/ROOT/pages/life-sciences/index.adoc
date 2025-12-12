@@ -17,13 +17,13 @@ Traditional relational databases struggle with this duality—they store heterog
 
 Neo4j, specifically designed to store and process connected data, enables life sciences users from pharmaceutical companies, chemical manufacturers, biotech startups, and healthcare providers—to analyze their connected data in ways impossible without graphs. The technology solves complicated problems at every scale, from atomic interactions to population health. Leading organizations have demonstrated this power. 
 
-== Patient Care
+== Medical Care
 
-Patient care isn't just about individual records, it's about relationships. A patient interacts with multiple providers, receives various diagnoses, takes medications that may interact with each other, has allergies that contraindicate certain treatments, and belongs to family units with shared genetic risks. These connections are first-class citizens in graph databases, making queries about relationships fast and intuitive.
+Medical care isn't just about individual records, it's about relationships. A patient interacts with multiple providers, receives various diagnoses, takes medications that may interact with each other, has allergies that contraindicate certain treatments, and belongs to family units with shared genetic risks. These connections are first-class citizens in graph databases, making queries about relationships fast and intuitive.
 
 === Patient Journey
 
 The patient journey encompasses all the interactions a patient has with the healthcare system, from initial contact through treatment and follow-up care. Understanding this journey is critical for improving patient outcomes and enhancing the overall healthcare experience. It can help identify gaps in care, streamline processes, and ensure that patients receive the right care at the right time. Saving time, resources and improving patient outcomes.
 
-* xref:life-sciences/patient-care/patient-journey.adoc[Patient Journey] 
+* xref:life-sciences/medical-care/patient-journey.adoc[Patient Journey] 
 

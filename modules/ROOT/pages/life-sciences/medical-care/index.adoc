@@ -1,4 +1,4 @@
-= Patient Care
+= Medical Care
 
 Patient journey data is highly heterogeneous and interconnected, spanning clinical records, laboratory results, medications, imaging, lifestyle factors, and social determinants of health. Traditional relational databases struggle to capture these complex, multi-dimensional relationships efficiently, often requiring numerous complex joins across tables.
 
@@ -13,4 +13,4 @@ Patient care can be broken down into a variety of use cases that leverage the po
 A Patient Journey encompasses the interactions a patient has with a healthcare system, and can be viewed from a holistic 'lifetime' perspective through
 to individual episodes of care.
 
-* xref:life-sciences/patient-care/patient-journey.adoc[]
+* xref:life-sciences/medical-care/patient-journey.adoc[]

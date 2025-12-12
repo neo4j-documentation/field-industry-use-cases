@@ -22,8 +22,8 @@
 ** xref:insurance/quote-fraud.adoc[]
 
 * xref:life-sciences/index.adoc[]
-** xref:life-sciences/patient-care/index.adoc[]
-*** xref:life-sciences/patient-care/patient-journey.adoc[]
+** xref:life-sciences/medical-care/index.adoc[]
+*** xref:life-sciences/medical-care/patient-journey.adoc[]
 
 * xref:manufacturing/index.adoc[]
 ** xref:manufacturing/supply-chain-management/index.adoc[]
