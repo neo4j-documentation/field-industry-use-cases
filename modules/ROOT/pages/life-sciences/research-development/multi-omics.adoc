@@ -1,17 +1,22 @@
 = Multi-OMICs Data Integration
 
+Building on the single omics integration, we further enhance biological insight by connecting other omics data types (proteomics, metabolomics) and ontology information directly into the knowledge graph. Linking standardized biomedical ontologies—such as the Gene Ontology *(GO)*, Disease Ontology *(MONDO)* and phenotype *(EFO, HPO)* which enriches the multi-omics graph with layers of curated knowledge. Each gene, protein, metabolite, or biological entity in the graph can be annotated with relevant ontology terms, enabling not just data integration, but deep semantic enrichment.
+
+This ontology-driven approach allows researchers to query molecular data in concept-driven ways: for example, finding all genes participating in a specific biological process (GO term), all proteins annotated as drug targets, or all molecular entities linked to a disease category across experiments. By linking omics data to ontological nodes and relationships, the knowledge graph supports cross-omics reasoning (e.g., transcript changes that impact disease-relevant pathways), leverages hierarchical vocabulary structures for inference, and enables federated analysis across datasets and domains. The result is a truly interconnected data and knowledge landscape—accelerating hypothesis generation, translational discovery, and precision medicine.
+
 == Scenario
 
-Building on the single omics foundation, we now extend the integration to support multiple omics layers such as proteomics and metabolomics. By mapping relationships between genes, their protein products, and metabolic pathways, the knowledge graph captures the full spectrum from transcriptomics through proteomics to metabolomic contexts. This unified representation enables researchers to trace molecular changes across different omics types and gain holistic insights into biological systems and disease mechanisms.
+Building on the single omics foundation, we now extend the integration to support multiple omics layers such as proteomics and metabolomics. By mapping relationships between genes, their protein products, and metabolic pathways, the knowledge graph captures the full spectrum from transcriptomics through proteomics to metabolomic contexts. This unified representation enables researchers to trace molecular changes across different omics types and gain holistic insights into biological systems and disease mechanisms. We will also add ontology information to the nodes and relationships to enrich the graph with layers of curated knowledge.
 
 == Data Model
 
-This data model extends the xref:life-sciences/research-development/single-omics.adoc[Single OMICs Data Integration] page by adding proteomics and metabolomics data by: 
-* 4 New Proteomics Experiments
+This data model extends the xref:life-sciences/research-development/single-omics.adoc[Single OMICs Data Integration] page by adding more omics data like proteomics and metabolomics as well as data from ontologies like GO and EFO: 
 * New Protein Nodes Added
-New Protein Nodes Added
-* Proteomics-Specific Data on Relationships
-* Multi-Omics Comparison (COMP009)
+* New Ontology Nodes Added
+* New Ontology Relationships Added
+* New Proteomics Experiments Added
+* New Metabolomics Experiments Added
+* New Multi-Omics Comparison (COMP009)
 
 The (Experiment)-[:HAS_VALUE]->(Protein) relationships now include:
 foldChange: Protein abundance change
@@ -203,6 +208,23 @@ MERGE (go3:GO {sid: "GO:0043066", name: "negative regulation of apoptosis"});
 MERGE (go4:GO {sid: "GO:0008286", name: "insulin receptor signaling pathway"});
 MERGE (go5:GO {sid: "GO:0006629", name: "lipid metabolic process"});
 MERGE (go6:GO {sid: "GO:0006955", name: "immune response"});
+MERGE (go7:GO {sid: "GO:0071356", name: "cellular response to tumor necrosis factor"});
+MERGE (go8:GO {sid: "GO:0042593", name: "glucose homeostasis"});
+MERGE (go9:GO {sid: "GO:0006006", name: "glucose metabolic process"});
+MERGE (go10:GO {sid: "GO:0030154", name: "cell differentiation"});
+MERGE (go11:GO {sid: "GO:0051091", name: "positive regulation of transcription factor activity"});
+
+// MERGE Pathway nodes (higher-level biological pathways)
+MERGE (pw1:Pathway {sid: "KEGG:04910", name: "Insulin signaling pathway", source: "KEGG"});
+MERGE (pw2:Pathway {sid: "KEGG:04064", name: "NF-kappa B signaling pathway", source: "KEGG"});
+MERGE (pw3:Pathway {sid: "KEGG:04151", name: "PI3K-Akt signaling pathway", source: "KEGG"});
+MERGE (pw4:Pathway {sid: "KEGG:04150", name: "mTOR signaling pathway", source: "KEGG"});
+MERGE (pw5:Pathway {sid: "KEGG:04920", name: "Adipocytokine signaling pathway", source: "KEGG"});
+MERGE (pw6:Pathway {sid: "KEGG:03320", name: "PPAR signaling pathway", source: "KEGG"});
+MERGE (pw7:Pathway {sid: "REACTOME:R-HSA-74751", name: "Insulin receptor signaling cascade", source: "Reactome"});
+MERGE (pw8:Pathway {sid: "REACTOME:R-HSA-449147", name: "Signaling by Interleukins", source: "Reactome"});
+MERGE (pw9:Pathway {sid: "REACTOME:R-HSA-162582", name: "Signal Transduction", source: "Reactome"});
+MERGE (pw10:Pathway {sid: "WIKIPATHWAYS:WP1471", name: "Inflammatory Response Pathway", source: "WikiPathways"});
 
 // ============================================
 // RELATIONSHIPS: PROJECT -> SAMPLE
@@ -962,6 +984,146 @@ MERGE (p)-[:ASSOCIATED_WITH {source: "GO"}]->(go);
 MATCH (p:Protein {sid: "P02768"}), (go:GO {sid: "GO:0006955"})
 MERGE (p)-[:ASSOCIATED_WITH {source: "GO"}]->(go);
 
+// Additional GO term associations for pathway enrichment
+MATCH (p:Protein {sid: "P48736"}), (go:GO {sid: "GO:0042593"})
+MERGE (p)-[:ASSOCIATED_WITH {source: "GO"}]->(go);
+
+MATCH (p:Protein {sid: "P31749"}), (go:GO {sid: "GO:0042593"})
+MERGE (p)-[:ASSOCIATED_WITH {source: "GO"}]->(go);
+
+MATCH (p:Protein {sid: "P42345"}), (go:GO {sid: "GO:0042593"})
+MERGE (p)-[:ASSOCIATED_WITH {source: "GO"}]->(go);
+
+MATCH (p:Protein {sid: "P37231"}), (go:GO {sid: "GO:0006629"})
+MERGE (p)-[:ASSOCIATED_WITH {source: "GO"}]->(go);
+
+MATCH (p:Protein {sid: "P16671"}), (go:GO {sid: "GO:0006629"})
+MERGE (p)-[:ASSOCIATED_WITH {source: "GO"}]->(go);
+
+MATCH (p:Protein {sid: "P01375"}), (go:GO {sid: "GO:0071356"})
+MERGE (p)-[:ASSOCIATED_WITH {source: "GO"}]->(go);
+
+MATCH (p:Protein {sid: "P35354"}), (go:GO {sid: "GO:0071356"})
+MERGE (p)-[:ASSOCIATED_WITH {source: "GO"}]->(go);
+
+MATCH (p:Protein {sid: "P02778"}), (go:GO {sid: "GO:0071356"})
+MERGE (p)-[:ASSOCIATED_WITH {source: "GO"}]->(go);
+
+MATCH (p:Protein {sid: "P01308"}), (go:GO {sid: "GO:0006006"})
+MERGE (p)-[:ASSOCIATED_WITH {source: "GO"}]->(go);
+
+MATCH (p:Protein {sid: "P01308"}), (go:GO {sid: "GO:0042593"})
+MERGE (p)-[:ASSOCIATED_WITH {source: "GO"}]->(go);
+
+MATCH (p:Protein {sid: "P37231"}), (go:GO {sid: "GO:0030154"})
+MERGE (p)-[:ASSOCIATED_WITH {source: "GO"}]->(go);
+
+MATCH (p:Protein {sid: "P37231"}), (go:GO {sid: "GO:0051091"})
+MERGE (p)-[:ASSOCIATED_WITH {source: "GO"}]->(go);
+
+// ============================================
+// RELATIONSHIPS: GO -> PATHWAY (IS_PART_OF hierarchy)
+// ============================================
+
+// Insulin signaling GO terms to Pathways
+MATCH (go:GO {sid: "GO:0008286"}), (pw:Pathway {sid: "KEGG:04910"})
+MERGE (go)-[:IS_PART_OF]->(pw);
+
+MATCH (go:GO {sid: "GO:0005158"}), (pw:Pathway {sid: "KEGG:04910"})
+MERGE (go)-[:IS_PART_OF]->(pw);
+
+MATCH (go:GO {sid: "GO:0042593"}), (pw:Pathway {sid: "KEGG:04910"})
+MERGE (go)-[:IS_PART_OF]->(pw);
+
+MATCH (go:GO {sid: "GO:0008286"}), (pw:Pathway {sid: "REACTOME:R-HSA-74751"})
+MERGE (go)-[:IS_PART_OF]->(pw);
+
+// PI3K-Akt pathway connections
+MATCH (go:GO {sid: "GO:0008286"}), (pw:Pathway {sid: "KEGG:04151"})
+MERGE (go)-[:IS_PART_OF]->(pw);
+
+MATCH (go:GO {sid: "GO:0042593"}), (pw:Pathway {sid: "KEGG:04151"})
+MERGE (go)-[:IS_PART_OF]->(pw);
+
+MATCH (go:GO {sid: "GO:0043066"}), (pw:Pathway {sid: "KEGG:04151"})
+MERGE (go)-[:IS_PART_OF]->(pw);
+
+// mTOR pathway connections
+MATCH (go:GO {sid: "GO:0042593"}), (pw:Pathway {sid: "KEGG:04150"})
+MERGE (go)-[:IS_PART_OF]->(pw);
+
+// Inflammatory pathway connections
+MATCH (go:GO {sid: "GO:0006954"}), (pw:Pathway {sid: "KEGG:04064"})
+MERGE (go)-[:IS_PART_OF]->(pw);
+
+MATCH (go:GO {sid: "GO:0071356"}), (pw:Pathway {sid: "KEGG:04064"})
+MERGE (go)-[:IS_PART_OF]->(pw);
+
+MATCH (go:GO {sid: "GO:0006954"}), (pw:Pathway {sid: "WIKIPATHWAYS:WP1471"})
+MERGE (go)-[:IS_PART_OF]->(pw);
+
+MATCH (go:GO {sid: "GO:0071356"}), (pw:Pathway {sid: "WIKIPATHWAYS:WP1471"})
+MERGE (go)-[:IS_PART_OF]->(pw);
+
+MATCH (go:GO {sid: "GO:0006955"}), (pw:Pathway {sid: "WIKIPATHWAYS:WP1471"})
+MERGE (go)-[:IS_PART_OF]->(pw);
+
+// Lipid metabolism pathways
+MATCH (go:GO {sid: "GO:0006629"}), (pw:Pathway {sid: "KEGG:04920"})
+MERGE (go)-[:IS_PART_OF]->(pw);
+
+MATCH (go:GO {sid: "GO:0006629"}), (pw:Pathway {sid: "KEGG:03320"})
+MERGE (go)-[:IS_PART_OF]->(pw);
+
+// PPAR signaling
+MATCH (go:GO {sid: "GO:0030154"}), (pw:Pathway {sid: "KEGG:03320"})
+MERGE (go)-[:IS_PART_OF]->(pw);
+
+MATCH (go:GO {sid: "GO:0051091"}), (pw:Pathway {sid: "KEGG:03320"})
+MERGE (go)-[:IS_PART_OF]->(pw);
+
+// Glucose metabolism
+MATCH (go:GO {sid: "GO:0006006"}), (pw:Pathway {sid: "KEGG:04910"})
+MERGE (go)-[:IS_PART_OF]->(pw);
+
+MATCH (go:GO {sid: "GO:0006006"}), (pw:Pathway {sid: "KEGG:04920"})
+MERGE (go)-[:IS_PART_OF]->(pw);
+
+// Interleukin signaling
+MATCH (go:GO {sid: "GO:0006954"}), (pw:Pathway {sid: "REACTOME:R-HSA-449147"})
+MERGE (go)-[:IS_PART_OF]->(pw);
+
+MATCH (go:GO {sid: "GO:0071356"}), (pw:Pathway {sid: "REACTOME:R-HSA-449147"})
+MERGE (go)-[:IS_PART_OF]->(pw);
+
+// ============================================
+// RELATIONSHIPS: DISEASE -> PATHWAY (direct disease-pathway associations)
+// ============================================
+
+MATCH (d:Disease {sid: "MONDO:0005359"}), (pw:Pathway {sid: "KEGG:04920"})
+MERGE (d)-[:INVOLVES_PATHWAY {evidence: "literature"}]->(pw);
+
+MATCH (d:Disease {sid: "MONDO:0005359"}), (pw:Pathway {sid: "KEGG:03320"})
+MERGE (d)-[:INVOLVES_PATHWAY {evidence: "literature"}]->(pw);
+
+MATCH (d:Disease {sid: "MONDO:0005359"}), (pw:Pathway {sid: "KEGG:04151"})
+MERGE (d)-[:INVOLVES_PATHWAY {evidence: "literature"}]->(pw);
+
+MATCH (d:Disease {sid: "MONDO:0005015"}), (pw:Pathway {sid: "KEGG:04910"})
+MERGE (d)-[:INVOLVES_PATHWAY {evidence: "literature"}]->(pw);
+
+MATCH (d:Disease {sid: "MONDO:0005015"}), (pw:Pathway {sid: "KEGG:04151"})
+MERGE (d)-[:INVOLVES_PATHWAY {evidence: "literature"}]->(pw);
+
+MATCH (d:Disease {sid: "MONDO:0005015"}), (pw:Pathway {sid: "KEGG:04920"})
+MERGE (d)-[:INVOLVES_PATHWAY {evidence: "literature"}]->(pw);
+
+MATCH (d:Disease {sid: "MONDO:0011382"}), (pw:Pathway {sid: "KEGG:04920"})
+MERGE (d)-[:INVOLVES_PATHWAY {evidence: "literature"}]->(pw);
+
+MATCH (d:Disease {sid: "MONDO:0011382"}), (pw:Pathway {sid: "KEGG:04910"})
+MERGE (d)-[:INVOLVES_PATHWAY {evidence: "literature"}]->(pw);
+
 // ============================================
 // RELATIONSHIPS: PROTEIN-PROTEIN INTERACTIONS
 // ============================================
@@ -1034,6 +1196,21 @@ MERGE (p2)-[:INTERACTS_WITH {source: "STRING", score: 0.65}]->(p1);
 
 == Cypher Queries
 
+Key Examples in the Dataset
+NAFLD Concordant Overexpression (COMP001):
+
+* PIK3CG: mRNA +2.5 FC ↔ Protein +2.3 FC ✓ Concordant
+* CD36: mRNA +2.8 FC ↔ Protein +3.1 FC ✓ Concordant
+* CXCL10: mRNA +3.2 FC ↔ Protein +2.8 FC ✓ Concordant
+
+T2D Concordant Overexpression (COMP002):
+
+* AKT1: mRNA +2.1 FC ↔ Protein +2.0 FC ✓ Concordant
+
+Multi-Omics Integration (COMP009):
+
+* Demonstrates correlation between transcript and protein levels with correlation coefficients (0.85-0.92)
+
 === Proteomics-only changes - Identify post-transcriptional regulation
 
 Find proteins that change significantly without corresponding mRNA changes
@@ -1052,6 +1229,50 @@ RETURN protein.name AS Protein,
        r.regulated AS Direction;
 ----
 
+=== Which proteins/genes are associated with a given disease or phenotype?
+
+[source, cypher, role=noheader]
+----
+// Find proteins associated with a given disease or phenotype
+MATCH (d:Disease {name: "Non-alcoholic fatty liver disease"})<-[:RELATED_TO]-(g:Gene)-[:CODES]->(p:Protein)-[:ASSOCIATED_WITH]->(go:GO)
+RETURN g.symbol AS Gene,
+       p.sid AS Protein,
+       go.name AS BiologicalProcess
+ORDER BY Gene;
+
+// Alternative: Find genes from experiments on samples with specific phenotype
+MATCH (ph:EFO {name: "Elevated triglycerides"})<-[:HAS_PHENOTYPE]-(s:Sample)-[:HAS_EXPERIMENT]->(e:Experiment)-[hv:HAS_VALUE]->(g:Gene)
+WHERE hv.pValue < 0.05
+RETURN g.symbol AS Gene, 
+       hv.foldChange AS FoldChange, 
+       hv.pValue AS PValue,
+       ph.name AS Phenotype
+ORDER BY hv.pValue;
+
+
+=== Which diseases or phenotypes are linked to a given gene/protein (i.e. what else might targeting this protein affect)?
+
+[source, cypher, role=noheader]
+----
+// Find diseases linked to a given gene/protein
+MATCH (g:Gene {symbol: "PIK3CG"})-[:RELATED_TO]-(d:Disease)
+RETURN d.name AS Disease
+ORDER BY Disease;
+----
+
+=== Find phenotypes linked to a given gene/protein (i.e. what else might targeting this protein affect)?
+
+[source, cypher, role=noheader] 
+----
+// Find phenotypes linked to a given gene/protein
+MATCH (g:Gene {symbol: "PIK3CG"})<-[:HAS_VALUE]-(exp:Experiment)<-[:HAS_EXPERIMENT]-(s:Sample)-[:HAS_PHENOTYPE]->(ph:EFO)
+RETURN DISTINCT g.symbol AS Gene,
+       ph.name AS Phenotype,
+       ph.sid AS PhenotypeID
+ORDER BY ph.name;
+ORDER BY g.symbol;
+----
+
 === Which genes are overexpressed at both the mRNA (transcript) and protein levels in a given disease?
 
 [source, cypher, role=noheader]
@@ -1068,7 +1289,71 @@ RETURN DISTINCT disease.name AS Disease,
        rnaR.adjPValue AS mRNA_AdjPValue;
 ----
 
+=== Which proteins are in the network neighborhood — interacting proteins, upstream regulators, downstream effectors — of a candidate target?
 
+[source, cypher, role=noheader]
+----
+// Find direct interacting proteins for PIK3CG
+MATCH (g:Gene {symbol: "PIK3CG"})-[:CODES]->(p:Protein)-[i:INTERACTS_WITH]-(neighbor:Protein)<-[:CODES]-(ng:Gene)
+RETURN g.symbol AS TargetGene,
+       ng.symbol AS NeighborGene,
+       neighbor.sid AS NeighborProtein,
+       i.score AS InteractionScore
+ORDER BY i.score DESC;
+----
+
+=== Under-explored but potentially druggable targets close to disease nodes?
+
+[source, cypher, role=noheader]
+----
+// Find proteins 1-2 hops away from known disease-associated nodes that aren't annotated to drugs
+MATCH path = (d:Disease)<-[:RELATED_TO]-(g:Gene)-[:CODES]->(p:Protein)-[:INTERACTS_WITH*1..2]-(neighbor:Protein)<-[:CODES]-(ng:Gene)
+WHERE NOT (p)-[:ASSOCIATED_WITH]->(:Drug)
+RETURN g.symbol AS TargetGene,
+       ng.symbol AS NeighborGene,
+       neighbor.sid AS NeighborProtein,
+       length(path) AS Distance
+ORDER BY Distance;
+----
+
+=== Among candidate targets for a disease, which have the strongest support from multiple evidence types (genetics, expression, pathway involvement, literature, etc.)?
+
+[source, cypher, role=noheader]
+----
+// Find novel candidate genes for Type 2 Diabetes through shared GO pathways
+// with known disease-associated genes
+
+MATCH (d:Disease {sid: "MONDO:0005015"})<-[:RELATED_TO]-(known:Gene)-[:CODES]->(kp:Protein)-[:ASSOCIATED_WITH]->(go:GO)
+MATCH (go)<-[:ASSOCIATED_WITH]-(cp:Protein)<-[:CODES]-(candidate:Gene)
+WHERE NOT (candidate)-[:RELATED_TO]->(d)
+  AND candidate <> known
+WITH candidate, d, count(DISTINCT go) AS sharedPathways, collect(DISTINCT go.name) AS pathways
+WHERE sharedPathways >= 1  // Reduced from 2 to 1 due to smaller demo dataset
+RETURN candidate.symbol AS NovelCandidate,
+       candidate.name AS CandidateName,
+       d.name AS Disease,
+       sharedPathways AS SharedPathwayCount,
+       pathways AS SharedPathways
+ORDER BY sharedPathways DESC
+LIMIT 10;
+----
+
+=== Which candidate targets are expressed (or dysregulated) in the relevant tissue / cell type / biological context for the disease?
+
+[source, cypher, role=noheader]
+----
+// Find genes co-expressed with known disease genes across experiments
+MATCH (d:Disease)<-[:RELATED_TO]-(known:Gene)<-[hv1:HAS_VALUE]-(e:Experiment)-[hv2:HAS_VALUE]->(candidate:Gene)
+WHERE NOT (candidate)-[:RELATED_TO]->(d)
+  AND hv1.regulated = hv2.regulated
+  AND hv1.pValue < 0.05 AND hv2.pValue < 0.05
+WITH candidate, d, count(DISTINCT e) AS coExpressionCount
+WHERE coExpressionCount >= 2
+RETURN candidate.symbol AS NovelCandidate,
+       d.name AS Disease,
+       coExpressionCount AS TimesCoExpressed
+ORDER BY coExpressionCount DESC;
+----
 
 === Which proteins are in the network neighborhood of a candidate target?
 
@@ -1187,5 +1472,104 @@ RETURN disease.name AS Disease,
 ORDER BY Avg_FoldChange DESC;
 ----
 
-=== Network neighborhood of a candidate target
+=== Druggable proteins in the PPI neighborhood
+
+Find proteins that are druggable and in the PPI neighborhood of overexpressed genes (RNA-seq).
+
 [source, cypher, role=noheader]
+----
+MATCH (exp:Experiment {sid: "EXP001", type: "RNA-seq"})-[r:HAS_VALUE]->(gene:Gene)
+WHERE r.regulated = "up" AND r.pValue < 0.05
+MATCH (gene)-[:CODES]->(protein:Protein)
+MATCH (protein)-[:INTERACTS_WITH*1..2]-(neighbor:Protein)
+MATCH (neighbor)<-[:CODES]-(neighborGene:Gene)
+OPTIONAL MATCH (neighborGene)-[:RELATED_TO]->(disease:Disease)
+WITH DISTINCT neighbor, 
+     count(DISTINCT disease) AS DiseaseAssociations,
+     collect(DISTINCT disease.name) AS AssociatedDiseases
+WHERE DiseaseAssociations > 0
+RETURN neighbor.name AS PotentialDrugTarget,
+       neighbor.sid AS UniProt,
+       DiseaseAssociations,
+       AssociatedDiseases,
+       "Druggable neighbor" AS TargetClass
+ORDER BY DiseaseAssociations DESC;
+----
+
+=== Provenance and confidence of evidence for a target?
+
+[source, cypher, role=noheader]
+----
+// Get all evidence and provenance for PIK3CG
+MATCH (g:Gene {symbol: "PIK3CG"})
+OPTIONAL MATCH (g)-[r1:RELATED_TO]->(d:Disease)
+OPTIONAL MATCH (g)<-[hv:HAS_VALUE]-(e:Experiment)<-[:COMPARES]-(c:Comparison)
+OPTIONAL MATCH (g)-[:CODES]->(p:Protein)-[r2:ASSOCIATED_WITH]->(go:GO)
+RETURN g.symbol AS Gene,
+       collect(DISTINCT {
+         evidenceType: "Literature",
+         source: r1.source,
+         disease: d.name,
+         confidence: r1.score
+       }) AS literatureEvidence,
+       collect(DISTINCT {
+         evidenceType: "Expression",
+         experiment: e.sid,
+         comparison: c.name,
+         foldChange: hv.foldChange,
+         pValue: hv.pValue,
+         regulation: hv.regulated
+       }) AS expressionEvidence,
+       collect(DISTINCT {
+         evidenceType: "Pathway",
+         source: r2.source,
+         pathway: go.name,
+         goId: go.sid
+       }) AS pathwayEvidence;
+----
+
+=== Are there functional modules or sub-networks (pathways, protein complexes) enriched among disease-associated proteins that might be more robust therapeutic targets than single proteins?
+
+[source, cypher, role=noheader]
+----
+// Find pathways enriched for disease-associated proteins
+MATCH (d:Disease)<-[:RELATED_TO]-(g:Gene)-[:CODES]->(p:Protein)-[:ASSOCIATED_WITH]->(go:GO)
+WITH d, go, COUNT(DISTINCT g) AS proteinCount
+MATCH (go)-[:IS_PART_OF]->(pathway:Pathway)
+RETURN pathway.name AS Pathway,
+       proteinCount AS ProteinCount
+ORDER BY ProteinCount DESC;
+
+// Find GO terms enriched among NAFLD-associated genes
+MATCH (d:Disease)-[:RELATED_TO]-(g:Gene)-[:CODES]->(p:Protein)-[:ASSOCIATED_WITH]-(go:GO)
+WITH go, count(DISTINCT g) AS geneCount
+WHERE geneCount >= 2
+RETURN go.sid AS GOTerm,
+       go.name AS GOName,
+       geneCount AS NumGenesInModule
+ORDER BY geneCount DESC;
+
+// Find interconnected protein complexes in disease
+MATCH path = (d:Disease {name: "Type 2 Diabetes"})<-[:RELATED_TO]-(g1:Gene)-[:CODES]->(p1:Protein)-[:INTERACTS_WITH]-(p2:Protein)<-[:CODES]-(g2:Gene)-[:RELATED_TO]->(d)
+RETURN g1.symbol AS Gene1,
+       g2.symbol AS Gene2,
+       p1.sid AS Protein1,
+       p2.sid AS Protein2
+LIMIT 20;
+----
+
+=== Find genes that share multiple GO terms with known disease genes but aren't annotated to the disease
+
+[source, cypher, role=noheader]
+----
+// Find genes that share multiple GO terms with known disease genes but aren't annotated to the disease
+MATCH (d:Disease {name: "Type 2 Diabetes"})<-[:RELATED_TO]-(known:Gene)-[:CODES]->(kp:Protein)-[:ASSOCIATED_WITH]->(go:GO)
+MATCH (go)<-[:ASSOCIATED_WITH]-(cp:Protein)<-[:CODES]-(candidate:Gene)
+WHERE NOT (candidate)-[:RELATED_TO]->(d)
+  AND candidate <> known
+WITH candidate, d, count(DISTINCT go) AS sharedPathways, collect(DISTINCT go.name) AS pathways
+WHERE sharedPathways >= 2
+RETURN candidate.symbol AS NovelCandidate,
+       d.name AS Disease,
+       sharedPathways AS SharedPathwayCount,
+       pathways AS SharedPathways 

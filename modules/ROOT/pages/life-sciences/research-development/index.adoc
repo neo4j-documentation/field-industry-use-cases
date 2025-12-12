@@ -8,8 +8,6 @@ Effective omics data management requires *flexible data models*, robust infrastr
 
 == Use Cases
 
-=== xref:life-sciences/research-development/single-omics.adoc[Single OMICs Data Integration]    
+=== xref:life-sciences/research-development/single-omics.adoc[Single omics Data Integration]    
 
-=== xref:life-sciences/research-development/multi-omics.adoc[Multi-OMICs Data Integration]
-
-=== xref:life-sciences/research-development/multi-omics-with-ontologies.adoc[Multi-OMICs Data Integration with Ontologies]
+=== xref:life-sciences/research-development/multi-omics-with-ontologies.adoc[Multi-omics Data Integration with Ontologies]

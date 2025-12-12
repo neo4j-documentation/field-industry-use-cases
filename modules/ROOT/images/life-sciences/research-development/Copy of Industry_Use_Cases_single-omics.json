@@ -54,10 +54,10 @@
   },
   "nodes": [
     {
-      "id": "n1",
+      "id": "n0",
       "position": {
-        "x": 1108.5523120689763,
-        "y": 322.5174373563259
+        "x": 1054.5523120689763,
+        "y": 347.69839606686867
       },
       "caption": "",
       "labels": [
@@ -73,10 +73,10 @@
       }
     },
     {
-      "id": "n3",
+      "id": "n1",
       "position": {
-        "x": 782.0348747126509,
-        "y": 322.5174548374648
+        "x": 728.0348747126509,
+        "y": 347.6984135480076
       },
       "caption": "",
       "labels": [
@@ -91,10 +91,10 @@
       }
     },
     {
-      "id": "n6",
+      "id": "n2",
       "position": {
-        "x": 129,
-        "y": 649.0348747126518
+        "x": 75,
+        "y": 674.2158334231946
       },
       "caption": "",
       "labels": [
@@ -109,10 +109,10 @@
       }
     },
     {
-      "id": "n7",
+      "id": "n3",
       "position": {
-        "x": 455.51743735632544,
-        "y": 649.0348747126518
+        "x": 401.51743735632544,
+        "y": 674.2158334231946
       },
       "caption": "",
       "labels": [
@@ -127,10 +127,10 @@
       }
     },
     {
-      "id": "n8",
+      "id": "n4",
       "position": {
-        "x": 782.0348747126509,
-        "y": 649.0348747126518
+        "x": 728.0348747126509,
+        "y": 674.2158334231946
       },
       "caption": "",
       "labels": [
@@ -145,10 +145,10 @@
       }
     },
     {
-      "id": "n11",
+      "id": "n5",
       "position": {
-        "x": 970.5497949726922,
-        "y": 975.5522945878387
+        "x": 916.5497949726922,
+        "y": 1000.7332532983814
       },
       "caption": "",
       "labels": [
@@ -160,10 +160,10 @@
       }
     },
     {
-      "id": "n12",
+      "id": "n6",
       "position": {
-        "x": 455.51743735632544,
-        "y": 345.0358745729801
+        "x": 401.51743735632544,
+        "y": 370.2168332835229
       },
       "caption": "",
       "labels": [
@@ -175,10 +175,10 @@
       }
     },
     {
-      "id": "n13",
+      "id": "n7",
       "position": {
-        "x": 1347.5796354927747,
-        "y": 975.5522945878387
+        "x": 1293.5796354927747,
+        "y": 1000.7332532983814
       },
       "caption": "",
       "labels": [
@@ -190,10 +190,10 @@
       }
     },
     {
-      "id": "n14",
+      "id": "n8",
       "position": {
-        "x": 1406.2507256169838,
-        "y": 322.5174548374652
+        "x": 1352.2507256169838,
+        "y": 347.698413548008
       },
       "caption": "",
       "labels": [
@@ -205,28 +205,10 @@
       }
     },
     {
-      "id": "n15",
+      "id": "n10",
       "position": {
-        "x": 1406.2507256169838,
-        "y": 649.0348747126518
-      },
-      "caption": "",
-      "labels": [
-        "Molecule"
-      ],
-      "properties": {},
-      "style": {
-        "node-color": "#ffffff",
-        "border-color": "#f44e3b",
-        "label-color": "#f44e3b",
-        "label-border-color": "#f44e3b"
-      }
-    },
-    {
-      "id": "n16",
-      "position": {
-        "x": 1406.2507256169838,
-        "y": 24.819041289457232
+        "x": 1352.2507256169838,
+        "y": 50
       },
       "caption": "",
       "labels": [
@@ -236,127 +218,109 @@
       "style": {
         "node-color": "#ffffff"
       }
-    },
-    {
-      "id": "n17",
-      "position": {
-        "x": 455.51743735632544,
-        "y": 975.5522945878387
-      },
-      "caption": "",
-      "labels": [
-        "EFO"
-      ],
-      "properties": {},
-      "style": {
-        "node-color": "#ffffff",
-        "border-color": "#f44e3b",
-        "label-color": "#f44e3b",
-        "label-border-color": "#f44e3b"
-      }
     }
   ],
   "relationships": [
     {
-      "id": "n1",
-      "fromId": "n1",
-      "toId": "n3",
+      "id": "n0",
+      "fromId": "n0",
+      "toId": "n1",
       "type": "MAPPED",
       "properties": {},
       "style": {}
     },
     {
-      "id": "n4",
-      "fromId": "n6",
-      "toId": "n7",
+      "id": "n1",
+      "fromId": "n2",
+      "toId": "n3",
       "type": "HAS_SAMPLE",
       "properties": {},
       "style": {}
     },
     {
-      "id": "n5",
-      "fromId": "n7",
-      "toId": "n8",
+      "id": "n2",
+      "fromId": "n3",
+      "toId": "n4",
       "type": "HAS_EXPERIMENT",
       "properties": {},
       "style": {}
     },
     {
-      "id": "n8",
-      "fromId": "n11",
-      "toId": "n8",
+      "id": "n3",
+      "fromId": "n5",
+      "toId": "n4",
       "type": "COMPARES",
       "properties": {},
       "style": {}
     },
     {
-      "id": "n9",
-      "fromId": "n8",
-      "toId": "n1",
+      "id": "n4",
+      "fromId": "n4",
+      "toId": "n0",
       "type": "HAS_VALUE",
       "properties": {},
       "style": {}
     },
     {
-      "id": "n10",
-      "fromId": "n7",
-      "toId": "n12",
+      "id": "n5",
+      "fromId": "n3",
+      "toId": "n6",
       "type": "TAKEN_FROM",
       "properties": {},
       "style": {}
     },
     {
-      "id": "n11",
-      "fromId": "n11",
-      "toId": "n7",
+      "id": "n6",
+      "fromId": "n5",
+      "toId": "n3",
       "type": "INCLUDES_CASE",
       "properties": {},
       "style": {}
     },
     {
-      "id": "n12",
-      "fromId": "n11",
-      "toId": "n7",
+      "id": "n7",
+      "fromId": "n5",
+      "toId": "n3",
       "type": "INCLUDES_CONTROL",
       "properties": {},
       "style": {}
     },
     {
-      "id": "n13",
-      "fromId": "n11",
-      "toId": "n13",
+      "id": "n8",
+      "fromId": "n5",
+      "toId": "n7",
       "type": "STUDIES_DISEASE",
       "properties": {},
       "style": {}
     },
     {
-      "id": "n14",
-      "fromId": "n1",
-      "toId": "n13",
+      "id": "n9",
+      "fromId": "n0",
+      "toId": "n7",
       "type": "RELATED_TO",
       "properties": {},
       "style": {}
     },
     {
-      "id": "n15",
-      "fromId": "n11",
-      "toId": "n1",
+      "id": "n10",
+      "fromId": "n5",
+      "toId": "n0",
       "type": "FOUND_DIFFERENTIAL",
       "properties": {},
       "style": {}
     },
     {
-      "id": "n16",
-      "fromId": "n1",
-      "toId": "n14",
+      "id": "n11",
+      "fromId": "n0",
+      "toId": "n8",
       "type": "CODES",
       "properties": {},
       "style": {}
     },
     {
-      "id": "n17",
-      "fromId": "n14",
-      "toId": "n14",
+      "id": "n12",
+      "fromId": "n8",
+      "toId": "n8",
       "type": "INTERACTS_WITH",
       "properties": {},
       "style": {
@@ -365,45 +329,12 @@
       }
     },
     {
-      "id": "n18",
+      "id": "n15",
       "fromId": "n8",
-      "toId": "n14",
-      "type": "HAS_VALUE",
-      "properties": {},
-      "style": {
-        "arrow-color": "#f44e3b",
-        "type-color": "#f44e3b"
-      }
-    },
-    {
-      "id": "n19",
-      "fromId": "n8",
-      "toId": "n15",
-      "type": "HAS_VALUE",
-      "properties": {},
-      "style": {
-        "arrow-color": "#f44e3b",
-        "type-color": "#f44e3b"
-      }
-    },
-    {
-      "id": "n20",
-      "fromId": "n14",
-      "toId": "n16",
+      "toId": "n10",
       "type": "ASSOCIATED_WITH",
       "properties": {},
       "style": {}
-    },
-    {
-      "id": "n21",
-      "fromId": "n7",
-      "toId": "n17",
-      "type": "HAS_PHENOTYPE",
-      "properties": {},
-      "style": {
-        "arrow-color": "#f44e3b",
-        "type-color": "#f44e3b"
-      }
     }
   ]
 }
