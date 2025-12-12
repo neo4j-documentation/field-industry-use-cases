@@ -371,7 +371,9 @@ It's not just theory, there are real world examples of Neo4j being used to analy
 
 AstraZeneca is using Neo4j to improve patient outcomes by analysing patient journeys.
 
-- https://neo4j.com/blog/healthcare/improving-patient-outcomes-algorithms-graphconnect/[Blog post]
+==== Improving Patient Outcomes with Graph Algorithms
 
 .Improving Patient Outcomes with Graph Algorithms
 video::6gAFnrWQ4kk[youtube]
+
+There is an accompanying https://neo4j.com/blog/healthcare/improving-patient-outcomes-algorithms-graphconnect/[blog post] from the presentation.
