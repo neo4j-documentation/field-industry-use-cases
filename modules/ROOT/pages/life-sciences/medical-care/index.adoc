@@ -1,0 +1,16 @@
+= Medical Care
+
+Patient journey data is highly heterogeneous and interconnected, spanning clinical records, laboratory results, medications, imaging, lifestyle factors, and social determinants of health. Traditional relational databases struggle to capture these complex, multi-dimensional relationships efficiently, often requiring numerous complex joins across tables.
+
+Neo4j's graph database model naturally represents patients, conditions, treatments, and lifestyle factors as nodes with relationships mirroring real-world clinical causality. This enables healthcare organizations to integrate disparate data sources while maintaining semantic richness. Neo4j's labeled property graph model aligns with the OMOP Common Data Model by representing clinical concepts as nodes, attributes as properties, and clinical events as relationships.
+
+== Use Cases
+
+Patient care can be broken down into a variety of use cases that leverage the power of graph databases to garner better insights and improve patient outcomes.
+
+=== Patient Journey
+
+A Patient Journey encompasses the interactions a patient has with a healthcare system, and can be viewed from a holistic 'lifetime' perspective through
+to individual episodes of care.
+
+* xref:life-sciences/medical-care/patient-journey.adoc[]

@@ -6,6 +6,7 @@ Explore the potential of Neo4j's graph database with our industry-specific use c
 
 * xref:finserv/index.adoc[]
 * xref:insurance/index.adoc[]
+* xref:life-sciences/index.adoc[]
 * xref:manufacturing/index.adoc[]
 * xref:agnostic/index.adoc[]
 
