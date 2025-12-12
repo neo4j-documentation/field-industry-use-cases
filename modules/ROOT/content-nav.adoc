@@ -31,7 +31,7 @@
 ** xref:life-sciences/research-development/index.adoc[]
 *** xref:life-sciences/research-development/single-omics.adoc[]
 *** xref:life-sciences/research-development/multi-omics.adoc[]
-*** xref:life-sciences/research-development/omics-with-ontologies.adoc[]
+
 
 * xref:manufacturing/index.adoc[]
 ** xref:manufacturing/supply-chain-management/index.adoc[]
