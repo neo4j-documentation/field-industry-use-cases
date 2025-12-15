@@ -31,13 +31,12 @@ This adaptable structure means researchers can integrate new RNA-seq datasets in
 The graph data model demonstrates how Neo4j's flexible schema elegantly addresses the inherent heterogeneity of single omics data. Unlike rigid relational databases that require predefined table structures, this graph architecture allows researchers to naturally represent the diverse experimental contexts, varied sample annotations, and multiple identifier systems that characterize real-world omics projects.
 
 .Single OMICs Data Model
-image:images/life-sciences/research-development/Industry_Use_Cases_multi-omics_with_ontologies.png[Single OMICs data model]
+image:images/life-sciences/research-development/Industry_Use_Cases_single-omics.svg[Single OMICs data model]
+      
 
 We will continue to build on this model by adding more OMICs data types and ontologies.
 
 For multi-omics integration, see the xref:life-sciences/research-development/multi-omics.adoc[Multi-OMICs Data Integration] page.
-
-For bioscientific ontologies and semantic enrichment, see the xref:life-sciences/research-development/multi-omics-with-ontologies.adoc[Multi-OMICs Data Integration with Ontologies] page.
 
 == Demo Data
 
@@ -571,39 +570,9 @@ MERGE (p1)-[:INTERACTS_WITH {source: "STRING", score: 0.65}]->(p2);
 
 == Cypher Queries
 
-1. Return experiment data
-III,IV
-2. Aggregate experimental data for disease
-V,VI
-3. Collect information for interesting gene(s)
-I,VIII,IX, X
-4. Integrate across genes and proteins
-II,VII
+=== Return experiment data
 
-
-=== Return all synonyms for a given gene?
-[source, cypher, role=noheader]
-----
-// Find all synonyms for the gene PIK3CG
-MATCH (g:Gene {symbol: "PIK3CG"})-[:MAPPED]->(syn:ID)
-RETURN syn.sid AS ID, syn.source AS Source
-ORDER BY syn.name;
-----
-
-=== Find the network neighborhood of a candidate gene target
-
-[source, cypher, role=noheader]
-----
-// Find the network neighborhood of a candidate gene target
-MATCH (g:Gene {symbol: "PIK3CG"})-[:CODES]->(p:Protein)-[i:INTERACTS_WITH]-(neighbor:Protein)<-[:CODES]-(ng:Gene)
-RETURN g.symbol AS TargetGene,
-       ng.symbol AS NeighborGene,
-       neighbor.sid AS NeighborProtein,
-       i.score AS InteractionScore
-ORDER BY i.score DESC;
-----
-
-=== Find all genes differentially expressed in a given comparison?
+==== Find all genes differentially expressed in a given comparison?
 
 [source, cypher, role=noheader]
 ----
@@ -618,7 +587,7 @@ RETURN gene.symbol AS Gene,
 ORDER BY r.adjPValue;
 ----
 
-=== Find all genes overexpressed in a given comparison?
+==== Find all genes overexpressed in a given comparison?
 [source, cypher, role=noheader]
 ----
 // Find all genes overexpressed in the NAFLD vs Control comparison
@@ -632,7 +601,22 @@ RETURN gene.symbol AS Gene,
 ORDER BY r.adjPValue;
 ----
 
-=== Compare gene signatures between two diseases
+=== Aggregate experimental data for disease
+
+==== Find all genes that are overexpressed in multiple comparisons
+[source, cypher, role=noheader]
+----
+MATCH (gene:Gene)<-[r:FOUND_DIFFERENTIAL]-(comp:Comparison)
+WHERE r.regulated = "up" AND r.adjPValue < 0.05
+WITH gene, count(DISTINCT comp) AS compCount, collect(comp.name) AS comparisons
+WHERE compCount >= 2
+RETURN gene.symbol AS Gene,
+       compCount AS TimesOverexpressed,
+       comparisons AS OverexpressedInComparisons
+ORDER BY compCount DESC;
+----
+
+==== Compare gene signatures between two diseases
 [source, cypher, role=noheader]
 ----
 // Compare gene signatures between two diseases
@@ -646,6 +630,71 @@ RETURN gene.symbol AS SharedGene,
        r2.logFC AS T2D_LogFC,
        r1.regulated AS NAFLD_Direction,
        r2.regulated AS T2D_Direction;
+----
+
+=== Collect information for interesting gene(s)
+
+==== Return all synonyms for a given gene?
+[source, cypher, role=noheader]
+----
+// Find all synonyms for the gene PIK3CG
+MATCH (g:Gene {symbol: "PIK3CG"})-[:MAPPED]->(syn:ID)
+RETURN syn.sid AS ID, syn.source AS Source
+ORDER BY syn.name;
+----
+
+==== Show interesting result for a given gene
+[source, cypher, role=noheader]
+----
+// Show interesting result for a given gene
+MATCH (g:Gene {symbol: "PIK3CG"})<-[r:FOUND_DIFFERENTIAL]-(c:Comparison)-[:STUDIES_DISEASE]->(d:Disease)
+RETURN g.symbol AS Gene,
+       d.name AS Disease,
+       r.logFC AS LogFoldChange,
+       r.pValue AS PValue,
+       r.adjPValue AS AdjustedPValue,
+       r.regulated AS Direction;
+----
+
+==== Show  interesting results for a specific tissue type
+[source, cypher, role=noheader]
+----
+// Show interesting results for a specific tissue type
+MATCH (t:Tissue {name: "Liver"})<-[:TAKEN_FROM]-(s:Sample)-[:HAS_EXPERIMENT]->(e:Experiment)-[r:HAS_VALUE]->(g:Gene)
+RETURN g.symbol AS Gene,
+       t.name AS Tissue,
+       r.logFC AS LogFoldChange,
+       r.pValue AS PValue,
+       r.adjPValue AS AdjustedPValue,
+       r.regulated AS Direction;
+----
+
+=== Integrate across genes and proteins
+
+==== Find the network neighborhood of a candidate gene target
+
+[source, cypher, role=noheader]
+----
+// Find the network neighborhood of a candidate gene target
+MATCH (g:Gene {symbol: "PIK3CG"})-[:CODES]->(p:Protein)-[i:INTERACTS_WITH]-(neighbor:Protein)<-[:CODES]-(ng:Gene)
+RETURN g.symbol AS TargetGene,
+       ng.symbol AS NeighborGene,
+       neighbor.sid AS NeighborProtein,
+       i.score AS InteractionScore
+ORDER BY i.score DESC;
+----
+==== Trace network neighborhood of regulated genes from comparison to protein interactions
+[source, cypher, role=noheader]
+----
+// Trace network neighborhood of regulated genes from comparison to protein interactions
+MATCH (comp:Comparison {sid: "COMP001"})-[:FOUND_DIFFERENTIAL]->(g1:Gene)
+MATCH (g1)-[:CODES]->(p1:Protein)-[i:INTERACTS_WITH]->(p2:Protein)
+MATCH (p2)<-[:CODES]-(g2:Gene)
+RETURN g1.symbol AS Gene1,
+       g2.symbol AS Gene2,
+       // p1.name AS Protein1,
+       // p2.name AS Protein2,
+       i.score AS InteractionScore;
 ----
 
 === Find enriched pathways for regulated genes in a disease
@@ -662,57 +711,4 @@ RETURN go.name AS Pathway,
        go.sid AS GO_ID,
        geneCount AS GenesInPathway
 ORDER BY geneCount DESC;
-----
-
-=== Trace network neighborhood of regulated genes from comparison to protein interactions
-[source, cypher, role=noheader]
-----
-// Trace network neighborhood of regulated genes from comparison to protein interactions
-MATCH (comp:Comparison {sid: "COMP001"})-[:FOUND_DIFFERENTIAL]->(g1:Gene)
-MATCH (g1)-[:CODES]->(p1:Protein)-[i:INTERACTS_WITH]->(p2:Protein)
-MATCH (p2)<-[:CODES]-(g2:Gene)
-RETURN g1.symbol AS Gene1,
-       g2.symbol AS Gene2,
-       // p1.name AS Protein1,
-       // p2.name AS Protein2,
-       i.score AS InteractionScore;
-----
-
-=== Find all genes that are overexpressed in multiple comparisons
-[source, cypher, role=noheader]
-----
-MATCH (gene:Gene)<-[r:FOUND_DIFFERENTIAL]-(comp:Comparison)
-WHERE r.regulated = "up" AND r.adjPValue < 0.05
-WITH gene, count(DISTINCT comp) AS compCount, collect(comp.name) AS comparisons
-WHERE compCount >= 2
-RETURN gene.symbol AS Gene,
-       compCount AS TimesOverexpressed,
-       comparisons AS OverexpressedInComparisons
-ORDER BY compCount DESC;
-----
-
-=== Show interesting result for a given gene
-[source, cypher, role=noheader]
-----
-// Show interesting result for a given gene
-MATCH (g:Gene {symbol: "PIK3CG"})<-[r:FOUND_DIFFERENTIAL]-(c:Comparison)-[:STUDIES_DISEASE]->(d:Disease)
-RETURN g.symbol AS Gene,
-       d.name AS Disease,
-       r.logFC AS LogFoldChange,
-       r.pValue AS PValue,
-       r.adjPValue AS AdjustedPValue,
-       r.regulated AS Direction;
-----
-
-=== Show  interesting results for a specific tissue type
-[source, cypher, role=noheader]
-----
-// Show interesting results for a specific tissue type
-MATCH (t:Tissue {name: "Liver"})<-[:TAKEN_FROM]-(s:Sample)-[:HAS_EXPERIMENT]->(e:Experiment)-[r:HAS_VALUE]->(g:Gene)
-RETURN g.symbol AS Gene,
-       t.name AS Tissue,
-       r.logFC AS LogFoldChange,
-       r.pValue AS PValue,
-       r.adjPValue AS AdjustedPValue,
-       r.regulated AS Direction;
 ----
