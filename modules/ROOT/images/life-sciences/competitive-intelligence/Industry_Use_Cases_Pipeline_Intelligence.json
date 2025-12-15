@@ -54,171 +54,171 @@
   },
   "nodes": [
     {
-      "id": "n0",
+      "id": "n13",
       "position": {
-        "x": 22.428319968614346,
-        "y": -123.44899610313934
+        "x": 1114.8626143658867,
+        "y": 162.22332776679747
       },
       "caption": "",
-      "style": {},
       "labels": [
         "Company"
       ],
-      "properties": {}
+      "properties": {},
+      "style": {}
     },
     {
-      "id": "n1",
+      "id": "n14",
       "position": {
-        "x": 617.6661880595968,
-        "y": 46.77433166365813
+        "x": 1710.100482456869,
+        "y": 332.44665553359494
       },
       "caption": "",
-      "style": {},
       "labels": [
         "Drug"
       ],
-      "properties": {}
+      "properties": {},
+      "style": {}
     },
     {
-      "id": "n2",
+      "id": "n15",
       "position": {
-        "x": 220.8409426656085,
-        "y": -293.6723238699368
+        "x": 1288.039665477731,
+        "y": -51.709292143520884
       },
       "caption": "",
-      "style": {},
       "labels": [
         "Protein",
         "Gene"
       ],
-      "properties": {}
+      "properties": {},
+      "style": {}
     },
     {
-      "id": "n3",
+      "id": "n16",
       "position": {
-        "x": 613.9548790996662,
-        "y": -293.6723238699368
+        "x": 1710.100482456869,
+        "y": -47.710696843835365
       },
       "caption": "",
-      "style": {},
       "labels": [
         "ClinicalTrial"
       ],
-      "properties": {}
+      "properties": {},
+      "style": {}
     },
     {
-      "id": "n4",
+      "id": "n17",
       "position": {
-        "x": 899.6263467754292,
-        "y": -293.6723238699368
+        "x": 1995.0986377999354,
+        "y": -45.01063031662164
       },
       "caption": "",
-      "style": {},
       "labels": [
         "Phase"
       ],
-      "properties": {}
+      "properties": {},
+      "style": {}
     },
     {
-      "id": "n5",
+      "id": "n18",
       "position": {
-        "x": 351.5539394959757,
-        "y": -67.27077215015117
+        "x": 1443.988233893248,
+        "y": 218.40155171978563
       },
       "caption": "",
-      "style": {},
       "labels": [
         "Disease"
       ],
-      "properties": {}
+      "properties": {},
+      "style": {}
     }
   ],
   "relationships": [
     {
-      "id": "n0",
+      "id": "n13",
+      "fromId": "n13",
+      "toId": "n14",
       "type": "IN_PIPILINE",
+      "properties": {},
       "style": {
         "attachment-start": "bottom",
         "attachment-end": "bottom"
-      },
-      "properties": {},
-      "fromId": "n0",
-      "toId": "n1"
+      }
     },
     {
-      "id": "n1",
+      "id": "n14",
+      "fromId": "n14",
+      "toId": "n15",
       "type": "TARGETS",
+      "properties": {},
       "style": {
         "attachment-start": "bottom",
         "attachment-end": "bottom"
-      },
-      "properties": {},
-      "fromId": "n1",
-      "toId": "n2"
+      }
     },
     {
-      "id": "n2",
+      "id": "n15",
+      "fromId": "n13",
+      "toId": "n15",
       "type": "TARGETS",
-      "style": {},
       "properties": {},
-      "fromId": "n0",
-      "toId": "n2"
+      "style": {}
     },
     {
-      "id": "n3",
+      "id": "n16",
+      "fromId": "n15",
+      "toId": "n16",
       "type": "INVESTIGATED_IN",
-      "style": {},
       "properties": {},
-      "fromId": "n2",
-      "toId": "n3"
+      "style": {}
     },
     {
-      "id": "n4",
+      "id": "n17",
+      "fromId": "n14",
+      "toId": "n16",
       "type": "INVESTIGATED_IN",
-      "style": {},
       "properties": {},
-      "fromId": "n1",
-      "toId": "n3"
+      "style": {}
     },
     {
-      "id": "n5",
+      "id": "n18",
+      "fromId": "n16",
+      "toId": "n17",
       "type": "HAS_PHASE",
-      "style": {},
       "properties": {},
-      "fromId": "n3",
-      "toId": "n4"
+      "style": {}
     },
     {
-      "id": "n6",
+      "id": "n19",
+      "fromId": "n15",
+      "toId": "n18",
       "type": "ASSOCIATED_WITH",
-      "style": {},
       "properties": {},
-      "fromId": "n2",
-      "toId": "n5"
+      "style": {}
     },
     {
-      "id": "n7",
+      "id": "n20",
+      "fromId": "n14",
+      "toId": "n18",
       "type": "TREATS",
-      "style": {},
       "properties": {},
-      "fromId": "n1",
-      "toId": "n5"
+      "style": {}
     },
     {
-      "id": "n8",
+      "id": "n21",
+      "fromId": "n16",
+      "toId": "n18",
       "type": "FOR_DISEASE",
-      "style": {},
       "properties": {},
-      "toId": "n5",
-      "fromId": "n3"
+      "style": {}
     },
     {
-      "id": "n9",
+      "id": "n22",
+      "fromId": "n16",
+      "toId": "n18",
       "type": "ASSOCIATED",
-      "style": {},
       "properties": {},
-      "fromId": "n3",
-      "toId": "n5"
+      "style": {}
     }
   ]
 }

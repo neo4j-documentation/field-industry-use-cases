@@ -1,1 +1,175 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="986" height="542" viewBox="0 0 986 542"><defs><style type="text/css"/></defs><g transform="translate(31.571680031385654 347.6723238699368) scale(1)"><g class="relationship"><g stroke-width="5" stroke="#000000"><path d="M 22.42831996861435 -64.44899610313934 L 22.42831996861436 130.63648228140644 A 50 50 0 0 0 72.42831996861436 180.63648228140644 L 322.5472540141056 180.63648228140644 L 572.6661880595968 180.63648228140644 A 50 50 0 0 0 622.6661880595968 130.63648228140644 L 622.6661880595968 130.63648228140642 L 622.6661880595968 130.63648228140642"/><polygon points="-24.8621506177483,0 -27.62461179749811,9.20820393249937 0,0 -27.62461179749811,-9.20820393249937" fill="#000000" transform="translate(622.6661880595968 130.63648228140642) rotate(-90) translate(24.8621506177483 0)" stroke="none"/></g><g transform="translate(322.5472540141056 180.63648228140644) rotate(360) translate(0 -13)"><g transform="translate(0 0)"><g transform="translate(-50.3515625 0)" fill="#ffffff" stroke="#000000" stroke-width="0"><rect x="0" y="0" width="100.703125" height="26" rx="5" ry="5" stroke="none"/><text xml:space="preserve" x="5" y="17.45703125" stroke="none" text-anchor="left" font-family="sans-serif" font-size="16" font-weight="normal" fill="#000000">IN_PIPILINE</text></g></g></g></g><g class="relationship"><g stroke-width="5" stroke="#000000"><path d="M 612.6661880595968 105.77433166365813 L 612.6661880595968 105.77433166365813 A 40 40 0 0 1 572.6661880595968 145.77433166365813 L 416.75356536260267 145.77433166365816 L 260.84094266560857 145.7743316636582 A 40 40 0 0 0 220.84094266560857 105.77433166365819 L 220.8409426656085 -209.81017325218852 L 220.8409426656085 -209.81017325218852"/><polygon points="-24.8621506177483,0 -27.62461179749811,9.20820393249937 0,0 -27.62461179749811,-9.20820393249937" fill="#000000" transform="translate(220.8409426656085 -209.81017325218852) rotate(-90) translate(24.8621506177483 0)" stroke="none"/></g><g transform="translate(416.75356536260267 145.77433166365816) rotate(-8.312093291854571e-15) translate(0 -13)"><g transform="translate(0 0)"><g transform="translate(-42.19140625 0)" fill="#ffffff" stroke="#000000" stroke-width="0"><rect x="0" y="0" width="84.3828125" height="26" rx="5" ry="5" stroke="none"/><text xml:space="preserve" x="5" y="17.45703125" stroke="none" text-anchor="left" font-family="sans-serif" font-size="16" font-weight="normal" fill="#000000">TARGETS</text></g></g></g></g><g class="relationship"><g transform="translate(22.428319968614346 -123.44899610313934) rotate(-40.62714800052394)" stroke-width="5" stroke="#000000"><path d="M 59 0 L 177.5638430429861 0"/><polygon points="-24.8621506177483,0 -27.62461179749811,9.20820393249937 0,0 -27.62461179749811,-9.20820393249937" fill="#000000" transform="translate(202.42599366073438 0) rotate(0)" stroke="none"/></g><g transform="translate(112.19990671134617 -200.46636539415584) rotate(-40.62714800052394) translate(0 -13)"><g transform="translate(0 0)"><g transform="translate(-42.19140625 0)" fill="#ffffff" stroke="#000000" stroke-width="0"><rect x="0" y="0" width="84.3828125" height="26" rx="5" ry="5" stroke="none"/><text xml:space="preserve" x="5" y="17.45703125" stroke="none" text-anchor="left" font-family="sans-serif" font-size="16" font-weight="normal" fill="#000000">TARGETS</text></g></g></g></g><g class="relationship"><g transform="translate(220.8409426656085 -293.6723238699368) rotate(0)" stroke-width="5" stroke="#000000"><path d="M 59 0 L 309.25178581630934 0"/><polygon points="-24.8621506177483,0 -27.62461179749811,9.20820393249937 0,0 -27.62461179749811,-9.20820393249937" fill="#000000" transform="translate(334.1139364340577 0) rotate(0)" stroke="none"/></g><g transform="translate(404.9668355737632 -293.6723238699368) rotate(0) translate(0 -13)"><g transform="translate(0 0)"><g transform="translate(-75.53515625 0)" fill="#ffffff" stroke="#000000" stroke-width="0"><rect x="0" y="0" width="151.0703125" height="26" rx="5" ry="5" stroke="none"/><text xml:space="preserve" x="5" y="17.45703125" stroke="none" text-anchor="left" font-family="sans-serif" font-size="16" font-weight="normal" fill="#000000">INVESTIGATED_IN</text></g></g></g></g><g class="relationship"><g transform="translate(617.6661880595968 46.77433166365813) rotate(-90.62457337639546)" stroke-width="5" stroke="#000000"><path d="M 59 0 L 256.6047333492629 0"/><polygon points="-24.8621506177483,0 -27.62461179749811,9.20820393249937 0,0 -27.62461179749811,-9.20820393249937" fill="#000000" transform="translate(281.46688396701126 0) rotate(0)" stroke="none"/></g><g transform="translate(615.9460403303552 -111.01865937176277) rotate(89.37542662360454) translate(0 -13)"><g transform="translate(0 0)"><g transform="translate(-75.53515625 0)" fill="#ffffff" stroke="#000000" stroke-width="0"><rect x="0" y="0" width="151.0703125" height="26" rx="5" ry="5" stroke="none"/><text xml:space="preserve" x="5" y="17.45703125" stroke="none" text-anchor="left" font-family="sans-serif" font-size="16" font-weight="normal" fill="#000000">INVESTIGATED_IN</text></g></g></g></g><g class="relationship"><g transform="translate(613.9548790996662 -293.6723238699368) rotate(0)" stroke-width="5" stroke="#000000"><path d="M 59 0 L 201.80931705801467 0"/><polygon points="-24.8621506177483,0 -27.62461179749811,9.20820393249937 0,0 -27.62461179749811,-9.20820393249937" fill="#000000" transform="translate(226.67146767576298 0) rotate(0)" stroke="none"/></g><g transform="translate(744.3595376286735 -293.6723238699368) rotate(0) translate(0 -13)"><g transform="translate(0 0)"><g transform="translate(-53.01953125 0)" fill="#ffffff" stroke="#000000" stroke-width="0"><rect x="0" y="0" width="106.0390625" height="26" rx="5" ry="5" stroke="none"/><text xml:space="preserve" x="5" y="17.45703125" stroke="none" text-anchor="left" font-family="sans-serif" font-size="16" font-weight="normal" fill="#000000">HAS_PHASE</text></g></g></g></g><g class="relationship"><g transform="translate(220.8409426656085 -293.6723238699368) rotate(59.99999999999999)" stroke-width="5" stroke="#000000"><path d="M 59 0 L 177.56384304298615 0"/><polygon points="-24.8621506177483,0 -27.62461179749811,9.20820393249937 0,0 -27.62461179749811,-9.20820393249937" fill="#000000" transform="translate(202.42599366073443 0) rotate(0)" stroke="none"/></g><g transform="translate(279.9819034263551 -191.2371750238865) rotate(59.99999999999999) translate(0 -13)"><g transform="translate(0 0)"><g transform="translate(-80.86328125 0)" fill="#ffffff" stroke="#000000" stroke-width="0"><rect x="0" y="0" width="161.7265625" height="26" rx="5" ry="5" stroke="none"/><text xml:space="preserve" x="5" y="17.45703125" stroke="none" text-anchor="left" font-family="sans-serif" font-size="16" font-weight="normal" fill="#000000">ASSOCIATED_WITH</text></g></g></g></g><g class="relationship"><g transform="translate(617.6661880595968 46.77433166365813) rotate(-156.80195567355267)" stroke-width="5" stroke="#000000"><path d="M 59 0 L 205.65816739031308 0"/><polygon points="-24.8621506177483,0 -27.62461179749811,9.20820393249937 0,0 -27.62461179749811,-9.20820393249937" fill="#000000" transform="translate(230.5203180080614 0) rotate(0)" stroke="none"/></g><g transform="translate(496.0360715456283 -5.3514886982142755) rotate(23.19804432644733) translate(0 -13)"><g transform="translate(0 0)"><g transform="translate(-35.96875 0)" fill="#ffffff" stroke="#000000" stroke-width="0"><rect x="0" y="0" width="71.9375" height="26" rx="5" ry="5" stroke="none"/><text xml:space="preserve" x="5" y="17.45703125" stroke="none" text-anchor="left" font-family="sans-serif" font-size="16" font-weight="normal" fill="#000000">TREATS</text></g></g></g></g><g class="relationship"><g transform="translate(613.9548790996662 -293.6723238699368) rotate(139.21212223901873)" stroke-width="5" stroke="#000000"><path d="M 58.695178092152055 -5.989663490593891 L 95.96898050729243 -9.793341079425122 A 40 40 0 0 1 100.02976931447472 -10 L 173.28583015211197 -10 L 246.54189098974925 -10 A 40 40 0 0 1 250.60267979693154 -9.79334107942512 L 263.14278122456943 -8.51366206436971 L 263.14278122456943 -8.51366206436971"/><polygon points="-24.8621506177483,0 -27.62461179749811,9.20820393249937 0,0 -27.62461179749811,-9.20820393249937" fill="#000000" transform="translate(346.57166030422394 0) rotate(5.826689442008371) translate(-59 0)" stroke="none"/></g><g transform="translate(489.28701359446336 -172.90021516149676) rotate(319.21212223901875) translate(0 -13)"><g transform="translate(0 0)"><g transform="translate(-61.015625 0)" fill="#ffffff" stroke="#000000" stroke-width="0"><rect x="0" y="0" width="122.03125" height="26" rx="5" ry="5" stroke="none"/><text xml:space="preserve" x="5" y="17.45703125" stroke="none" text-anchor="left" font-family="sans-serif" font-size="16" font-weight="normal" fill="#000000">FOR_DISEASE</text></g></g></g></g><g class="relationship"><g transform="translate(613.9548790996662 -293.6723238699368) rotate(139.21212223901873)" stroke-width="5" stroke="#000000"><path d="M 58.695178092152055 5.989663490593891 L 95.96898050729243 9.793341079425122 A 40 40 0 0 0 100.02976931447472 10 L 173.28583015211197 10 L 246.54189098974925 10 A 40 40 0 0 0 250.60267979693154 9.79334107942512 L 263.14278122456943 8.51366206436971 L 263.14278122456943 8.51366206436971"/><polygon points="-24.8621506177483,0 -27.62461179749811,9.20820393249937 0,0 -27.62461179749811,-9.20820393249937" fill="#000000" transform="translate(346.57166030422394 0) rotate(-5.826689442008371) translate(-59 0)" stroke="none"/></g><g transform="translate(476.2218050011786 -188.0428808585911) rotate(319.21212223901875) translate(0 -13)"><g transform="translate(0 0)"><g transform="translate(-55.9765625 0)" fill="#ffffff" stroke="#000000" stroke-width="0"><rect x="0" y="0" width="111.953125" height="26" rx="5" ry="5" stroke="none"/><text xml:space="preserve" x="5" y="17.45703125" stroke="none" text-anchor="left" font-family="sans-serif" font-size="16" font-weight="normal" fill="#000000">ASSOCIATED</text></g></g></g></g><g class="node"><g fill="#ffffff" stroke="#000000" stroke-width="4"><circle cx="22.428319968614346" cy="-123.44899610313934" r="52"/></g><g transform="translate(22.428319968614346 -123.44899610313934)"><g transform="scale(0.38864230401678984) translate(0 -27)"><g transform="translate(0 0)"><g transform="translate(-112.595703125 0)"><g fill="#ffffff" stroke="#000000" stroke-width="4"><rect x="0" y="0" width="225.19140625" height="54" rx="27" ry="27"/><text xml:space="preserve" x="27" y="38.142578125" stroke="none" font-family="sans-serif" font-size="40" font-weight="normal" fill="#000000">Company</text></g></g></g></g></g></g><g class="node"><g fill="#ffffff" stroke="#000000" stroke-width="4"><circle cx="617.6661880595968" cy="46.77433166365813" r="52"/></g><g transform="translate(617.6661880595968 46.77433166365813)"><g transform="scale(0.5971896011417263) translate(0 -27)"><g transform="translate(0 0)"><g transform="translate(-70.349609375 0)"><g fill="#ffffff" stroke="#000000" stroke-width="4"><rect x="0" y="0" width="140.69921875" height="54" rx="27" ry="27"/><text xml:space="preserve" x="27" y="38.142578125" stroke="none" font-family="sans-serif" font-size="40" font-weight="normal" fill="#000000">Drug</text></g></g></g></g></g></g><g class="node"><g fill="#ffffff" stroke="#000000" stroke-width="4"><circle cx="220.8409426656085" cy="-293.6723238699368" r="52"/></g><g transform="translate(220.8409426656085 -293.6723238699368)"><g transform="scale(0.4232760430990848) translate(0 -56)"><g transform="translate(0 0)"><g transform="translate(-90.369140625 0)"><g fill="#ffffff" stroke="#000000" stroke-width="4"><rect x="0" y="0" width="180.73828125" height="54" rx="27" ry="27"/><text xml:space="preserve" x="27" y="38.142578125" stroke="none" font-family="sans-serif" font-size="40" font-weight="normal" fill="#000000">Protein</text></g></g><g transform="translate(-75.92578125 62)"><g fill="#ffffff" stroke="#000000" stroke-width="4"><rect x="0" y="0" width="151.8515625" height="54" rx="27" ry="27"/><text xml:space="preserve" x="27" y="38.142578125" stroke="none" font-family="sans-serif" font-size="40" font-weight="normal" fill="#000000">Gene</text></g></g></g></g></g></g><g class="node"><g fill="#ffffff" stroke="#000000" stroke-width="4"><circle cx="613.9548790996662" cy="-293.6723238699368" r="52"/></g><g transform="translate(613.9548790996662 -293.6723238699368)"><g transform="scale(0.33988055690374774) translate(0 -27)"><g transform="translate(0 0)"><g transform="translate(-129.6171875 0)"><g fill="#ffffff" stroke="#000000" stroke-width="4"><rect x="0" y="0" width="259.234375" height="54" rx="27" ry="27"/><text xml:space="preserve" x="27" y="38.142578125" stroke="none" font-family="sans-serif" font-size="40" font-weight="normal" fill="#000000">ClinicalTrial</text></g></g></g></g></g></g><g class="node"><g fill="#ffffff" stroke="#000000" stroke-width="4"><circle cx="899.6263467754292" cy="-293.6723238699368" r="52"/></g><g transform="translate(899.6263467754292 -293.6723238699368)"><g transform="scale(0.5116215580767506) translate(0 -27)"><g transform="translate(0 0)"><g transform="translate(-83.708984375 0)"><g fill="#ffffff" stroke="#000000" stroke-width="4"><rect x="0" y="0" width="167.41796875" height="54" rx="27" ry="27"/><text xml:space="preserve" x="27" y="38.142578125" stroke="none" font-family="sans-serif" font-size="40" font-weight="normal" fill="#000000">Phase</text></g></g></g></g></g></g><g class="node"><g fill="#ffffff" stroke="#000000" stroke-width="4"><circle cx="351.5539394959757" cy="-67.27077215015117" r="52"/></g><g transform="translate(351.5539394959757 -67.27077215015117)"><g transform="scale(0.4374765590941863) translate(0 -27)"><g transform="translate(0 0)"><g transform="translate(-99.255859375 0)"><g fill="#ffffff" stroke="#000000" stroke-width="4"><rect x="0" y="0" width="198.51171875" height="54" rx="27" ry="27"/><text xml:space="preserve" x="27" y="38.142578125" stroke="none" font-family="sans-serif" font-size="40" font-weight="normal" fill="#000000">Disease</text></g></g></g></g></g></g></g></svg>
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="Layer_1" xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="0 0 989 586">
+  <!-- Generator: Adobe Illustrator 30.1.0, SVG Export Plug-In . SVG Version: 2.1.1 Build 136)  -->
+  <defs>
+    <style>
+      .st0 {
+        stroke-miterlimit: 4;
+        stroke-width: 5px;
+      }
+
+      .st0, .st1, .st2, .st3, .st4, .st5, .st6, .st7, .st8, .st9, .st10, .st11, .st12, .st13 {
+        stroke: #000;
+      }
+
+      .st1 {
+        stroke-miterlimit: 1.8;
+        stroke-width: 1.8px;
+      }
+
+      .st1, .st14, .st8, .st9, .st10, .st11, .st12, .st13 {
+        fill: #fff;
+      }
+
+      .st2 {
+        fill: none;
+      }
+
+      .st2, .st3 {
+        stroke-width: 5px;
+      }
+
+      .st15 {
+        font-size: 13.3px;
+      }
+
+      .st15, .st16, .st17, .st18, .st19, .st20, .st21 {
+        font-family: Helvetica, Helvetica;
+        isolation: isolate;
+      }
+
+      .st16 {
+        font-size: 24.6px;
+      }
+
+      .st17 {
+        font-size: 18.5px;
+      }
+
+      .st4 {
+        stroke-miterlimit: 4;
+        stroke-width: 5px;
+      }
+
+      .st5 {
+        stroke-miterlimit: 4;
+        stroke-width: 5px;
+      }
+
+      .st18 {
+        font-size: 16.8px;
+      }
+
+      .st19 {
+        font-size: 16.1px;
+      }
+
+      .st6 {
+        stroke-miterlimit: 4;
+        stroke-width: 5px;
+      }
+
+      .st7 {
+        stroke-miterlimit: 4;
+        stroke-width: 5px;
+      }
+
+      .st8 {
+        stroke-width: 4px;
+      }
+
+      .st9 {
+        stroke-miterlimit: 1.3;
+        stroke-width: 1.3px;
+      }
+
+      .st20 {
+        font-size: 16px;
+      }
+
+      .st21 {
+        font-size: 21.9px;
+      }
+
+      .st10 {
+        stroke-miterlimit: 1.7;
+        stroke-width: 1.7px;
+      }
+
+      .st11 {
+        stroke-miterlimit: 2.2;
+        stroke-width: 2.2px;
+      }
+
+      .st12 {
+        stroke-miterlimit: 1.6;
+        stroke-width: 1.6px;
+      }
+
+      .st13 {
+        stroke-miterlimit: 2.5;
+        stroke-width: 2.5px;
+      }
+    </style>
+  </defs>
+  <path class="st2" d="M54,326.9v195.1c0,27.6,22.4,50,50,50h500.2c27.6,0,50-22.4,50-50h0"/>
+  <polygon points="654.2 522 663.4 524.8 654.2 497.2 645 524.8 654.2 522"/>
+  <rect class="st14" x="308.5" y="559" width="101.3" height="26" rx="5.3" ry="5.3"/>
+  <text class="st20" transform="translate(313.5 576)"><tspan x="0" y="0">IN_PIPILINE</tspan></text>
+  <path class="st2" d="M644.2,497.2h0c0,22.1-17.9,40-40,40h-341.6c-19.6,0-35.5-15.9-35.5-35.5V137.9h0"/>
+  <polygon points="227.2 137.9 236.4 140.6 227.2 113 218 140.6 227.2 137.9"/>
+  <rect class="st14" x="399.3" y="524.2" width="82.9" height="26" rx="5.3" ry="5.3"/>
+  <text class="st20" transform="translate(404.3 541.2)"><tspan x="0" y="0">TARGETS</tspan></text>
+  <path class="st5" d="M91.1,222.1l83.3-102.9"/>
+  <polygon points="174.4 119.2 179.8 127.1 190.1 99.9 165.5 115.5 174.4 119.2"/>
+  <rect class="st14" x="94.9" y="154.6" width="80.8" height="26" rx="5.3" ry="5.3" transform="translate(-80.1 167.3) rotate(-51)"/>
+  <text class="st20" transform="translate(116.1 197.6) rotate(-51)"><tspan x="0" y="0">TARGETS</tspan></text>
+  <path class="st7" d="M286.2,54.6l279.2,2.6"/>
+  <polygon points="565.4 57.2 562.5 66.4 590.2 57.4 562.7 48 565.4 57.2"/>
+  <rect class="st14" x="421" y="-19.1" width="26" height="150" rx="5.3" ry="5.3" transform="translate(374 489.5) rotate(-89.5)"/>
+  <text class="st20" transform="translate(364 59.3) rotate(.5)"><tspan x="0" y="0">INVESTIGATED_IN</tspan></text>
+  <path class="st3" d="M649.2,379.2v-237.3"/>
+  <polygon points="649.2 141.9 658.4 144.6 649.2 117 640 144.6 649.2 141.9"/>
+  <rect class="st14" x="636.2" y="193.8" width="26" height="148.4" rx="5.3" ry="5.3"/>
+  <text class="st20" transform="translate(645.2 198.8) rotate(90)"><tspan x="0" y="0">INVESTIGATED_IN</tspan></text>
+  <path class="st7" d="M708.2,58.6l142.1,1.3"/>
+  <polygon points="850.4 59.9 847.5 69.1 875.2 60.1 847.7 50.7 850.4 59.9"/>
+  <rect class="st14" x="772.3" y="7.7" width="26" height="103.1" rx="5.3" ry="5.3" transform="translate(718.6 844) rotate(-89.5)"/>
+  <text class="st20" transform="translate(738.7 62.8) rotate(.5)"><tspan x="0" y="0">HAS_PHASE</tspan></text>
+  <path class="st0" d="M256.7,105.1l84.5,146.4"/>
+  <polygon points="341.2 251.5 331.8 253.7 353.6 273 347.8 244.5 341.2 251.5"/>
+  <rect class="st14" x="286.3" y="101.4" width="26" height="155.9" rx="5.3" ry="5.3" transform="translate(-49.6 173.7) rotate(-30)"/>
+  <text class="st20" transform="translate(258.6 116.9) rotate(60)"><tspan x="0" y="0">ASSOCIATED_WITH</tspan></text>
+  <path class="st6" d="M595,414.9l-134.8-57.8"/>
+  <polygon points="460.2 357.1 466.4 349.8 437.4 347.4 459.1 366.7 460.2 357.1"/>
+  <rect class="st14" x="517.5" y="353.1" width="26" height="68.3" rx="5.3" ry="5.3" transform="translate(-34.4 722.3) rotate(-66.8)"/>
+  <text class="st20" transform="translate(502.1 379.5) rotate(23.2)"><tspan x="0" y="0">TREATS</tspan></text>
+  <path class="st4" d="M612,103.7l-23.7,29c-.9,1.1-1.8,2.1-2.7,3l-62.3,62.3-62.3,62.3c-1,1-2,1.9-3,2.7l-9.8,8h0"/>
+  <polygon points="448.1 271.1 444.5 262.3 428.9 286.8 456.1 276.5 448.1 271.1"/>
+  <rect class="st14" x="469.1" y="182.5" width="118.2" height="21.1" rx="4.9" ry="4.9" transform="translate(18.2 430) rotate(-45)"/>
+  <text class="st20" transform="translate(493.2 234.5) rotate(-45)"><tspan x="0" y="0">FOR_DISEASE</tspan></text>
+  <path class="st4" d="M603.5,95.3l-29,23.7c-1.1.9-2.1,1.8-3,2.7l-62.3,62.3-62.3,62.3c-1,1-1.9,2-2.7,3l-8,9.8h0"/>
+  <polygon points="436.1 259.1 430.7 251.1 420.4 278.4 445 262.8 436.1 259.1"/>
+  <rect class="st14" x="458.1" y="166.5" width="109.5" height="22.4" rx="5" ry="5" transform="translate(24.6 414.7) rotate(-45)"/>
+  <text class="st20" transform="translate(481.8 216.9) rotate(-45)"><tspan x="0" y="0">ASSOCIATED</tspan></text>
+  <circle class="st8" cx="54" cy="267.9" r="52"/>
+  <path class="st12" d="M21.2,257.1h65.7c6,0,10.8,4.9,10.8,10.8h0c0,6-4.9,10.8-10.8,10.8H21.2c-6,0-10.8-4.9-10.8-10.8h0c0-6,4.9-10.8,10.8-10.8Z"/>
+  <text class="st19" transform="translate(21.2 272.1)"><tspan x="0" y="0">Company</tspan></text>
+  <circle class="st8" cx="649.2" cy="438.2" r="52"/>
+  <path class="st13" d="M624,421.6h50.4c9.2,0,16.6,7.4,16.6,16.6h0c0,9.2-7.4,16.6-16.6,16.6h-50.4c-9.2,0-16.6-7.4-16.6-16.6h0c0-9.2,7.4-16.6,16.6-16.6Z"/>
+  <text class="st16" transform="translate(624 444.6)"><tspan x="0" y="0">Drug</tspan></text>
+  <circle class="st8" cx="227.2" cy="54" r="52"/>
+  <path class="st10" d="M200.2,30.5h54c6.3,0,11.4,5.1,11.4,11.4h0c0,6.3-5.1,11.4-11.4,11.4h-54c-6.3,0-11.4-5.1-11.4-11.4h0c0-6.3,5.1-11.4,11.4-11.4Z"/>
+  <text class="st18" transform="translate(200.2 46.2)"><tspan x="0" y="0">Protein</tspan></text>
+  <path class="st10" d="M207.7,56.5h38.9c6.3,0,11.4,5.1,11.4,11.4h0c0,6.3-5.1,11.4-11.4,11.4h-38.9c-6.3,0-11.4-5.1-11.4-11.4h0c0-6.3,5.1-11.4,11.4-11.4Z"/>
+  <text class="st18" transform="translate(207.7 72.3)"><tspan x="0" y="0">Gene</tspan></text>
+  <circle class="st8" cx="649.2" cy="58" r="52"/>
+  <path class="st9" d="M614.1,49h70.3c5,0,9,4,9,9h0c0,5-4,9-9,9h-70.3c-5,0-9-4-9-9h0c0-5,4-9,9-9Z"/>
+  <text class="st15" transform="translate(614.1 61.5)"><tspan x="0" y="0">ClinicalTrial</tspan></text>
+  <circle class="st8" cx="934.2" cy="60.7" r="52"/>
+  <path class="st11" d="M906.5,45.9h55.5c8.2,0,14.8,6.6,14.8,14.8h0c0,8.2-6.6,14.8-14.8,14.8h-55.5c-8.2,0-14.8-6.6-14.8-14.8h0c0-8.2,6.6-14.8,14.8-14.8Z"/>
+  <text class="st21" transform="translate(906.5 66.4)"><tspan x="0" y="0">Phase</tspan></text>
+  <circle class="st8" cx="383.1" cy="324.1" r="52"/>
+  <path class="st1" d="M352.4,311.6h61.5c6.9,0,12.5,5.6,12.5,12.5h0c0,6.9-5.6,12.5-12.5,12.5h-61.5c-6.9,0-12.5-5.6-12.5-12.5h0c0-6.9,5.6-12.5,12.5-12.5Z"/>
+  <text class="st17" transform="translate(352.4 329)"><tspan x="0" y="0">Disease</tspan></text>
+</svg>
