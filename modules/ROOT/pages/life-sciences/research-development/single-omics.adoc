@@ -571,6 +571,16 @@ MERGE (p1)-[:INTERACTS_WITH {source: "STRING", score: 0.65}]->(p2);
 
 == Cypher Queries
 
+1. Return experiment data
+III,IV
+2. Aggregate experimental data for disease
+V,VI
+3. Collect information for interesting gene(s)
+I,VIII,IX, X
+4. Integrate across genes and proteins
+II,VII
+
+
 === Return all synonyms for a given gene?
 [source, cypher, role=noheader]
 ----
@@ -580,6 +590,19 @@ RETURN syn.sid AS ID, syn.source AS Source
 ORDER BY syn.name;
 ----
 
+=== Find the network neighborhood of a candidate gene target
+
+[source, cypher, role=noheader]
+----
+// Find the network neighborhood of a candidate gene target
+MATCH (g:Gene {symbol: "PIK3CG"})-[:CODES]->(p:Protein)-[i:INTERACTS_WITH]-(neighbor:Protein)<-[:CODES]-(ng:Gene)
+RETURN g.symbol AS TargetGene,
+       ng.symbol AS NeighborGene,
+       neighbor.sid AS NeighborProtein,
+       i.score AS InteractionScore
+ORDER BY i.score DESC;
+----
+
 === Find all genes differentially expressed in a given comparison?
 
 [source, cypher, role=noheader]
@@ -587,6 +610,20 @@ ORDER BY syn.name;
 // Find all genes differentially expressed in the NAFLD vs Control comparison
 MATCH (comp:Comparison {sid: "COMP001"})-[r:FOUND_DIFFERENTIAL]->(gene:Gene)
 WHERE r.adjPValue < 0.05
+RETURN gene.symbol AS Gene, 
+       r.logFC AS LogFoldChange,
+       r.pValue AS PValue,
+       r.adjPValue AS AdjustedPValue,
+       r.regulated AS Direction
+ORDER BY r.adjPValue;
+----
+
+=== Find all genes overexpressed in a given comparison?
+[source, cypher, role=noheader]
+----
+// Find all genes overexpressed in the NAFLD vs Control comparison
+MATCH (comp:Comparison {sid: "COMP001"})-[r:FOUND_DIFFERENTIAL]->(gene:Gene)
+WHERE r.adjPValue < 0.05 AND r.regulated = "up"
 RETURN gene.symbol AS Gene, 
        r.logFC AS LogFoldChange,
        r.pValue AS PValue,
@@ -611,59 +648,33 @@ RETURN gene.symbol AS SharedGene,
        r2.regulated AS T2D_Direction;
 ----
 
-=== Find all genes overexpressed in a given comparison?
-[source, cypher, role=noheader]
-----
-// Find all genes overexpressed in the NAFLD vs Control comparison
-MATCH (comp:Comparison {sid: "COMP001"})-[r:FOUND_DIFFERENTIAL]->(gene:Gene)
-WHERE r.adjPValue < 0.05 AND r.regulated = "up"
-RETURN gene.symbol AS Gene, 
-       r.logFC AS LogFoldChange,
-       r.pValue AS PValue,
-       r.adjPValue AS AdjustedPValue,
-       r.regulated AS Direction
-ORDER BY r.adjPValue;
-----
-
-=== Find enriched pathways in a comparison through GO terms
+=== Find enriched pathways for regulated genes in a disease
 
 [source, cypher, role=noheader]
 ----
 // Find enriched pathways in the NAFLD vs Control comparison
-MATCH (comp:Comparison)-[:FOUND_DIFFERENTIAL]->(gene:Gene)
+WITH "Non-alcoholic fatty liver disease" as diseaseName
+MATCH (d:Disease {name: diseaseName})<-[:STUDIES_DISEASE]-(comp)-[:FOUND_DIFFERENTIAL]->(gene:Gene)
 MATCH (gene)-[:CODES]->(protein:Protein)-[:ASSOCIATED_WITH]->(go:GO)
 WITH go, count(DISTINCT gene) AS geneCount
-WHERE geneCount >= 2
+//WHERE geneCount >= 2 // uncomment to filter for pathways with at least 2 genes
 RETURN go.name AS Pathway,
        go.sid AS GO_ID,
        geneCount AS GenesInPathway
 ORDER BY geneCount DESC;
 ----
 
-=== Find the network neighborhood of a candidate protein target—including direct interactors, upstream regulators, and downstream effectors?
-
+=== Trace network neighborhood of regulated genes from comparison to protein interactions
 [source, cypher, role=noheader]
 ----
-// Find the network neighborhood of a candidate protein target—including direct interactors, upstream regulators, and downstream effectors?
-MATCH (g:Gene {symbol: "PIK3CG"})-[:CODES]->(p:Protein)-[i:INTERACTS_WITH]-(neighbor:Protein)<-[:CODES]-(ng:Gene)
-RETURN g.symbol AS TargetGene,
-       ng.symbol AS NeighborGene,
-       neighbor.sid AS NeighborProtein,
-       i.score AS InteractionScore
-ORDER BY i.score DESC;
-----
-
-=== Trace from comparison to protein interactions
-[source, cypher, role=noheader]
-----
-// Trace from comparison to protein interactions
+// Trace network neighborhood of regulated genes from comparison to protein interactions
 MATCH (comp:Comparison {sid: "COMP001"})-[:FOUND_DIFFERENTIAL]->(g1:Gene)
 MATCH (g1)-[:CODES]->(p1:Protein)-[i:INTERACTS_WITH]->(p2:Protein)
 MATCH (p2)<-[:CODES]-(g2:Gene)
 RETURN g1.symbol AS Gene1,
        g2.symbol AS Gene2,
-       p1.name AS Protein1,
-       p2.name AS Protein2,
+       // p1.name AS Protein1,
+       // p2.name AS Protein2,
        i.score AS InteractionScore;
 ----
 
@@ -678,4 +689,30 @@ RETURN gene.symbol AS Gene,
        compCount AS TimesOverexpressed,
        comparisons AS OverexpressedInComparisons
 ORDER BY compCount DESC;
+----
+
+=== Show interesting result for a given gene
+[source, cypher, role=noheader]
+----
+// Show interesting result for a given gene
+MATCH (g:Gene {symbol: "PIK3CG"})<-[r:FOUND_DIFFERENTIAL]-(c:Comparison)-[:STUDIES_DISEASE]->(d:Disease)
+RETURN g.symbol AS Gene,
+       d.name AS Disease,
+       r.logFC AS LogFoldChange,
+       r.pValue AS PValue,
+       r.adjPValue AS AdjustedPValue,
+       r.regulated AS Direction;
+----
+
+=== Show  interesting results for a specific tissue type
+[source, cypher, role=noheader]
+----
+// Show interesting results for a specific tissue type
+MATCH (t:Tissue {name: "Liver"})<-[:TAKEN_FROM]-(s:Sample)-[:HAS_EXPERIMENT]->(e:Experiment)-[r:HAS_VALUE]->(g:Gene)
+RETURN g.symbol AS Gene,
+       t.name AS Tissue,
+       r.logFC AS LogFoldChange,
+       r.pValue AS PValue,
+       r.adjPValue AS AdjustedPValue,
+       r.regulated AS Direction;
 ----
