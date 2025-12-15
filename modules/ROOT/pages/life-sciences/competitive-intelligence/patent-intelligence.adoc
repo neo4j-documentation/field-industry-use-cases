@@ -1,14 +1,12 @@
 = Patent Intelligence
 
-== 1. Introduction
+Patent-based competitive intelligence reveals critical insights into competitors' R&D pipelines, therapeutic strategies, and potential market moves by analysing what genes, disease targets, drug mechanisms, and treatment approaches are being claimed in patent filings. By tracking which companies are patenting specific molecular targets, combination therapies, or indications for particular diseases, organizations can identify emerging competitive threats, potential collaboration opportunities, and white space for their own innovation efforts. This intelligence becomes particularly valuable in pharma and biotech, where patent filings often signal strategic intent years before clinical data or product launches, allowing companies to anticipate competitive dynamics in specific therapeutic areas and adjust their development priorities accordingly.
 
-Patent-based competitive intelligence reveals critical insights into competitors' R&D pipelines, therapeutic strategies, and potential market moves by analyzing what genes, disease targets, drug mechanisms, and treatment approaches are being claimed in patent filings. By tracking which companies are patenting specific molecular targets, combination therapies, or indications for particular diseases, organizations can identify emerging competitive threats, potential collaboration opportunities, and white space for their own innovation efforts. This intelligence becomes particularly valuable in pharma and biotech, where patent filings often signal strategic intent years before clinical data or product launches, allowing companies to anticipate competitive dynamics in specific therapeutic areas and adjust their development priorities accordingly.
-
-== 2. Scenario
+== Scenario
 
 Consider a pharma company's competitive intelligence team trying to understand the competitive landscape for Alzheimer's disease treatments—they need to connect fragmented information across thousands of patents to identify which competitors are targeting specific genes (like APOE or TREM2), what mechanisms of action are being explored, and which companies might have overlapping or complementary approaches. Traditional relational databases struggle with this because the relationships between patents, genes, diseases, drug mechanisms, companies, and inventors create a complex, interconnected web that's difficult to query efficiently.
 
-== 3. Solution
+== Solution
 
 Neo4j's graph database excels here by naturally modeling these relationships—patents connect to genes they mention, genes link to diseases they're associated with, diseases connect to treatments and drug classes, and companies relate to both their own patents and their competitors' through shared targets or mechanisms. A competitive analyst can write a single Cypher query to ask questions like "show me all companies patenting BACE inhibitors for Alzheimer's that also mention inflammation-related genes" or "find all patents targeting the same protein as our lead compound and reveal the competitive network around that target." This enables the team to rapidly visualize competitive clusters, identify potential acquisition targets working on complementary mechanisms, spot emerging therapeutic trends before they become mainstream, and make informed decisions about where to focus their own R&D investments based on a comprehensive view of the competitive patent landscape.
 
@@ -18,7 +16,7 @@ image::life-sciences/competitive-intelligence/Industry_Use_Cases_Competitive_Int
 
 == Demo Data
 
-This dataset includes 
+This dataset includes:
 
 * 4 pharmaceutical companies (Pfizer, Novartis, Roche, Biogen) with overlapping competitive interests
 * 6 patents covering various therapeutic areas
@@ -27,9 +25,10 @@ This dataset includes
 * Mechanism types and inventor networks
 
 Key Insights from the Data:
+
 The dataset reveals that Pfizer and Roche have direct competitive overlap on BACE1 inhibitors for Alzheimer's, while Pfizer and Biogen both explore TREM2-related neuroinflammation approaches. This type of analysis helps identify potential acquisition targets, patent challenges, or collaboration opportunities.
 
-The following Cypher statement will MERGE the example graph in the Neo4j database:
+The following Cypher statement will `MERGE` the example graph in the Neo4j database:
 
 [source, cypher, role=noheader]
 ----
@@ -200,27 +199,41 @@ MERGE (p5)-[:BELONGS_TO]->(fam2)
 
 == Cypher Queries
 
+The queries that follow demonstrate how to extract competitive intelligence insights from the patent graph data model.
+
 === What diseases is a company working on based on their patents?
+
+This is the very base level query to understand a company's therapeutic focus areas. It could be used to narrow down competitors in a specific disease area.
 
 [source, cypher, role=noheader]
 ----
-MATCH (company:Owner {name: 'Pfizer Inc.'})<-[:HAS_OWNER]-(patent:Patent)-[:TREATS]->(disease:Disease)
+WITH "Pfizer Inc." AS companyName
+MATCH (company:Owner {name: companyName})<-[:HAS_OWNER]-(patent:Patent)-[:TREATS]->(disease:Disease)
 RETURN company.name, collect(DISTINCT disease.name) AS diseases
 ----
 
 === Which companies are targeting the same gene/protein for the same disease?
 
+Given a particular company and disease, identify competitors working on the same targets. 
+
+This could be used to highlight direct competitive threats, potential collaboration opportunities, or patent challenge targets.
+
 [source, cypher, role=noheader]
 ----
-MATCH (pfizer:Owner {name: 'Pfizer Inc.'})<-[:HAS_OWNER]-(pfizerPatent:Patent)-[:TREATS]->(ad:Disease {name: "Alzheimer's Disease"})
-MATCH (pfizerPatent)-[:TARGETS]->(target:Target)
-MATCH (competitorPatent:Patent)-[:TARGETS]->(target)
-MATCH (competitorPatent)-[:TREATS]->(ad)
-MATCH (competitorPatent)-[:HAS_OWNER]->(competitor:Owner)
-WHERE competitor.name <> 'Pfizer Inc.'
-RETURN target.name AS SharedTarget, 
-       collect(DISTINCT competitor.name) AS Competitors,
-       count(DISTINCT competitorPatent) AS CompetingPatents
+WITH 
+  "Pfizer Inc." AS companyName,
+  "Alzheimer's Disease" AS targetDisease
+MATCH 
+  (pfizer:Owner {name: companyName})<-[:HAS_OWNER]-(pfizerPatent:Patent)-[:TREATS]->(ad:Disease {name: targetDisease}),
+  (pfizerPatent)-[:TARGETS]->(target:Target),
+  (competitorPatent:Patent)-[:TARGETS]->(target),
+  (competitorPatent)-[:TREATS]->(ad),
+  (competitorPatent)-[:HAS_OWNER]->(competitor:Owner)
+WHERE competitor <> pfizer
+RETURN 
+  target.name AS SharedTarget, 
+  collect(DISTINCT competitor.name) AS Competitors,
+  count(DISTINCT competitorPatent) AS CompetingPatents
 ----
 
 === 3. Find all companies working on the same target and what diseases they target

@@ -1,14 +1,14 @@
 = Publication Intelligence
 
-Scientific publications reveal competitive research directions years before patents or clinical trials appear. By connecting publications with authors, institutions, genes, diseases, and clinical variants from databases like ClinVar, companies can identify emerging therapeutic targets, track institutional expertise, and discover collaboration opportunities. This intelligence becomes particularly valuable in pharma and biotech, where publications often signal strategic intent years before clinical data or product launches, allowing companies to anticipate competitive dynamics in specific therapeutic areas and adjust their development priorities accordingly.
+Scientific publications reveal competitive research directions years before patents or clinical trials appear. By connecting publications with authors, institutions, genes, diseases, and clinical variants from databases like http://www.ncbi.nlm.nih.gov/clinvar/[ClinVar], companies can identify emerging therapeutic targets, track institutional expertise, and discover collaboration opportunities. This intelligence becomes particularly valuable in pharma and biotech, where publications often signal strategic intent years before clinical data or product launches, allowing companies to anticipate competitive dynamics in specific therapeutic areas and adjust their development priorities accordingly.
 
 == Scenario
 
-A pharma CI team monitoring Alzheimer's research faces information overload—thousands of disconnected PubMed results make it impossible to answer strategic questions like: "Which institutions are leading TREM2 research?" or "What new gene-disease links are validated by clinical evidence?" They need to connect these publications to patents, clinical trials, and other research to understand the competitive landscape and identify potential collaboration opportunities.
+A pharma Competitive Intelligence team monitoring Alzheimer's research faces information overload—thousands of disconnected https://pubmed.ncbi.nlm.nih.gov/[PubMed] results make it impossible to answer strategic questions like: "Which institutions are leading TREM2 research?" or "What new gene-disease links are validated by clinical evidence?" They need to connect these publications to patents, clinical trials, and other research to understand the competitive landscape and identify potential collaboration opportunities.
 
 == Solution
 
-The graph connects publications → authors → institutions → genes → proteins → diseases → SNPs in a unified model. This enables traversing complex paths like "Institution → Author → Publication → Gene → Clinical Variant → Disease" in single queries, revealing patterns invisible in traditional databases. 
+The graph connects publications, authors, institutions, genes, proteins, diseases and SNPs in a unified model. This enables traversing complex paths like "Institution, Author, Publication, Gene, Clinical Variant, Disease" in single queries, revealing patterns invisible in traditional databases. 
 
 == Data Model
 
