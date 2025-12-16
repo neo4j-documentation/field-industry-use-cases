@@ -238,58 +238,83 @@ RETURN
 
 === 3. Find all companies working on the same target and what diseases they target
 
+With a specific target in mind, we can identify companies that have patents against that target and the diseases they are addressing with those patents.
+
+This could be useful for understanding the competitive landscape around a specific biological target, and identifying potential opportunities or threats.
+
 [source, cypher, role=noheader]
 ----
-MATCH (patent:Patent)-[:TARGETS]->(target:Target {name: 'BACE1'})
-MATCH (patent)-[:HAS_OWNER]->(company:Owner)
-MATCH (patent)-[:TREATS]->(disease:Disease)
-RETURN company.name AS Company,
-       collect(DISTINCT disease.name) AS Diseases,
-       count(patent) AS PatentCount
+WITH 'BACE1' AS targetName
+MATCH 
+  (patent:Patent)-[:TARGETS]->(target:Target {name: targetName}),
+  (patent)-[:HAS_OWNER]->(company:Owner),
+  (patent)-[:TREATS]->(disease:Disease)
+RETURN 
+  company.name AS Company,
+  collect(DISTINCT disease.name) AS Diseases,
+  count(patent) AS PatentCount
 ----
 
 === 4. Competitive landscape - which companies have overlapping targets and diseases?
 
+The goal here is to find pairs of companies that are working on the same targets for the same diseases, indicating direct competition.
+
+This could indicate a crowded competitive space, potential patent disputes, or areas where differentiation is needed.
+
 [source, cypher, role=noheader]
 ----
-MATCH (p1:Patent)-[:HAS_OWNER]->(c1:Owner)
-MATCH (p1)-[:TARGETS]->(target:Target)
-MATCH (p1)-[:TREATS]->(disease:Disease)
-MATCH (p2:Patent)-[:HAS_OWNER]->(c2:Owner)
-MATCH (p2)-[:TARGETS]->(target)
-MATCH (p2)-[:TREATS]->(disease)
+MATCH 
+  (p1:Patent)-[:HAS_OWNER]->(c1:Owner),
+  (p1)-[:TARGETS]->(target:Target),
+  (p1)-[:TREATS]->(disease:Disease),
+  (p2:Patent)-[:HAS_OWNER]->(c2:Owner),
+  (p2)-[:TARGETS]->(target),
+  (p2)-[:TREATS]->(disease)
 WHERE c1.name < c2.name
-RETURN c1.name AS Company1, 
-       c2.name AS Company2,
-       target.name AS SharedTarget,
-       disease.name AS SharedDisease,
-       count(*) AS OverlapScore
+RETURN 
+  c1.name AS Company1, 
+  c2.name AS Company2,
+  target.name AS SharedTarget,
+  disease.name AS SharedDisease,
+  count(*) AS OverlapScore
 ORDER BY OverlapScore DESC
 ----
 
 === 5. Find patents that mention inflammation-related targets for Alzheimer's
 
+This sort of query is useful to identify potential targets that have no patents directly claiming them, and so might be good avenues for innovation or acquisition.
+
 [source, cypher, role=noheader]
 ----
-MATCH (patent:Patent)-[:TREATS]->(ad:Disease {name: "Alzheimer's Disease"})
-MATCH (patent)-[:TARGETS|MENTIONS_TARGET]->(target:Target)
-WHERE target.name IN ['TREM2', 'TNF-alpha', 'IL-6']
+WITH 
+  "Alzheimer's Disease" AS diseaseName,
+  ['TREM2', 'TNF-alpha', 'IL-6'] AS inflammatoryTargets
+MATCH 
+  (patent:Patent)-[:TREATS]->(ad:Disease {name: diseaseName}),
+  (patent)-[:TARGETS|MENTIONS_TARGET]->(target:Target)
+WHERE target.name IN inflammatoryTargets
 MATCH (patent)-[:HAS_OWNER]->(company:Owner)
-RETURN company.name AS Company,
-       patent.id AS PatentID,
-       collect(target.name) AS InflammatoryTargets
+RETURN 
+  company.name AS Company,
+  patent.id AS PatentID,
+  collect(target.name) AS InflammatoryTargets
 ----
 
 === 6. Inventor collaboration networks
 
+This query could be used to identify key inventors working across multiple companies, indicating potential knowledge transfer, collaboration opportunities, or even conflicts of interest.
+
 [source, cypher, role=noheader]
 ----
-MATCH (inv1:Inventor)<-[:HAS_INVENTOR]-(patent:Patent)-[:HAS_INVENTOR]->(inv2:Inventor)
+MATCH 
+  (inv1:Inventor)<-[:HAS_INVENTOR]-(patent:Patent)-[:HAS_INVENTOR]->(inv2:Inventor)
 WHERE inv1.name < inv2.name
-MATCH (patent)-[:HAS_OWNER]->(company:Owner)
-MATCH (patent)-[:TREATS]->(disease:Disease)
-RETURN inv1.name AS Inventor1,
-       inv2.name AS Inventor2,
-       company.name AS Company,
-       collect(DISTINCT disease.name) AS DiseasesWorkedOn   
+MATCH 
+  (patent)-[:HAS_OWNER]->(company:Owner),
+  (patent)-[:TREATS]->(disease:Disease)
+RETURN 
+  inv1.name AS Inventor1,
+  inv2.name AS Inventor2,
+  company.name AS Company,
+  collect(DISTINCT disease.name) AS DiseasesWorkedOn
 ----
