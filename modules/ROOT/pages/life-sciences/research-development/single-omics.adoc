@@ -31,8 +31,7 @@ This adaptable structure means researchers can integrate new RNA-seq datasets in
 The graph data model demonstrates how Neo4j's flexible schema elegantly addresses the inherent heterogeneity of single omics data. Unlike rigid relational databases that require predefined table structures, this graph architecture allows researchers to naturally represent the diverse experimental contexts, varied sample annotations, and multiple identifier systems that characterize real-world omics projects.
 
 .Single OMICs Data Model
-image:images/life-sciences/research-development/Industry_Use_Cases_single-omics.svg[Single OMICs data model]
-      
+image::life-sciences/research-development/Industry_Use_Cases_single-omics.png[width=800]
 
 We will continue to build on this model by adding more OMICs data types and ontologies.
 

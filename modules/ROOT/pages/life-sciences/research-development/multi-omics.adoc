@@ -34,7 +34,7 @@ Proteomics TMT-MS (EXP004)
 Proteomics DIA-PASEF (EXP007)
 Correlation values showing mRNA-protein concordance
 
-image:images/life-sciences/research-development/Industry_Use_Cases_multi-omics.svg[Multi-OMICs data model]
+image::life-sciences/research-development/Industry_Use_Cases_multi-omics_with_ontologies.png[width=800]
 == Demo Data
 
 The following Cypher statements will create the example graph in the Neo4j database:
