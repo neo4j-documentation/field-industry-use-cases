@@ -56,6 +56,8 @@ This demo data includes:
 * Multiple targets: BACE1, Amyloid-beta, Tau, TREM2, LRRK2, GBA
 * 3 diseases: Alzheimer's, Parkinson's, MS
 
+_This data is mock/simulated data for demonstration purposes only and does not reflect real-world information, but is inspired by actual pharmaceutical pipelines._
+
 [source, cypher, role=noheader]
 ----
 // ============================================
@@ -65,7 +67,6 @@ This demo data includes:
 MERGE (pfizer:Company {
   name: 'Pfizer Inc.',
   country: 'US',
-  type: 'Large Cap Pharma',
   market_cap: 280000000000,
   focus: 'Neuroscience, Oncology, Immunology'
 })
@@ -73,7 +74,6 @@ MERGE (pfizer:Company {
 MERGE (biogen:Company {
   name: 'Biogen Inc.',
   country: 'US',
-  type: 'Specialty Pharma',
   market_cap: 35000000000,
   focus: 'Neurology, Rare Disease'
 })
@@ -81,7 +81,6 @@ MERGE (biogen:Company {
 MERGE (novartis:Company {
   name: 'Novartis AG',
   country: 'CH',
-  type: 'Large Cap Pharma',
   market_cap: 220000000000,
   focus: 'Cardiovascular, Oncology, Immunology'
 })
@@ -89,7 +88,6 @@ MERGE (novartis:Company {
 MERGE (roche:Company {
   name: 'Roche Holdings',
   country: 'CH',
-  type: 'Large Cap Pharma',
   market_cap: 265000000000,
   focus: 'Oncology, Immunology, Neuroscience'
 })
@@ -97,7 +95,6 @@ MERGE (roche:Company {
 MERGE (eisai:Company {
   name: 'Eisai Co.',
   country: 'JP',
-  type: 'Mid Cap Pharma',
   market_cap: 12000000000,
   focus: 'Neurology, Oncology'
 })
@@ -105,7 +102,6 @@ MERGE (eisai:Company {
 MERGE (alector:Company {
   name: 'Alector Inc.',
   country: 'US',
-  type: 'Biotech',
   market_cap: 850000000,
   focus: 'Neurodegeneration'
 })
@@ -113,7 +109,6 @@ MERGE (alector:Company {
 MERGE (denali:Company {
   name: 'Denali Therapeutics',
   country: 'US',
-  type: 'Biotech',
   market_cap: 2100000000,
   focus: 'Neurodegenerative diseases'
 })
@@ -122,7 +117,6 @@ MERGE (denali:Company {
 // MERGE PHASES
 // ============================================
 
-MERGE (preclinical:Phase {name: 'Preclinical', number: 0})
 MERGE (phase1:Phase {name: 'Phase 1', number: 1})
 MERGE (phase2:Phase {name: 'Phase 2', number: 2})
 MERGE (phase3:Phase {name: 'Phase 3', number: 3})
@@ -147,13 +141,6 @@ MERGE (parkinsons:Disease {
   market_size: '5.2B USD'
 })
 
-MERGE (als:Disease {
-  name: 'ALS',
-  icd10: 'G12.21',
-  prevalence: '30K US patients',
-  market_size: '2.1B USD'
-})
-
 MERGE (ms:Disease {
   name: 'Multiple Sclerosis',
   icd10: 'G35',
@@ -170,13 +157,6 @@ MERGE (bace1:Protein {
   uniprot: 'P56817',
   function: 'Beta-secretase',
   type: 'Enzyme'
-})
-
-MERGE (apoe:Gene {
-  symbol: 'APOE',
-  name: 'Apolipoprotein E',
-  chromosome: '19',
-  type: 'Risk factor gene'
 })
 
 MERGE (trem2:Protein {
@@ -215,7 +195,6 @@ MERGE (gba:Gene {
 })
 
 // Gene-Protein relationships
-MERGE (apoe)-[:CODES_FOR]->(:Protein {name: 'ApoE', uniprot: 'P02649'})
 MERGE (lrrk2)-[:CODES_FOR]->(:Protein {name: 'LRRK2', uniprot: 'Q5S007'})
 MERGE (gba)-[:CODES_FOR]->(:Protein {name: 'GCase', uniprot: 'P04062'})
 
@@ -470,6 +449,13 @@ MERGE (novartis_ms)-[:TREATS]->(ms)
 MERGE (novartis_ms)-[:INVESTIGATED_IN]->(novartis_trial_ms)
 MERGE (novartis_trial_ms)-[:HAS_PHASE]->(approved)
 MERGE (novartis_trial_ms)-[:FOR_DISEASE]->(ms)
+
+WITH true AS _
+
+MATCH (drug:Drug)-[r:TARGETS]->(target:Protein)
+SET 
+  r.mechanism = drug.mechanism,
+  drug.mechanism = null
 ----
 
 == Cypher Queries
@@ -483,18 +469,20 @@ This reveals *direct competition* and validates/invalidates a drug target based 
 
 [source, cypher, role=noheader]
 ----
-WITH 'BACE1' AS targetName
-MATCH (drug:Drug)-[:TARGETS]->(target:Protein {name: targetName})
-MATCH (drug)<-[:IN_PIPELINE]-(company:Company)
-MATCH (drug)-[:INVESTIGATED_IN]->(trial:ClinicalTrial)-[:HAS_PHASE]->(phase:Phase)
-MATCH (drug)-[:TREATS]->(disease:Disease)
-RETURN company.name AS Company,
-       drug.name AS Drug,
-       drug.mechanism AS Mechanism,
-       phase.name AS CurrentPhase,
-       trial.status AS TrialStatus,
-       disease.name AS Disease,
-       trial.nct_id AS ClinicalTrialID
+WITH 'BACE1' AS targetName 
+MATCH 
+  (drug:Drug)-[tg:TARGETS]->(target:Protein {name: targetName}),
+  (drug)<-[:IN_PIPELINE]-(company:Company),
+  (drug)-[:INVESTIGATED_IN]->(trial:ClinicalTrial)-[:HAS_PHASE]->(phase:Phase),
+  (drug)-[:TREATS]->(disease:Disease)
+RETURN 
+  company.name AS Company,
+  drug.name AS Drug,
+  tg.mechanism AS Mechanism,
+  phase.name AS CurrentPhase,
+  trial.status AS TrialStatus,
+  disease.name AS Disease,
+  trial.nct_id AS ClinicalTrialID
 ORDER BY phase.number DESC;
 ----
 
@@ -514,18 +502,16 @@ MATCH
   (drug)-[:INVESTIGATED_IN]->(:ClinicalTrial)-[:HAS_PHASE]->(phase:Phase)
 WITH 
   company, 
-  count(DISTINCT drug) AS DrugCount,
+  count(DISTINCT drug) AS PipelineAssets,
   collect(DISTINCT phase.name) AS Phases,
   max(phase.number) AS HighestPhase
 MATCH (phase:Phase {number: HighestPhase})
 RETURN 
   company.name AS Company,
-  company.type AS CompanyType,
-  company.market_cap AS MarketCap,
-  DrugCount AS PipelineAssets,
+  PipelineAssets,
   Phases AS DevelopmentPhases,
   phase.name AS MostAdvancedPhase
-ORDER BY HighestPhase DESC, DrugCount DESC;
+ORDER BY HighestPhase DESC, PipelineAssets DESC;
 ----
 
 === Target Diversification Strategy
@@ -545,10 +531,11 @@ WITH "Alzheimer's Disease" AS diseaseName
 MATCH 
   (company:Company)-[:IN_PIPELINE]->(drug:Drug)-[:TARGETS]->(target:Protein),
   (drug)-[:TREATS]->(disease:Disease {name: diseaseName})
-RETURN 
+WITH 
   company.name AS Company,
-  target.name AS Target,
-  count(DISTINCT drug) AS PipelineAssets
+  collect("'" + drug.name + "' targeting: '" + target.name + "'") AS DrugTargetting
+RETURN 
+  Company, DrugTargetting, size(DrugTargetting) AS PipelineAssets
 ORDER BY PipelineAssets DESC;
 ----
 
@@ -568,12 +555,13 @@ MATCH
   (drug)<-[:IN_PIPELINE]-(company:Company),
   (drug)-[:INVESTIGATED_IN]->(:ClinicalTrial)-[:HAS_PHASE]->(phase:Phase)
 WHERE phase.number >= 2  // Phase 2 or later
-RETURN target.name AS Target,
-       target.function AS TargetFunction,
-       count(DISTINCT company) AS CompaniesTargeting,
-       collect(DISTINCT company.name) AS Companies,
-       count(DISTINCT drug) AS Drugs,
-       avg(phase.number) AS AvgPhase
+RETURN 
+  target.name AS Target,
+  target.function AS TargetFunction,
+  count(DISTINCT company) AS CompaniesTargeting,
+  collect(DISTINCT company.name) AS Companies,
+  count(DISTINCT drug) AS Drugs,
+  avg(phase.number) AS AvgPhase
 ORDER BY CompaniesTargeting DESC, AvgPhase DESC;
 ----
 
@@ -599,14 +587,15 @@ MATCH
   (drug)-[:TREATS]->(disease:Disease),
   (drug)-[:TARGETS]->(target)
 WHERE 1 <= phase.number <= 2 // Phase 1 or 2
-RETURN company.name AS PotentialTarget,
-       company.market_cap / 1000000 AS MarketCapMillions,
-       company.focus AS Focus,
-       count(DISTINCT drug) AS PipelineSize,
-       collect(DISTINCT drug.name) AS Drugs,
-       collect(DISTINCT target.name) AS Targets,
-       collect(DISTINCT disease.name) AS Diseases,
-       max(phase.number) AS HighestPhase
+RETURN 
+  company.name AS PotentialTarget,
+  company.market_cap / 1000000 AS MarketCapMillions,
+  company.focus AS Focus,
+  count(DISTINCT drug) AS PipelineSize,
+  collect(DISTINCT drug.name) AS Drugs,
+  collect(DISTINCT target.name) AS Targets,
+  collect(DISTINCT disease.name) AS Diseases,
+  max(phase.number) AS HighestPhase
 ORDER BY MarketCapMillions ASC, PipelineSize DESC;
 ----
 
@@ -618,19 +607,21 @@ potentially identify situations where we might want to re-evaluate our own pipel
 
 [source, cypher, role=noheader]
 ----
+WITH 'Discontinued' AS phaseName
 MATCH 
-  (trial:ClinicalTrial)-[:HAS_PHASE]->(phase:Phase {name: 'Discontinued'}),
+  (trial:ClinicalTrial)-[:HAS_PHASE]->(phase:Phase {name: phaseName}),
   (drug:Drug)-[:INVESTIGATED_IN]->(trial),
-  (drug)-[:TARGETS]->(target),
+  (drug)-[tg:TARGETS]->(target),
   (drug)-[:TREATS]->(disease:Disease),
   (drug)<-[:IN_PIPELINE]-(company:Company)
-RETURN company.name AS Company,
-       drug.name AS FailedDrug,
-       target.name AS Target,
-       drug.mechanism AS Mechanism,
-       disease.name AS Disease,
-       trial.termination_reason AS ReasonForFailure,
-       trial.completion_date AS DiscontinuedDate
+RETURN 
+  company.name AS Company,
+  drug.name AS FailedDrug,
+  target.name AS Target,
+  tg.mechanism AS Mechanism,
+  disease.name AS Disease,
+  trial.termination_reason AS ReasonForFailure,
+  trial.completion_date AS DiscontinuedDate
 ORDER BY trial.completion_date DESC;
 ----
 
