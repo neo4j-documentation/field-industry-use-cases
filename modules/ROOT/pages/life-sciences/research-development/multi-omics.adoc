@@ -1,4 +1,4 @@
-= Multi-OMICs Data Integration
+= Multi-Omics Data Integration
 
 Building on the single omics integration, we further enhance biological insight by connecting other omics data types (proteomics, metabolomics) and ontology information directly into the knowledge graph. Linking standardized biomedical ontologies—such as the Gene Ontology *(GO)*, Disease Ontology *(MONDO)* and phenotype *(EFO, HPO)* which enriches the multi-omics graph with layers of curated knowledge. Each gene, protein, metabolite, or biological entity in the graph can be annotated with relevant ontology terms, enabling not just data integration, but deep semantic enrichment.
 
