@@ -1,29 +1,60 @@
-= Single OMICs Data Integration
+= Single-Omics Data Integration
 
-== Introduction
+Integrating omics data into https://neo4j.com/use-cases/knowledge-graph/[Knowledge Graphs] typically begins with a single data type, such as https://en.wikipedia.org/wiki/RNA-Seq[RNA-seq] 
+experiments, which provides a foundation for subsequent multi-omics integration. By representing RNA-seq data in Neo4j, researchers can move 
+beyond static tables and embrace the inherently connected nature of transcriptomic information. 
 
-Integrating omics data into knowledge graphs typically begins with a single data type, such as RNA-seq experiments, which provides a foundation for subsequent multi-omics integration. By representing RNA-seq data in Neo4j, researchers can move beyond static tables and embrace the inherently connected nature of transcriptomic information. Each transcript measurement becomes a node connected to its corresponding gene, sample metadata, experimental conditions, and biological annotations. This graph structure naturally captures the relationships between differentially expressed genes, their protein products, associated pathways, and clinical phenotypes—all queryable through intuitive graph traversals. For instance, researchers can rapidly identify co-expressed gene modules across multiple experiments, trace expression changes from transcript to protein to pathway, or link expression signatures to patient outcomes. Neo4j's native graph architecture transforms RNA-seq data from isolated datasets into an integrated molecular map that accelerates hypothesis generation and biological discovery.
+Each transcript measurement becomes a node connected to its corresponding gene, sample metadata, experimental conditions, and biological annotations. 
+This graph structure naturally captures the relationships between differentially expressed genes, their protein products, associated pathways, and 
+clinical phenotypes—all queryable through intuitive graph traversals. For instance, researchers can rapidly identify co-expressed gene modules across 
+multiple experiments, trace expression changes from transcript to protein to pathway, or link expression signatures to patient outcomes. Neo4j's native 
+graph architecture transforms RNA-seq data from isolated datasets into an integrated molecular map that accelerates hypothesis generation and 
+biological discovery.
 
 == Scenario
 
-A typical research scenario involves comparing disease versus control samples to identify molecular signatures of pathology. Researchers collect tissue samples from both healthy controls and disease patients—for example, liver biopsies from patients with non-alcoholic fatty liver disease versus healthy donors. These samples undergo RNA-seq experimentation, where raw sequencing data is processed through bioinformatics pipelines to identify differentially expressed genes between the two groups. The analyzed results, such as the top 10 upregulated or downregulated genes with their fold-changes and statistical significance, are then stored in Neo4j. 
+A typical research scenario involves comparing cases (people with a specific outcome) versus control (those without the outcome) samples 
+to identify molecular signatures of pathology. Researchers collect tissue samples from both cases and controls - for example, liver 
+biopsies from patients with non-alcoholic fatty liver disease versus patients without. These samples undergo RNA-seq experimentation, 
+where raw sequencing data is processed through bioinformatics pipelines to identify differentially expressed genes between the two groups. 
+The analysed results, such as the top 10 upregulated or downregulated genes with their fold-changes and statistical significance, are then 
+stored in Neo4j. 
 
-In the graph database, each biological sample becomes a node with properties describing its tissue type, patient demographics, and group assignment (control or disease). Sample nodes connect to experiment nodes representing the RNA-seq analysis, which in turn link to gene nodes for the differentially expressed transcripts. This structure makes it intuitive to query across experiments—for instance, identifying genes consistently dysregulated across multiple disease cohorts, tracing which pathways are affected, or connecting expression changes to known protein functions. The graph naturally represents the experimental design, preserving the relationship between samples, conditions, and molecular measurements in a way that supports both immediate analysis and future integration with additional omics layers.
+In the graph database, each biological sample becomes a node with properties describing its tissue type, patient demographics, and group 
+assignment (control or case). Sample nodes connect to experiment nodes representing the RNA-seq analysis, which in turn link to gene 
+nodes for the differentially expressed transcripts. This structure makes it intuitive to query across experiments—for instance, identifying 
+genes consistently dysregulated across multiple disease cohorts, tracing which pathways are affected, or connecting expression changes to 
+known protein functions. The graph naturally represents the experimental design, preserving the relationship between samples, conditions, 
+and molecular measurements in a way that supports both immediate analysis and future integration with additional omics layers.
 
-*Our scenario starts from a foundational single omics scenario, illustrating how transcriptomics data (like RNA-seq) is modeled in a graph structure. We progressively expand this core by demonstrating how the same framework is extended to handle multi-omics integration and incorporate rich information from biomedical ontologies. As the model grows, more complex biological and clinical questions can be addressed directly in the graph.*
+_Our scenario starts from a foundational single omics scenario, illustrating how transcriptomics data (like RNA-seq) is modelled in a graph structure. We progressively expand this core by demonstrating how the same framework is extended to handle multi-omics integration and incorporate rich information from biomedical ontologies. As the model grows, more complex biological and clinical questions can be addressed directly in the graph._
 
 
 == Solution
 
+This solution builds a single-omics model for RNA-seq data integration using Neo4j. 
+
 === Accommodating Heterogeneous Data
 
-Even within a single omics type like RNA-seq, experiments vary dramatically—different tissue sources, diverse phenotypic annotations, multiple comparison groups, and varying levels of biological annotation. The graph model handles this heterogeneity seamlessly. Projects connect to samples with flexible properties, samples link to their tissue origins and phenotypes (using standardized vocabularies like EFO), while experiments capture method-specific metadata. Critically, the Comparison node enables researchers to model complex experimental designs—whether comparing disease versus control, treatment versus baseline, or multiple conditions simultaneously—without restructuring the entire database.
+Even within a single omics type like RNA-seq, experiments can vary dramatically. Different tissue sources, diverse phenotypic annotations, 
+multiple comparison groups, and varying levels of biological annotation. The graph model handles this heterogeneity seamlessly. 
+Projects connect to samples with flexible properties, samples link to their tissue origins and phenotypes (using standardized 
+vocabularies like EFO), while experiments capture method-specific metadata. Critically, the Comparison node enables researchers 
+to model complex experimental designs—whether comparing disease versus control, treatment versus baseline, or multiple conditions 
+simultaneously—without restructuring the entire database.
 
 === Bridging Identifiers and Knowledge
-The model addresses a fundamental challenge in omics integration: connecting experimental measurements to standardized biological entities. Gene identifiers from RNA-seq analysis link to multiple ID nodes from different sources (Ensembl, NCBI, HGNC), which then map to canonical Gene nodes. These genes connect onwards to their encoded Proteins, associated Gene Ontology terms, and disease relationships. This identifier-bridging layer is crucial because different experiments and databases use different naming conventions, yet the graph structure makes these mappings explicit and traversable.
+
+The model addresses a fundamental challenge in omics integration: connecting experimental measurements to standardized biological 
+entities. Gene identifiers from RNA-seq analysis link to multiple ID nodes from different sources (https://www.ensembl.org/[Ensembl], 
+https://www.ncbi.nlm.nih.gov/[NCBI], https://www.genenames.org/[HGNC]), which then map to canonical Gene nodes. These genes connect 
+onwards to their encoded Proteins, associated Gene Ontology terms, and disease relationships. This identifier-bridging layer is crucial 
+because different experiments and databases use different naming conventions, yet the graph structure makes these mappings explicit and traversable.
 
 === Flexibility for Discovery
-The schema's flexibility truly shines when solving biological questions. Need to find all differentially expressed genes across multiple liver disease experiments? Simply traverse from Disease → Gene ← Experiment ← Sample ← Tissue. Want to identify genes consistently dysregulated in a specific phenotype regardless of tissue type? The graph makes this natural. Looking for functional enrichment? Follow Gene → Protein → GO paths. The graph's property model also allows each node type to carry experiment-specific attributes—fold-changes, p-values, expression levels—without forcing every experiment to share identical properties.
+
+The schema's flexibility truly shines when solving biological questions. Need to find all differentially expressed genes across multiple liver disease experiments?
+Simply traverse from Disease → Gene ← Experiment ← Sample ← Tissue. Want to identify genes consistently dysregulated in a specific phenotype regardless of tissue type? The graph makes this natural. Looking for functional enrichment? Follow Gene → Protein → GO paths. The graph's property model also allows each node type to carry experiment-specific attributes—fold-changes, p-values, expression levels—without forcing every experiment to share identical properties.
 This adaptable structure means researchers can integrate new RNA-seq datasets incrementally, add novel annotation layers as they become available, and explore biological connections without extensive database redesign—transforming single omics analysis from a data management burden into an opportunity for insight.
 
 == Data Model
@@ -33,7 +64,7 @@ The graph data model demonstrates how Neo4j's flexible schema elegantly addresse
 .Single OMICs Data Model
 image::life-sciences/research-development/Industry_Use_Cases_single-omics.png[width=800]
 
-We will continue to build on this model by adding more OMICs data types and ontologies.
+We will continue to build on this model by adding more Omics data types and ontologies.
 
 For multi-omics integration, see the xref:life-sciences/research-development/multi-omics.adoc[Multi-OMICs Data Integration] page.
 
@@ -48,39 +79,39 @@ The following Cypher statements will MERGE the example graph in the Neo4j databa
 // ============================================
 
 // MERGE Projects
-MERGE (p1:Project {sid: "PROJ001", name: "Liver Disease Study"});
-MERGE (p2:Project {sid: "PROJ002", name: "Diabetes Research"});
-MERGE (p3:Project {sid: "PROJ003", name: "Cross-Disease Metabolic Study"});
+MERGE (p1:Project {sid: "PROJ001", name: "Liver Disease Study"})
+MERGE (p2:Project {sid: "PROJ002", name: "Diabetes Research"})
+MERGE (p3:Project {sid: "PROJ003", name: "Cross-Disease Metabolic Study"})
 
 // MERGE Tissues
-MERGE (t1:Tissue {sid: "UBERON:0002107", name: "Liver"});
-MERGE (t2:Tissue {sid: "UBERON:0001264", name: "Pancreas"});
-MERGE (t3:Tissue {sid: "UBERON:0000945", name: "Adipose tissue"});
+MERGE (t1:Tissue {sid: "UBERON:0002107", name: "Liver"})
+MERGE (t2:Tissue {sid: "UBERON:0001264", name: "Pancreas"})
+MERGE (t3:Tissue {sid: "UBERON:0000945", name: "Adipose tissue"})
 
 // MERGE Diseases
-MERGE (d1:Disease {sid: "MONDO:0005359", name: "Non-alcoholic fatty liver disease"});
-MERGE (d2:Disease {sid: "MONDO:0005015", name: "Type 2 Diabetes"});
-MERGE (d3:Disease {sid: "MONDO:0011382", name: "Metabolic Syndrome"});
+MERGE (d1:Disease {sid: "MONDO:0005359", name: "Non-alcoholic fatty liver disease"})
+MERGE (d2:Disease {sid: "MONDO:0005015", name: "Type 2 Diabetes"})
+MERGE (d3:Disease {sid: "MONDO:0011382", name: "Metabolic Syndrome"})
 
 // MERGE Phenotypes (EFO)
-MERGE (ph1:EFO {sid: "EFO:0004220", name: "Insulin resistance"});
-MERGE (ph2:EFO {sid: "EFO:0001421", name: "Elevated triglycerides"});
-MERGE (ph3:EFO {sid: "EFO:0004465", name: "Hepatic steatosis"});
-MERGE (ph4:EFO {sid: "EFO:0000685", name: "Obesity"});
+MERGE (ph1:EFO {sid: "EFO:0004220", name: "Insulin resistance"})
+MERGE (ph2:EFO {sid: "EFO:0001421", name: "Elevated triglycerides"})
+MERGE (ph3:EFO {sid: "EFO:0004465", name: "Hepatic steatosis"})
+MERGE (ph4:EFO {sid: "EFO:0000685", name: "Obesity"})
 
 // MERGE Samples
-MERGE (s1:Sample {sid: "SAMPLE001", name: "Patient_001_Liver", condition: "NAFLD"});
-MERGE (s2:Sample {sid: "SAMPLE002", name: "Control_001_Liver", condition: "Healthy"});
-MERGE (s3:Sample {sid: "SAMPLE003", name: "Patient_002_Pancreas", condition: "T2D"});
-MERGE (s4:Sample {sid: "SAMPLE004", name: "Control_002_Pancreas", condition: "Healthy"});
-MERGE (s5:Sample {sid: "SAMPLE005", name: "Patient_003_Liver", condition: "NAFLD"});
-MERGE (s6:Sample {sid: "SAMPLE006", name: "Patient_004_Adipose", condition: "MetSyn"});
-MERGE (s7:Sample {sid: "SAMPLE007", name: "Control_003_Adipose", condition: "Healthy"});
+MERGE (s1:Sample {sid: "SAMPLE001", name: "Patient_001_Liver", condition: "NAFLD"})
+MERGE (s2:Sample {sid: "SAMPLE002", name: "Control_001_Liver", condition: "Healthy"})
+MERGE (s3:Sample {sid: "SAMPLE003", name: "Patient_002_Pancreas", condition: "T2D"})
+MERGE (s4:Sample {sid: "SAMPLE004", name: "Control_002_Pancreas", condition: "Healthy"})
+MERGE (s5:Sample {sid: "SAMPLE005", name: "Patient_003_Liver", condition: "NAFLD"})
+MERGE (s6:Sample {sid: "SAMPLE006", name: "Patient_004_Adipose", condition: "MetSyn"})
+MERGE (s7:Sample {sid: "SAMPLE007", name: "Control_003_Adipose", condition: "Healthy"})
 
 // MERGE Experiments
-MERGE (e1:Experiment {sid: "EXP001", type: "RNA-seq", platform: "Illumina NovaSeq"});
-MERGE (e2:Experiment {sid: "EXP002", type: "RNA-seq", platform: "Illumina NovaSeq"});
-MERGE (e3:Experiment {sid: "EXP003", type: "RNA-seq", platform: "Illumina NovaSeq"});
+MERGE (e1:Experiment {sid: "EXP001", type: "RNA-seq", platform: "Illumina NovaSeq"})
+MERGE (e2:Experiment {sid: "EXP002", type: "RNA-seq", platform: "Illumina NovaSeq"})
+MERGE (e3:Experiment {sid: "EXP003", type: "RNA-seq", platform: "Illumina NovaSeq"})
 
 // ============================================
 // EXTENDED COMPARISON NODES
@@ -88,34 +119,34 @@ MERGE (e3:Experiment {sid: "EXP003", type: "RNA-seq", platform: "Illumina NovaSe
 
 // Basic disease vs control comparisons
 MERGE (comp1:Comparison {
-  sid: "COMP001", 
+  sid: "COMP001",
   name: "NAFLD vs Control (Liver)",
   type: "disease_vs_control",
   tissue: "Liver",
   n_case: 2,
   n_control: 1,
   analysis_date: "2024-01-15"
-});
+})
 
 MERGE (comp2:Comparison {
-  sid: "COMP002", 
+  sid: "COMP002",
   name: "T2D vs Control (Pancreas)",
   type: "disease_vs_control",
   tissue: "Pancreas",
   n_case: 1,
   n_control: 1,
   analysis_date: "2024-01-20"
-});
+})
 
 MERGE (comp3:Comparison {
-  sid: "COMP003", 
+  sid: "COMP003",
   name: "Metabolic Syndrome vs Control (Adipose)",
   type: "disease_vs_control",
   tissue: "Adipose",
   n_case: 1,
   n_control: 1,
   analysis_date: "2024-02-01"
-});
+})
 
 // Cross-tissue comparisons (same disease, different tissues)
 MERGE (comp4:Comparison {
@@ -125,7 +156,7 @@ MERGE (comp4:Comparison {
   tissue: "Liver vs Pancreas",
   description: "Compare molecular signatures between NAFLD and T2D",
   analysis_date: "2024-02-10"
-});
+})
 
 // Cross-disease comparisons (same tissue)
 MERGE (comp5:Comparison {
@@ -135,7 +166,7 @@ MERGE (comp5:Comparison {
   tissue: "Liver",
   description: "Compare NAFLD to Metabolic Syndrome in liver",
   analysis_date: "2024-02-15"
-});
+})
 
 // Phenotype-based comparison
 MERGE (comp6:Comparison {
@@ -145,7 +176,7 @@ MERGE (comp6:Comparison {
   stratification: "Insulin resistance status",
   description: "Compare samples with vs without insulin resistance",
   analysis_date: "2024-02-20"
-});
+})
 
 // Time-series or longitudinal comparison (if applicable)
 MERGE (comp7:Comparison {
@@ -155,7 +186,7 @@ MERGE (comp7:Comparison {
   tissue: "Liver",
   description: "Compare early stage vs advanced NAFLD",
   analysis_date: "2024-03-01"
-});
+})
 
 // Multi-disease meta-analysis
 MERGE (comp8:Comparison {
@@ -165,65 +196,64 @@ MERGE (comp8:Comparison {
   diseases: "NAFLD, T2D, MetSyn",
   description: "Common molecular signatures across metabolic diseases",
   analysis_date: "2024-03-05"
-});
+})
 
 // ============================================
 // MERGE GENES with expression data
 // ============================================
 
-MERGE (g1:Gene {sid: "ENSG00000105851", symbol: "PIK3CG", name: "Phosphatidylinositol-3-kinase catalytic gamma", source: "Ensembl"});
-MERGE (g2:Gene {sid: "ENSG00000169245", symbol: "CXCL10", name: "C-X-C motif chemokine ligand 10", source: "Ensembl"});
-MERGE (g3:Gene {sid: "ENSG00000198793", symbol: "MTOR", name: "Mechanistic target of rapamycin kinase", source: "Ensembl"});
-MERGE (g4:Gene {sid: "ENSG00000134108", symbol: "AKT1", name: "AKT serine/threonine kinase 1", source: "Ensembl"});
-MERGE (g5:Gene {sid: "ENSG00000171408", symbol: "PPARG", name: "Peroxisome proliferator activated receptor gamma", source: "Ensembl"});
-MERGE (g6:Gene {sid: "ENSG00000108932", symbol: "CD36", name: "CD36 molecule", source: "Ensembl"});
-MERGE (g7:Gene {sid: "ENSG00000163631", symbol: "ALB", name: "Albumin", source: "Ensembl"});
-MERGE (g8:Gene {sid: "ENSG00000169429", symbol: "CXCL8", name: "C-X-C motif chemokine ligand 8", source: "Ensembl"});
+MERGE (g1:Gene {sid: "ENSG00000105851", symbol: "PIK3CG", name: "Phosphatidylinositol-3-kinase catalytic gamma", source: "Ensembl"})
+MERGE (g2:Gene {sid: "ENSG00000169245", symbol: "CXCL10", name: "C-X-C motif chemokine ligand 10", source: "Ensembl"})
+MERGE (g3:Gene {sid: "ENSG00000198793", symbol: "MTOR", name: "Mechanistic target of rapamycin kinase", source: "Ensembl"})
+MERGE (g4:Gene {sid: "ENSG00000134108", symbol: "AKT1", name: "AKT serine/threonine kinase 1", source: "Ensembl"})
+MERGE (g5:Gene {sid: "ENSG00000171408", symbol: "PPARG", name: "Peroxisome proliferator activated receptor gamma", source: "Ensembl"})
+MERGE (g6:Gene {sid: "ENSG00000108932", symbol: "CD36", name: "CD36 molecule", source: "Ensembl"})
+MERGE (g7:Gene {sid: "ENSG00000163631", symbol: "ALB", name: "Albumin", source: "Ensembl"})
+MERGE (g8:Gene {sid: "ENSG00000169429", symbol: "CXCL8", name: "C-X-C motif chemokine ligand 8", source: "Ensembl"})
 
 // MERGE IDs (alternative identifiers)
-MERGE (id1:ID {sid: "5294", source: "NCBI"});               
-MERGE (id2:ID {sid: "3627", source: "NCBI"});
-MERGE (id3:ID {sid: "2475", source: "NCBI"});
-MERGE (id4:ID {sid: "207", source: "NCBI"});
-MERGE (id5:ID {sid: "5468", source: "NCBI"});
+MERGE (id1:ID {sid: "5294", source: "NCBI"})
+MERGE (id2:ID {sid: "3627", source: "NCBI"})
+MERGE (id3:ID {sid: "2475", source: "NCBI"})
+MERGE (id4:ID {sid: "207", source: "NCBI"})
+MERGE (id5:ID {sid: "5468", source: "NCBI"})
 
 // MERGE Proteins
-MERGE (pr1:Protein {sid: "P48736", source: "UniProt", name: "PIK3CG"});
-MERGE (pr2:Protein {sid: "P02778", source: "UniProt", name: "CXCL10"});
-MERGE (pr3:Protein {sid: "P42345", source: "UniProt", name: "MTOR"});
-MERGE (pr4:Protein {sid: "P31749", source: "UniProt", name: "AKT1"});
-MERGE (pr5:Protein {sid: "P37231", source: "UniProt", name: "PPARG"});
-MERGE (pr6:Protein {sid: "P16671", source: "UniProt", name: "CD36"});
-MERGE (pr7:Protein {sid: "P02768", source: "UniProt", name: "ALB"});
+MERGE (pr1:Protein {sid: "P48736", source: "UniProt", name: "PIK3CG"})
+MERGE (pr2:Protein {sid: "P02778", source: "UniProt", name: "CXCL10"})
+MERGE (pr3:Protein {sid: "P42345", source: "UniProt", name: "MTOR"})
+MERGE (pr4:Protein {sid: "P31749", source: "UniProt", name: "AKT1"})
+MERGE (pr5:Protein {sid: "P37231", source: "UniProt", name: "PPARG"})
+MERGE (pr6:Protein {sid: "P16671", source: "UniProt", name: "CD36"})
+MERGE (pr7:Protein {sid: "P02768", source: "UniProt", name: "ALB"})
 
 // MERGE GO terms
-MERGE (go1:GO {sid: "GO:0005158", name: "insulin receptor binding"});
-MERGE (go2:GO {sid: "GO:0006954", name: "inflammatory response"});
-MERGE (go3:GO {sid: "GO:0043066", name: "negative regulation of apoptosis"});
-MERGE (go4:GO {sid: "GO:0008286", name: "insulin receptor signaling pathway"});
-MERGE (go5:GO {sid: "GO:0006629", name: "lipid metabolic process"});
+MERGE (go1:GO {sid: "GO:0005158", name: "insulin receptor binding"})
+MERGE (go2:GO {sid: "GO:0006954", name: "inflammatory response"})
+MERGE (go3:GO {sid: "GO:0043066", name: "negative regulation of apoptosis"})
+MERGE (go4:GO {sid: "GO:0008286", name: "insulin receptor signaling pathway"})
+MERGE (go5:GO {sid: "GO:0006629", name: "lipid metabolic process"})
 MERGE (go6:GO {sid: "GO:0006955", name: "immune response"});
 
 // ============================================
 // RELATIONSHIPS: PROJECT -> SAMPLE
 // ============================================
 
-MATCH (p:Project {sid: "PROJ001"}), (s:Sample {sid: "SAMPLE001"})
-MERGE (p)-[:HAS_SAMPLE]->(s);
-MATCH (p:Project {sid: "PROJ001"}), (s:Sample {sid: "SAMPLE002"})
-MERGE (p)-[:HAS_SAMPLE]->(s);
-MATCH (p:Project {sid: "PROJ001"}), (s:Sample {sid: "SAMPLE005"})
+WITH ["SAMPLE001", , "SAMPLE002", "SAMPLE005"] AS samples
+MATCH (p:Project {sid: "PROJ001"}), (s:Sample)
+WHERE s.sid IN samples
 MERGE (p)-[:HAS_SAMPLE]->(s);
 
-MATCH (p:Project {sid: "PROJ002"}), (s:Sample {sid: "SAMPLE003"})
-MERGE (p)-[:HAS_SAMPLE]->(s);
-MATCH (p:Project {sid: "PROJ002"}), (s:Sample {sid: "SAMPLE004"})
+WITH ["SAMPLE003", "SAMPLE004"] AS samples
+MATCH (p:Project {sid: "PROJ002"}), (s:Sample)
+WHERE s.sid IN samples
 MERGE (p)-[:HAS_SAMPLE]->(s);
 
-MATCH (p:Project {sid: "PROJ003"}), (s:Sample {sid: "SAMPLE006"})
+WITH ["SAMPLE006", "SAMPLE007"] AS samples
+MATCH (p:Project {sid: "PROJ003"}), (s:Sample)
+WHERE s.sid IN samples
 MERGE (p)-[:HAS_SAMPLE]->(s);
-MATCH (p:Project {sid: "PROJ003"}), (s:Sample {sid: "SAMPLE007"})
-MERGE (p)-[:HAS_SAMPLE]->(s);
+
 
 // ============================================
 // RELATIONSHIPS: SAMPLE -> TISSUE
@@ -417,27 +447,27 @@ MERGE (e)-[:HAS_VALUE {foldChange: 1.9, pValue: 0.004, regulated: "up", baseMean
 // COMP001 results
 MATCH (c:Comparison {sid: "COMP001"}), (g:Gene {symbol: "PIK3CG"})
 MERGE (c)-[:FOUND_DIFFERENTIAL {
-  logFC: 2.5, 
-  pValue: 0.001, 
-  adjPValue: 0.015, 
+  logFC: 2.5,
+  pValue: 0.001,
+  adjPValue: 0.015,
   regulated: "up",
   significance: "significant"
 }]->(g);
 
 MATCH (c:Comparison {sid: "COMP001"}), (g:Gene {symbol: "CXCL10"})
 MERGE (c)-[:FOUND_DIFFERENTIAL {
-  logFC: 3.2, 
-  pValue: 0.0005, 
-  adjPValue: 0.008, 
+  logFC: 3.2,
+  pValue: 0.0005,
+  adjPValue: 0.008,
   regulated: "up",
   significance: "significant"
 }]->(g);
 
 MATCH (c:Comparison {sid: "COMP001"}), (g:Gene {symbol: "CD36"})
 MERGE (c)-[:FOUND_DIFFERENTIAL {
-  logFC: 2.8, 
-  pValue: 0.0008, 
-  adjPValue: 0.012, 
+  logFC: 2.8,
+  pValue: 0.0008,
+  adjPValue: 0.012,
   regulated: "up",
   significance: "significant"
 }]->(g);
@@ -445,18 +475,18 @@ MERGE (c)-[:FOUND_DIFFERENTIAL {
 // COMP002 results
 MATCH (c:Comparison {sid: "COMP002"}), (g:Gene {symbol: "MTOR"})
 MERGE (c)-[:FOUND_DIFFERENTIAL {
-  logFC: -1.8, 
-  pValue: 0.01, 
-  adjPValue: 0.045, 
+  logFC: -1.8,
+  pValue: 0.01,
+  adjPValue: 0.045,
   regulated: "down",
   significance: "significant"
 }]->(g);
 
 MATCH (c:Comparison {sid: "COMP002"}), (g:Gene {symbol: "AKT1"})
 MERGE (c)-[:FOUND_DIFFERENTIAL {
-  logFC: 2.1, 
-  pValue: 0.002, 
-  adjPValue: 0.018, 
+  logFC: 2.1,
+  pValue: 0.002,
+  adjPValue: 0.018,
   regulated: "up",
   significance: "significant"
 }]->(g);
@@ -464,9 +494,9 @@ MERGE (c)-[:FOUND_DIFFERENTIAL {
 // COMP008 - Meta-analysis (shared signatures)
 MATCH (c:Comparison {sid: "COMP008"}), (g:Gene {symbol: "PIK3CG"})
 MERGE (c)-[:FOUND_DIFFERENTIAL {
-  logFC: 2.2, 
-  pValue: 0.0001, 
-  adjPValue: 0.005, 
+  logFC: 2.2,
+  pValue: 0.0001,
+  adjPValue: 0.005,
   regulated: "up",
   significance: "significant",
   note: "Shared across NAFLD and MetSyn"
