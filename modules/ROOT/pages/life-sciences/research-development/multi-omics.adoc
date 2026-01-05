@@ -1,16 +1,17 @@
 = Multi-Omics Data Integration
 
-Building on the single omics integration, we further enhance biological insight by connecting other omics data types (proteomics, metabolomics) and ontology information directly into the knowledge graph. Linking standardized biomedical ontologies—such as the Gene Ontology *(GO)*, Disease Ontology *(MONDO)* and phenotype *(EFO, HPO)* which enriches the multi-omics graph with layers of curated knowledge. Each gene, protein, metabolite, or biological entity in the graph can be annotated with relevant ontology terms, enabling not just data integration, but deep semantic enrichment.
+Building on the xref:life-sciences/research-development/single-omics.adoc[single omics] integration, we further enhance biological insight by connecting other omics data types (https://en.wikipedia.org/wiki/Proteomics[proteomics], https://en.wikipedia.org/wiki/Metabolomics[metabolomics]) and ontology information directly into the knowledge graph. Linking standardized biomedical ontologies—such as the Gene Ontology (https://en.wikipedia.org/wiki/Gene_Ontology[GO]), Disease Ontology (https://mondo.monarchinitiative.org/[MONDO]) and phenotype (https://en.wikipedia.org/wiki/Experimental_Factor_Ontology[EFO], https://en.wikipedia.org/wiki/Human_Phenotype_Ontology[HPO]) which enriches the multi-omics graph with layers of curated knowledge. Each gene, protein, metabolite, or biological entity in the graph can be annotated with relevant ontology terms, enabling not just data integration, but deep semantic enrichment.
 
 This ontology-driven approach allows researchers to query molecular data in concept-driven ways: for example, finding all genes participating in a specific biological process (GO term), all proteins annotated as drug targets, or all molecular entities linked to a disease category across experiments. By linking omics data to ontological nodes and relationships, the knowledge graph supports cross-omics reasoning (e.g., transcript changes that impact disease-relevant pathways), leverages hierarchical vocabulary structures for inference, and enables federated analysis across datasets and domains. The result is a truly interconnected data and knowledge landscape—accelerating hypothesis generation, translational discovery, and precision medicine.
 
 == Scenario
 
-Building on the single omics foundation, we now extend the integration to support multiple omics layers such as proteomics and metabolomics. By mapping relationships between genes, their protein products, and metabolic pathways, the knowledge graph captures the full spectrum from transcriptomics through proteomics to metabolomic contexts. This unified representation enables researchers to trace molecular changes across different omics types and gain holistic insights into biological systems and disease mechanisms. We will also add ontology information to the nodes and relationships to enrich the graph with layers of curated knowledge.
+Building on the xref:life-sciences/research-development/single-omics.adoc[Single Omics] foundation, we now extend the integration to support multiple omics layers such as proteomics and metabolomics. By mapping relationships between genes, their protein products, and metabolic pathways, the knowledge graph captures the full spectrum from https://en.wikipedia.org/wiki/Transcriptomics_technologies[transcriptomics] through proteomics to metabolomic contexts. This unified representation enables researchers to trace molecular changes across different omics types and gain holistic insights into biological systems and disease mechanisms. We will also add ontology information to the nodes and relationships to enrich the graph with layers of curated knowledge.
 
 == Data Model
 
-This data model extends the xref:life-sciences/research-development/single-omics.adoc[Single OMICs Data Integration] page by adding more omics data like proteomics and metabolomics as well as data from ontologies like GO and EFO: 
+This data model extends the xref:life-sciences/research-development/single-omics.adoc[Single Omics Data Integration] page by adding more omics data like proteomics and metabolomics as well as data from ontologies like GO and EFO: 
+
 * New Protein Nodes Added
 * New Ontology Nodes Added
 * New Ontology Relationships Added
@@ -18,23 +19,26 @@ This data model extends the xref:life-sciences/research-development/single-omics
 * New Metabolomics Experiments Added
 * New Multi-Omics Comparison (COMP009)
 
-The (Experiment)-[:HAS_VALUE]->(Protein) relationships now include:
-foldChange: Protein abundance change
-pValue: Statistical significance
-regulated: up/down direction
-intensity: MS intensity values
-peptides: Number of peptides identified
-coverage: Protein sequence coverage percentage
+The `(Experiment)-[:HAS_VALUE]->(Protein)` relationships now include:
 
-Multi-Omics Comparison (COMP009)
-A new comparison integrating transcriptomics and proteomics for NAFLD, including:
+* foldChange: Protein abundance change1
+* pValue: Statistical significance
+* regulated: up/down direction
+* intensity: MS intensity values
+* peptides: Number of peptides identified
+* coverage: Protein sequence coverage percentage
 
-RNA-seq (EXP001)
-Proteomics TMT-MS (EXP004)
-Proteomics DIA-PASEF (EXP007)
-Correlation values showing mRNA-protein concordance
+=== Multi-Omics Comparison (COMP009)
+
+A new comparison integrating transcriptomics and proteomics for https://en.wikipedia.org/wiki/Non-alcoholic_fatty_liver_disease[NAFLD], including:
+
+* RNA-seq (EXP001)
+* Proteomics TMT-MS (EXP004)
+* Proteomics DIA-PASEF (EXP007)
+* Correlation values showing mRNA-protein concordance
 
 image::life-sciences/research-development/Industry_Use_Cases_multi-omics_with_ontologies.png[width=800]
+
 == Demo Data
 
 The following Cypher statements will create the example graph in the Neo4j database:
@@ -42,45 +46,45 @@ The following Cypher statements will create the example graph in the Neo4j datab
 [source, cypher, role=noheader]
 ----
 // MERGE Projects
-MERGE (p1:Project {sid: "PROJ001", name: "Liver Disease Study"});
-MERGE (p2:Project {sid: "PROJ002", name: "Diabetes Research"});
-MERGE (p3:Project {sid: "PROJ003", name: "Cross-Disease Metabolic Study"});
+MERGE (p1:Project {sid: "PROJ001", name: "Liver Disease Study"})
+MERGE (p2:Project {sid: "PROJ002", name: "Diabetes Research"})
+MERGE (p3:Project {sid: "PROJ003", name: "Cross-Disease Metabolic Study"})
 
 // MERGE Tissues
-MERGE (t1:Tissue {sid: "UBERON:0002107", name: "Liver"});
-MERGE (t2:Tissue {sid: "UBERON:0001264", name: "Pancreas"});
-MERGE (t3:Tissue {sid: "UBERON:0000945", name: "Adipose tissue"});
+MERGE (t1:Tissue {sid: "UBERON:0002107", name: "Liver"})
+MERGE (t2:Tissue {sid: "UBERON:0001264", name: "Pancreas"})
+MERGE (t3:Tissue {sid: "UBERON:0000945", name: "Adipose tissue"})
 
 // MERGE Diseases
-MERGE (d1:Disease {sid: "MONDO:0005359", name: "Non-alcoholic fatty liver disease"});
-MERGE (d2:Disease {sid: "MONDO:0005015", name: "Type 2 Diabetes"});
-MERGE (d3:Disease {sid: "MONDO:0011382", name: "Metabolic Syndrome"});
+MERGE (d1:Disease {sid: "MONDO:0005359", name: "Non-alcoholic fatty liver disease"})
+MERGE (d2:Disease {sid: "MONDO:0005015", name: "Type 2 Diabetes"})
+MERGE (d3:Disease {sid: "MONDO:0011382", name: "Metabolic Syndrome"})
 
 // MERGE Phenotypes (EFO)
-MERGE (ph1:EFO {sid: "EFO:0004220", name: "Insulin resistance"});
-MERGE (ph2:EFO {sid: "EFO:0001421", name: "Elevated triglycerides"});
-MERGE (ph3:EFO {sid: "EFO:0004465", name: "Hepatic steatosis"});
-MERGE (ph4:EFO {sid: "EFO:0000685", name: "Obesity"});
+MERGE (ph1:EFO {sid: "EFO:0004220", name: "Insulin resistance"})
+MERGE (ph2:EFO {sid: "EFO:0001421", name: "Elevated triglycerides"})
+MERGE (ph3:EFO {sid: "EFO:0004465", name: "Hepatic steatosis"})
+MERGE (ph4:EFO {sid: "EFO:0000685", name: "Obesity"})
 
 // MERGE Samples
-MERGE (s1:Sample {sid: "SAMPLE001", name: "Patient_001_Liver", condition: "NAFLD"});
-MERGE (s2:Sample {sid: "SAMPLE002", name: "Control_001_Liver", condition: "Healthy"});
-MERGE (s3:Sample {sid: "SAMPLE003", name: "Patient_002_Pancreas", condition: "T2D"});
-MERGE (s4:Sample {sid: "SAMPLE004", name: "Control_002_Pancreas", condition: "Healthy"});
-MERGE (s5:Sample {sid: "SAMPLE005", name: "Patient_003_Liver", condition: "NAFLD"});
-MERGE (s6:Sample {sid: "SAMPLE006", name: "Patient_004_Adipose", condition: "MetSyn"});
-MERGE (s7:Sample {sid: "SAMPLE007", name: "Control_003_Adipose", condition: "Healthy"});
+MERGE (s1:Sample {sid: "SAMPLE001", name: "Patient_001_Liver", condition: "NAFLD"})
+MERGE (s2:Sample {sid: "SAMPLE002", name: "Control_001_Liver", condition: "Healthy"})
+MERGE (s3:Sample {sid: "SAMPLE003", name: "Patient_002_Pancreas", condition: "T2D"})
+MERGE (s4:Sample {sid: "SAMPLE004", name: "Control_002_Pancreas", condition: "Healthy"})
+MERGE (s5:Sample {sid: "SAMPLE005", name: "Patient_003_Liver", condition: "NAFLD"})
+MERGE (s6:Sample {sid: "SAMPLE006", name: "Patient_004_Adipose", condition: "MetSyn"})
+MERGE (s7:Sample {sid: "SAMPLE007", name: "Control_003_Adipose", condition: "Healthy"})
 
 // MERGE Experiments - RNA-seq
-MERGE (e1:Experiment {sid: "EXP001", type: "RNA-seq", platform: "Illumina NovaSeq"});
-MERGE (e2:Experiment {sid: "EXP002", type: "RNA-seq", platform: "Illumina NovaSeq"});
-MERGE (e3:Experiment {sid: "EXP003", type: "RNA-seq", platform: "Illumina NovaSeq"});
+MERGE (e1:Experiment {sid: "EXP001", type: "RNA-seq", platform: "Illumina NovaSeq"})
+MERGE (e2:Experiment {sid: "EXP002", type: "RNA-seq", platform: "Illumina NovaSeq"})
+MERGE (e3:Experiment {sid: "EXP003", type: "RNA-seq", platform: "Illumina NovaSeq"})
 
 // MERGE Experiments - Proteomics
-MERGE (e4:Experiment {sid: "EXP004", type: "Proteomics", platform: "Orbitrap Fusion", method: "TMT-MS"});
-MERGE (e5:Experiment {sid: "EXP005", type: "Proteomics", platform: "Orbitrap Fusion", method: "TMT-MS"});
-MERGE (e6:Experiment {sid: "EXP006", type: "Proteomics", platform: "Q Exactive HF", method: "Label-free quantification"});
-MERGE (e7:Experiment {sid: "EXP007", type: "Proteomics", platform: "timsTOF Pro", method: "DIA-PASEF"});
+MERGE (e4:Experiment {sid: "EXP004", type: "Proteomics", platform: "Orbitrap Fusion", method: "TMT-MS"})
+MERGE (e5:Experiment {sid: "EXP005", type: "Proteomics", platform: "Orbitrap Fusion", method: "TMT-MS"})
+MERGE (e6:Experiment {sid: "EXP006", type: "Proteomics", platform: "Q Exactive HF", method: "Label-free quantification"})
+MERGE (e7:Experiment {sid: "EXP007", type: "Proteomics", platform: "timsTOF Pro", method: "DIA-PASEF"})
 
 // ============================================
 // EXTENDED COMPARISON NODES
@@ -95,7 +99,7 @@ MERGE (comp1:Comparison {
   n_case: 2,
   n_control: 1,
   analysis_date: "2024-01-15"
-});
+})
 
 MERGE (comp2:Comparison {
   sid: "COMP002", 
@@ -105,7 +109,7 @@ MERGE (comp2:Comparison {
   n_case: 1,
   n_control: 1,
   analysis_date: "2024-01-20"
-});
+})
 
 MERGE (comp3:Comparison {
   sid: "COMP003", 
@@ -115,7 +119,7 @@ MERGE (comp3:Comparison {
   n_case: 1,
   n_control: 1,
   analysis_date: "2024-02-01"
-});
+})
 
 // Cross-tissue comparisons (same disease, different tissues)
 MERGE (comp4:Comparison {
@@ -125,17 +129,8 @@ MERGE (comp4:Comparison {
   tissue: "Liver vs Pancreas",
   description: "Compare molecular signatures between NAFLD and T2D",
   analysis_date: "2024-02-10"
-});
+})
 
-// Cross-disease comparisons (same tissue)
-MERGE (comp5:Comparison {
-  sid: "COMP005",
-  name: "NAFLD vs MetSyn (Liver tissue only)",
-  type: "cross_disease_same_tissue",
-  tissue: "Liver",
-  description: "Compare NAFLD to Metabolic Syndrome in liver",
-  analysis_date: "2024-02-15"
-});
 
 // Phenotype-based comparison
 MERGE (comp6:Comparison {
@@ -145,17 +140,9 @@ MERGE (comp6:Comparison {
   stratification: "Insulin resistance status",
   description: "Compare samples with vs without insulin resistance",
   analysis_date: "2024-02-20"
-});
+})
 
-// Time-series or longitudinal comparison (if applicable)
-MERGE (comp7:Comparison {
-  sid: "COMP007",
-  name: "Early vs Late NAFLD",
-  type: "disease_progression",
-  tissue: "Liver",
-  description: "Compare early stage vs advanced NAFLD",
-  analysis_date: "2024-03-01"
-});
+
 
 // Multi-disease meta-analysis
 MERGE (comp8:Comparison {
@@ -165,65 +152,64 @@ MERGE (comp8:Comparison {
   diseases: "NAFLD, T2D, MetSyn",
   description: "Common molecular signatures across metabolic diseases",
   analysis_date: "2024-03-05"
-});
+})
 
 // ============================================
 // MERGE GENES with expression data
 // ============================================
 
-MERGE (g1:Gene {sid: "ENSG00000105851", symbol: "PIK3CG", name: "Phosphatidylinositol-3-kinase catalytic gamma", source: "Ensembl"});
-MERGE (g2:Gene {sid: "ENSG00000169245", symbol: "CXCL10", name: "C-X-C motif chemokine ligand 10", source: "Ensembl"});
-MERGE (g3:Gene {sid: "ENSG00000198793", symbol: "MTOR", name: "Mechanistic target of rapamycin kinase", source: "Ensembl"});
-MERGE (g4:Gene {sid: "ENSG00000134108", symbol: "AKT1", name: "AKT serine/threonine kinase 1", source: "Ensembl"});
-MERGE (g5:Gene {sid: "ENSG00000171408", symbol: "PPARG", name: "Peroxisome proliferator activated receptor gamma", source: "Ensembl"});
-MERGE (g6:Gene {sid: "ENSG00000108932", symbol: "CD36", name: "CD36 molecule", source: "Ensembl"});
-MERGE (g7:Gene {sid: "ENSG00000163631", symbol: "ALB", name: "Albumin", source: "Ensembl"});
-MERGE (g8:Gene {sid: "ENSG00000169429", symbol: "CXCL8", name: "C-X-C motif chemokine ligand 8", source: "Ensembl"});
+MERGE (g1:Gene {sid: "ENSG00000105851", symbol: "PIK3CG", name: "Phosphatidylinositol-3-kinase catalytic gamma", source: "Ensembl"})
+MERGE (g2:Gene {sid: "ENSG00000169245", symbol: "CXCL10", name: "C-X-C motif chemokine ligand 10", source: "Ensembl"})
+MERGE (g3:Gene {sid: "ENSG00000198793", symbol: "MTOR", name: "Mechanistic target of rapamycin kinase", source: "Ensembl"})
+MERGE (g4:Gene {sid: "ENSG00000134108", symbol: "AKT1", name: "AKT serine/threonine kinase 1", source: "Ensembl"})
+MERGE (g5:Gene {sid: "ENSG00000171408", symbol: "PPARG", name: "Peroxisome proliferator activated receptor gamma", source: "Ensembl"})
+MERGE (g6:Gene {sid: "ENSG00000108932", symbol: "CD36", name: "CD36 molecule", source: "Ensembl"})
+MERGE (g7:Gene {sid: "ENSG00000163631", symbol: "ALB", name: "Albumin", source: "Ensembl"})
+MERGE (g8:Gene {sid: "ENSG00000169429", symbol: "CXCL8", name: "C-X-C motif chemokine ligand 8", source: "Ensembl"})
 
 // MERGE IDs (alternative identifiers)
-MERGE (id1:ID {sid: "5294", source: "NCBI"});               
-MERGE (id2:ID {sid: "3627", source: "NCBI"});
-MERGE (id3:ID {sid: "2475", source: "NCBI"});
-MERGE (id4:ID {sid: "207", source: "NCBI"});
-MERGE (id5:ID {sid: "5468", source: "NCBI"});
+MERGE (id1:ID {sid: "5294", source: "NCBI"})
+MERGE (id2:ID {sid: "3627", source: "NCBI"})
+MERGE (id3:ID {sid: "2475", source: "NCBI"})
+MERGE (id4:ID {sid: "207", source: "NCBI"})
+MERGE (id5:ID {sid: "5468", source: "NCBI"})
 
 // MERGE Proteins
-MERGE (pr1:Protein {sid: "P48736", source: "UniProt", name: "PIK3CG", gene_name: "PIK3CG"});
-MERGE (pr2:Protein {sid: "P02778", source: "UniProt", name: "CXCL10", gene_name: "CXCL10"});
-MERGE (pr3:Protein {sid: "P42345", source: "UniProt", name: "MTOR", gene_name: "MTOR"});
-MERGE (pr4:Protein {sid: "P31749", source: "UniProt", name: "AKT1", gene_name: "AKT1"});
-MERGE (pr5:Protein {sid: "P37231", source: "UniProt", name: "PPARG", gene_name: "PPARG"});
-MERGE (pr6:Protein {sid: "P16671", source: "UniProt", name: "CD36", gene_name: "CD36"});
-MERGE (pr7:Protein {sid: "P02768", source: "UniProt", name: "ALB", gene_name: "ALB"});
-MERGE (pr8:Protein {sid: "P05067", source: "UniProt", name: "APP", gene_name: "APP"});
-MERGE (pr9:Protein {sid: "P01308", source: "UniProt", name: "INS", gene_name: "INS"});
-MERGE (pr10:Protein {sid: "P10636", source: "UniProt", name: "MAPT", gene_name: "MAPT"});
-MERGE (pr11:Protein {sid: "P35354", source: "UniProt", name: "PTGS2", gene_name: "PTGS2"});
-MERGE (pr12:Protein {sid: "P01375", source: "UniProt", name: "TNF", gene_name: "TNF"});
+MERGE (pr1:Protein {sid: "P48736", source: "UniProt", name: "PIK3CG", gene_name: "PIK3CG"})
+MERGE (pr2:Protein {sid: "P02778", source: "UniProt", name: "CXCL10", gene_name: "CXCL10"})
+MERGE (pr3:Protein {sid: "P42345", source: "UniProt", name: "MTOR", gene_name: "MTOR"})
+MERGE (pr4:Protein {sid: "P31749", source: "UniProt", name: "AKT1", gene_name: "AKT1"})
+MERGE (pr5:Protein {sid: "P37231", source: "UniProt", name: "PPARG", gene_name: "PPARG"})
+MERGE (pr6:Protein {sid: "P16671", source: "UniProt", name: "CD36", gene_name: "CD36"})
+MERGE (pr7:Protein {sid: "P02768", source: "UniProt", name: "ALB", gene_name: "ALB"})
+MERGE (pr8:Protein {sid: "P05067", source: "UniProt", name: "APP", gene_name: "APP"})
+MERGE (pr9:Protein {sid: "P01308", source: "UniProt", name: "INS", gene_name: "INS"})
+MERGE (pr10:Protein {sid: "P10636", source: "UniProt", name: "MAPT", gene_name: "MAPT"})
+MERGE (pr11:Protein {sid: "P35354", source: "UniProt", name: "PTGS2", gene_name: "PTGS2"})
+MERGE (pr12:Protein {sid: "P01375", source: "UniProt", name: "TNF", gene_name: "TNF"})
 
 // MERGE GO terms
-MERGE (go1:GO {sid: "GO:0005158", name: "insulin receptor binding"});
-MERGE (go2:GO {sid: "GO:0006954", name: "inflammatory response"});
-MERGE (go3:GO {sid: "GO:0043066", name: "negative regulation of apoptosis"});
-MERGE (go4:GO {sid: "GO:0008286", name: "insulin receptor signaling pathway"});
-MERGE (go5:GO {sid: "GO:0006629", name: "lipid metabolic process"});
-MERGE (go6:GO {sid: "GO:0006955", name: "immune response"});
-MERGE (go7:GO {sid: "GO:0071356", name: "cellular response to tumor necrosis factor"});
-MERGE (go8:GO {sid: "GO:0042593", name: "glucose homeostasis"});
-MERGE (go9:GO {sid: "GO:0006006", name: "glucose metabolic process"});
-MERGE (go10:GO {sid: "GO:0030154", name: "cell differentiation"});
-MERGE (go11:GO {sid: "GO:0051091", name: "positive regulation of transcription factor activity"});
+MERGE (go1:GO {sid: "GO:0005158", name: "insulin receptor binding"})
+MERGE (go2:GO {sid: "GO:0006954", name: "inflammatory response"})
+MERGE (go3:GO {sid: "GO:0043066", name: "negative regulation of apoptosis"})
+MERGE (go4:GO {sid: "GO:0008286", name: "insulin receptor signaling pathway"})
+MERGE (go5:GO {sid: "GO:0006629", name: "lipid metabolic process"})
+MERGE (go6:GO {sid: "GO:0006955", name: "immune response"})
+MERGE (go7:GO {sid: "GO:0071356", name: "cellular response to tumor necrosis factor"})
+MERGE (go8:GO {sid: "GO:0042593", name: "glucose homeostasis"})
+MERGE (go9:GO {sid: "GO:0006006", name: "glucose metabolic process"})
+MERGE (go10:GO {sid: "GO:0030154", name: "cell differentiation"})
+MERGE (go11:GO {sid: "GO:0051091", name: "positive regulation of transcription factor activity"})
 
 // MERGE Pathway nodes (higher-level biological pathways)
-MERGE (pw1:Pathway {sid: "KEGG:04910", name: "Insulin signaling pathway", source: "KEGG"});
-MERGE (pw2:Pathway {sid: "KEGG:04064", name: "NF-kappa B signaling pathway", source: "KEGG"});
-MERGE (pw3:Pathway {sid: "KEGG:04151", name: "PI3K-Akt signaling pathway", source: "KEGG"});
-MERGE (pw4:Pathway {sid: "KEGG:04150", name: "mTOR signaling pathway", source: "KEGG"});
-MERGE (pw5:Pathway {sid: "KEGG:04920", name: "Adipocytokine signaling pathway", source: "KEGG"});
-MERGE (pw6:Pathway {sid: "KEGG:03320", name: "PPAR signaling pathway", source: "KEGG"});
-MERGE (pw7:Pathway {sid: "REACTOME:R-HSA-74751", name: "Insulin receptor signaling cascade", source: "Reactome"});
-MERGE (pw8:Pathway {sid: "REACTOME:R-HSA-449147", name: "Signaling by Interleukins", source: "Reactome"});
-MERGE (pw9:Pathway {sid: "REACTOME:R-HSA-162582", name: "Signal Transduction", source: "Reactome"});
+MERGE (pw1:Pathway {sid: "KEGG:04910", name: "Insulin signaling pathway", source: "KEGG"})
+MERGE (pw2:Pathway {sid: "KEGG:04064", name: "NF-kappa B signaling pathway", source: "KEGG"})
+MERGE (pw3:Pathway {sid: "KEGG:04151", name: "PI3K-Akt signaling pathway", source: "KEGG"})
+MERGE (pw4:Pathway {sid: "KEGG:04150", name: "mTOR signaling pathway", source: "KEGG"})
+MERGE (pw5:Pathway {sid: "KEGG:04920", name: "Adipocytokine signaling pathway", source: "KEGG"})
+MERGE (pw6:Pathway {sid: "KEGG:03320", name: "PPAR signaling pathway", source: "KEGG"})
+MERGE (pw7:Pathway {sid: "REACTOME:R-HSA-74751", name: "Insulin receptor signaling cascade", source: "Reactome"})
+MERGE (pw8:Pathway {sid: "REACTOME:R-HSA-449147", name: "Signaling by Interleukins", source: "Reactome"})
 MERGE (pw10:Pathway {sid: "WIKIPATHWAYS:WP1471", name: "Inflammatory Response Pathway", source: "WikiPathways"});
 
 // ============================================
@@ -1196,81 +1182,127 @@ MERGE (p2)-[:INTERACTS_WITH {source: "STRING", score: 0.65}]->(p1);
 
 == Cypher Queries
 
-Key Examples in the Dataset
-NAFLD Concordant Overexpression (COMP001):
+Below are some queries that can be used to get some insights from the data available.
+
+=== Key Examples in the Dataset
+
+These are just a few key examples within the dataset, and the queries that could be used to showcase them
+
+==== NAFLD Concordant Overexpression (COMP001):
 
 * PIK3CG: mRNA +2.5 FC ↔ Protein +2.3 FC ✓ Concordant
 * CD36: mRNA +2.8 FC ↔ Protein +3.1 FC ✓ Concordant
 * CXCL10: mRNA +3.2 FC ↔ Protein +2.8 FC ✓ Concordant
 
-T2D Concordant Overexpression (COMP002):
+[source, cypher, role=noheader]
+----
+WITH "COMP001" AS sid
+MATCH (c:Comparison {sid: sid})-[fd1:FOUND_DIFFERENTIAL]->(g:Gene)-[:CODES]->(p:Protein)<-[fd2:FOUND_DIFFERENTIAL]-(c)
+RETURN g.symbol AS Gene,
+       g.name AS GeneName,
+       fd1.logFC AS `mRNA Fold Change`,
+       fd2.logFC AS `Protein Fold Change`,
+       CASE WHEN fd1.logFC > 0 and fd2.logFC > 0 THEN 'Concordant'
+            WHEN fd1.logFC < 0 and fd2.logFC < 0 THEN 'Concordant'
+            ELSE 'Discordant' END AS Regulation;
+----
+
+==== T2D Concordant Overexpression (COMP002):
 
 * AKT1: mRNA +2.1 FC ↔ Protein +2.0 FC ✓ Concordant
 
-Multi-Omics Integration (COMP009):
+[source, cypher, role=noheader]
+----
+WITH "COMP002" AS sid
+MATCH (c:Comparison {sid: sid})-[fd1:FOUND_DIFFERENTIAL]->(g:Gene)-[:CODES]->(p:Protein)<-[fd2:FOUND_DIFFERENTIAL]-(c)
+WHERE fd1.logFC > 0 AND fd2.logFC > 0
+RETURN g.symbol AS Gene,
+       g.name AS GeneName,
+       fd1.logFC AS `mRNA Fold Change`,
+       fd2.logFC AS `Protein Fold Change`
+----
+
+==== Multi-Omics Integration (COMP009):
 
 * Demonstrates correlation between transcript and protein levels with correlation coefficients (0.85-0.92)
 
 === Proteomics-only changes - Identify post-transcriptional regulation
 
-Find proteins that change significantly without corresponding mRNA changes
+Find proteins that change significantly without corresponding mRNA changes.
 
 [source, cypher, role=noheader]
 ----
 // Proteomics-only changes - Identify post-transcriptional regulation
-MATCH (exp:Experiment {type: "Proteomics"})-[r:HAS_VALUE]->(protein:Protein)
+WITH "Proteomics" as experimentType
+MATCH (exp:Experiment {type: experimentType})-[r:HAS_VALUE]->(protein:Protein)
 WHERE r.pValue < 0.05 AND abs(r.foldChange) > 1.5
 MATCH (protein)<-[:CODES]-(gene:Gene)
 WHERE r.regulated = "up"
 RETURN protein.name AS Protein,
        gene.symbol AS Gene,
-       r.foldChange AS FoldChange,
-       r.pValue AS PValue,
+       r.foldChange AS `mRNA Fold Change`,
+       r.pValue AS `P-Value`,
        r.regulated AS Direction;
 ----
 
-=== Which proteins/genes are associated with a given disease or phenotype?
+=== Which proteins/genes are associated with a given disease?
+
+Starting with a disease of interest, what Genes and Proteins are implicated, and what biological processes those are associated with.
 
 [source, cypher, role=noheader]
 ----
-// Find proteins associated with a given disease or phenotype
-MATCH (d:Disease {name: "Non-alcoholic fatty liver disease"})<-[:RELATED_TO]-(g:Gene)-[:CODES]->(p:Protein)-[:ASSOCIATED_WITH]->(go:GO)
-RETURN g.symbol AS Gene,
-       p.sid AS Protein,
-       go.name AS BiologicalProcess
+// Find proteins associated with a given disease (e.g., Non-alcoholic fatty liver disease) 
+WITH "Non-alcoholic fatty liver disease" AS diseaseName
+MATCH (d:Disease {name: diseaseName})<-[:RELATED_TO]-(g:Gene)-[:CODES]->(p:Protein)-[:ASSOCIATED_WITH]->(go:GO)
+RETURN 
+  g.symbol AS Gene,
+  p.sid AS Protein,
+  go.name AS `Biological Process`
 ORDER BY Gene;
+----
 
-// Alternative: Find genes from experiments on samples with specific phenotype
-MATCH (ph:EFO {name: "Elevated triglycerides"})<-[:HAS_PHENOTYPE]-(s:Sample)-[:HAS_EXPERIMENT]->(e:Experiment)-[hv:HAS_VALUE]->(g:Gene)
+=== Which proteins/genes are associated with a given phenotype?
+
+We can also start with a particular phenotype and find associated genes/proteins.
+
+[source, cypher, role=noheader]
+----
+// Find genes from experiments on samples with specific phenotype (e.g., elevated triglycerides)
+WITH "Elevated triglycerides" AS phenotypeName
+MATCH (ph:EFO {name: phenotypeName})<-[:HAS_PHENOTYPE]-(s:Sample)-[:HAS_EXPERIMENT]->(e:Experiment)-[hv:HAS_VALUE]->(g:Gene)
 WHERE hv.pValue < 0.05
-RETURN g.symbol AS Gene, 
-       hv.foldChange AS FoldChange, 
-       hv.pValue AS PValue,
-       ph.name AS Phenotype
+RETURN 
+  g.symbol AS Gene, 
+  hv.foldChange AS FoldChange, 
+  hv.pValue AS PValue
 ORDER BY hv.pValue;
 
-
 === Which diseases or phenotypes are linked to a given gene/protein (i.e. what else might targeting this protein affect)?
+
+Starting with a gene or protein of interest, what diseases are associated with it?
 
 [source, cypher, role=noheader]
 ----
 // Find diseases linked to a given gene/protein
-MATCH (g:Gene {symbol: "PIK3CG"})-[:RELATED_TO]-(d:Disease)
+WITH "PIK3CG" AS geneSymbol
+MATCH (g:Gene {symbol: geneSymbol})-[:RELATED_TO]-(d:Disease)
 RETURN d.name AS Disease
 ORDER BY Disease;
 ----
 
 === Find phenotypes linked to a given gene/protein (i.e. what else might targeting this protein affect)?
 
+Beginning with a `Gene`, find associated phenotypes from samples in experiments measuring that gene.
+
 [source, cypher, role=noheader] 
 ----
 // Find phenotypes linked to a given gene/protein
-MATCH (g:Gene {symbol: "PIK3CG"})<-[:HAS_VALUE]-(exp:Experiment)<-[:HAS_EXPERIMENT]-(s:Sample)-[:HAS_PHENOTYPE]->(ph:EFO)
-RETURN DISTINCT g.symbol AS Gene,
-       ph.name AS Phenotype,
-       ph.sid AS PhenotypeID
-ORDER BY ph.name;
-ORDER BY g.symbol;
+WITH "PIK3CG" AS geneSymbol
+MATCH (g:Gene {symbol: geneSymbol})<-[:HAS_VALUE]-(:Experiment)<-[:HAS_EXPERIMENT]-(:Sample)-[:HAS_PHENOTYPE]->(ph:EFO)
+RETURN 
+  DISTINCT g.symbol AS Gene,
+  ph.name AS Phenotype,
+  ph.sid AS PhenotypeID;
 ----
 
 === Which genes are overexpressed at both the mRNA (transcript) and protein levels in a given disease?
@@ -1278,15 +1310,18 @@ ORDER BY g.symbol;
 [source, cypher, role=noheader]
 ----
 // Which genes are overexpressed at both the mRNA (transcript) and protein levels in a given disease?
-MATCH (disease:Disease {name: "Non-alcoholic fatty liver disease"})
-MATCH (comp:Comparison)-[:STUDIES_DISEASE]->(disease)
-MATCH (comp)-[rnaR:FOUND_DIFFERENTIAL]->(gene:Gene)
-WHERE rnaR.regulated = "up"
-RETURN DISTINCT disease.name AS Disease,
-       gene.symbol AS Gene,
-       gene.name AS GeneName,
-       rnaR.logFC AS mRNA_FoldChange,
-       rnaR.adjPValue AS mRNA_AdjPValue;
+WITH "Non-alcoholic fatty liver disease" AS diseaseName
+MATCH 
+  (disease:Disease {name: diseaseName}),
+  (comp:Comparison)-[:STUDIES_DISEASE]->(disease),
+  (comp)-[fd:FOUND_DIFFERENTIAL]->(gene:Gene)
+WHERE fd.regulated = "up"
+RETURN 
+  DISTINCT disease.name AS Disease,
+  gene.symbol AS Gene,
+  gene.name AS GeneName,
+  fd.logFC AS mRNA_FoldChange,
+  fd.adjPValue AS mRNA_AdjPValue;
 ----
 
 === Which proteins are in the network neighborhood — interacting proteins, upstream regulators, downstream effectors — of a candidate target?
