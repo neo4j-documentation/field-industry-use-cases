@@ -53,24 +53,32 @@ because different experiments and databases use different naming conventions, ye
 
 === Flexibility for Discovery
 
-The schema's flexibility truly shines when solving biological questions. Need to find all differentially expressed genes across multiple liver disease experiments?
-Simply traverse from Disease → Gene ← Experiment ← Sample ← Tissue. Want to identify genes consistently dysregulated in a specific phenotype regardless of tissue type? The graph makes this natural. Looking for functional enrichment? Follow Gene → Protein → GO paths. The graph's property model also allows each node type to carry experiment-specific attributes—fold-changes, p-values, expression levels—without forcing every experiment to share identical properties.
-This adaptable structure means researchers can integrate new RNA-seq datasets incrementally, add novel annotation layers as they become available, and explore biological connections without extensive database redesign—transforming single omics analysis from a data management burden into an opportunity for insight.
+The schema's flexibility truly shines when solving biological questions. Need to find all differentially expressed genes across 
+multiple liver disease experiments? Simply traverse from Disease → Gene ← Experiment ← Sample ← Tissue. Want to identify genes 
+consistently dysregulated in a specific phenotype regardless of tissue type? The graph makes this natural. Looking for functional 
+enrichment? Follow Gene → Protein → GO paths. The graph's property model also allows each node type to carry experiment-specific 
+attributes—fold-changes, p-values, expression levels—without forcing every experiment to share identical properties.
+
+This adaptable structure means researchers can integrate new RNA-seq datasets incrementally, add novel annotation layers as 
+they become available, and explore biological connections without extensive database redesign—transforming single omics analysis 
+from a data management burden into an opportunity for insight.
 
 == Data Model
 
-The graph data model demonstrates how Neo4j's flexible schema elegantly addresses the inherent heterogeneity of single omics data. Unlike rigid relational databases that require predefined table structures, this graph architecture allows researchers to naturally represent the diverse experimental contexts, varied sample annotations, and multiple identifier systems that characterize real-world omics projects.
+The graph data model demonstrates how Neo4j's flexible schema elegantly addresses the inherent heterogeneity of single omics data. 
+Unlike rigid relational databases that require predefined table structures, this graph architecture allows researchers to naturally 
+represent the diverse experimental contexts, varied sample annotations, and multiple identifier systems that characterize real-world 
+omics projects.
 
 .Single OMICs Data Model
 image::life-sciences/research-development/Industry_Use_Cases_single-omics.png[width=800]
 
-We will continue to build on this model by adding more Omics data types and ontologies.
-
-For multi-omics integration, see the xref:life-sciences/research-development/multi-omics.adoc[Multi-OMICs Data Integration] page.
+We will continue to build on this model by adding more Omics data types and ontologies
+in the xref:life-sciences/research-development/multi-omics.adoc[Multi-OMICs Data Integration] page.
 
 == Demo Data
 
-The following Cypher statements will MERGE the example graph in the Neo4j database:
+The following Cypher statements will create an example graph in the Neo4j database:
 
 [source, cypher, role=noheader]
 ----
@@ -158,16 +166,6 @@ MERGE (comp4:Comparison {
   analysis_date: "2024-02-10"
 })
 
-// Cross-disease comparisons (same tissue)
-MERGE (comp5:Comparison {
-  sid: "COMP005",
-  name: "NAFLD vs MetSyn (Liver tissue only)",
-  type: "cross_disease_same_tissue",
-  tissue: "Liver",
-  description: "Compare NAFLD to Metabolic Syndrome in liver",
-  analysis_date: "2024-02-15"
-})
-
 // Phenotype-based comparison
 MERGE (comp6:Comparison {
   sid: "COMP006",
@@ -176,16 +174,6 @@ MERGE (comp6:Comparison {
   stratification: "Insulin resistance status",
   description: "Compare samples with vs without insulin resistance",
   analysis_date: "2024-02-20"
-})
-
-// Time-series or longitudinal comparison (if applicable)
-MERGE (comp7:Comparison {
-  sid: "COMP007",
-  name: "Early vs Late NAFLD",
-  type: "disease_progression",
-  tissue: "Liver",
-  description: "Compare early stage vs advanced NAFLD",
-  analysis_date: "2024-03-01"
 })
 
 // Multi-disease meta-analysis
@@ -230,7 +218,6 @@ MERGE (pr7:Protein {sid: "P02768", source: "UniProt", name: "ALB"})
 // MERGE GO terms
 MERGE (go1:GO {sid: "GO:0005158", name: "insulin receptor binding"})
 MERGE (go2:GO {sid: "GO:0006954", name: "inflammatory response"})
-MERGE (go3:GO {sid: "GO:0043066", name: "negative regulation of apoptosis"})
 MERGE (go4:GO {sid: "GO:0008286", name: "insulin receptor signaling pathway"})
 MERGE (go5:GO {sid: "GO:0006629", name: "lipid metabolic process"})
 MERGE (go6:GO {sid: "GO:0006955", name: "immune response"});
@@ -239,7 +226,7 @@ MERGE (go6:GO {sid: "GO:0006955", name: "immune response"});
 // RELATIONSHIPS: PROJECT -> SAMPLE
 // ============================================
 
-WITH ["SAMPLE001", , "SAMPLE002", "SAMPLE005"] AS samples
+WITH ["SAMPLE001", "SAMPLE002", "SAMPLE005"] AS samples
 MATCH (p:Project {sid: "PROJ001"}), (s:Sample)
 WHERE s.sid IN samples
 MERGE (p)-[:HAS_SAMPLE]->(s);
@@ -259,22 +246,21 @@ MERGE (p)-[:HAS_SAMPLE]->(s);
 // RELATIONSHIPS: SAMPLE -> TISSUE
 // ============================================
 
-MATCH (s:Sample {sid: "SAMPLE001"}), (t:Tissue {sid: "UBERON:0002107"})
-MERGE (s)-[:TAKEN_FROM]->(t);
-MATCH (s:Sample {sid: "SAMPLE002"}), (t:Tissue {sid: "UBERON:0002107"})
-MERGE (s)-[:TAKEN_FROM]->(t);
-MATCH (s:Sample {sid: "SAMPLE005"}), (t:Tissue {sid: "UBERON:0002107"})
+WITH ["SAMPLE001", "SAMPLE002", "SAMPLE005"] AS samples
+MATCH (s:Sample), (t:Tissue {sid: "UBERON:0002107"})
+WHERE s.sid IN samples
 MERGE (s)-[:TAKEN_FROM]->(t);
 
-MATCH (s:Sample {sid: "SAMPLE003"}), (t:Tissue {sid: "UBERON:0001264"})
-MERGE (s)-[:TAKEN_FROM]->(t);
-MATCH (s:Sample {sid: "SAMPLE004"}), (t:Tissue {sid: "UBERON:0001264"})
+WITH ["SAMPLE003", "SAMPLE004"] AS samples
+MATCH (s:Sample), (t:Tissue {sid: "UBERON:0001264"})
+WHERE s.sid IN samples
 MERGE (s)-[:TAKEN_FROM]->(t);
 
-MATCH (s:Sample {sid: "SAMPLE006"}), (t:Tissue {sid: "UBERON:0000945"})
+WITH ["SAMPLE006", "SAMPLE007"] AS samples
+MATCH (s:Sample), (t:Tissue {sid: "UBERON:0000945"})
+WHERE s.sid IN samples
 MERGE (s)-[:TAKEN_FROM]->(t);
-MATCH (s:Sample {sid: "SAMPLE007"}), (t:Tissue {sid: "UBERON:0000945"})
-MERGE (s)-[:TAKEN_FROM]->(t);
+
 
 // ============================================
 // RELATIONSHIPS: SAMPLE -> PHENOTYPE
@@ -599,84 +585,161 @@ MERGE (p1)-[:INTERACTS_WITH {source: "STRING", score: 0.65}]->(p2);
 
 == Cypher Queries
 
+These example Cypher queries demonstrate how to retrieve and analyze single-omics experimental data stored in the graph database.
+
 === Return experiment data
 
-==== Find all genes differentially expressed in a given comparison?
+After you have stored your experiment data, it's important to be able to query and retrieve relevant information. 
+
+==== Find all genes differentially expressed in a given comparison
+
+In this query we take a particular `Comparison` node (identified by its `sid` property) and find all associated `Gene` nodes 
+that are differentially expressed (because they have the `FOUND_DIFFERENTIAL` relationship) for that comparison. We filter the 
+results based on an adjusted p-value threshold (e.g., < 0.05) to identify statistically significant genes. The query returns 
+the gene symbol, log fold change, p-value, adjusted p-value, and regulation direction (up or down).
 
 [source, cypher, role=noheader]
 ----
 // Find all genes differentially expressed in the NAFLD vs Control comparison
-MATCH (comp:Comparison {sid: "COMP001"})-[r:FOUND_DIFFERENTIAL]->(gene:Gene)
-WHERE r.adjPValue < 0.05
-RETURN gene.symbol AS Gene, 
-       r.logFC AS LogFoldChange,
-       r.pValue AS PValue,
-       r.adjPValue AS AdjustedPValue,
-       r.regulated AS Direction
+WITH 
+  "COMP001" AS sid,
+  0.05 AS adjPValueThreshold
+MATCH (comp:Comparison {sid: sid})-[r:FOUND_DIFFERENTIAL]->(gene:Gene)
+WHERE r.adjPValue < adjPValueThreshold
+RETURN 
+  gene.symbol AS Gene, 
+  r.logFC AS LogFoldChange,
+  r.pValue AS PValue,
+  r.adjPValue AS AdjustedPValue,
+  r.regulated AS Direction
 ORDER BY r.adjPValue;
 ----
 
-==== Find all genes overexpressed in a given comparison?
+==== Find all genes overexpressed in a given comparison
+
+Taking a particular `Comparison` node (identified by its `sid` property) we use filters (`adjPValue < 0.05` and `regulated = "up"`) 
+to find all associated `Gene` nodes that are overexpressed and where that overexpression is statistically significant.
+
 [source, cypher, role=noheader]
 ----
 // Find all genes overexpressed in the NAFLD vs Control comparison
-MATCH (comp:Comparison {sid: "COMP001"})-[r:FOUND_DIFFERENTIAL]->(gene:Gene)
-WHERE r.adjPValue < 0.05 AND r.regulated = "up"
-RETURN gene.symbol AS Gene, 
-       r.logFC AS LogFoldChange,
-       r.pValue AS PValue,
-       r.adjPValue AS AdjustedPValue,
-       r.regulated AS Direction
+WITH 
+  "COMP001" AS sid,
+  0.05 AS adjPValueThreshold,
+  "up" AS regulationDirection
+MATCH (comp:Comparison {sid: sid})-[r:FOUND_DIFFERENTIAL]->(gene:Gene)
+WHERE r.adjPValue < adjPValueThreshold AND r.regulated = regulationDirection
+RETURN 
+  gene.symbol AS Gene, 
+  r.logFC AS LogFoldChange,
+  r.pValue AS PValue,
+  r.adjPValue AS AdjustedPValue,
+  r.regulated AS Direction
 ORDER BY r.adjPValue;
 ----
 
 === Aggregate experimental data for disease
 
+A disease-centric view can be useful for understanding the molecular signatures associated with specific conditions across multiple experiments.
+
 ==== Find all genes that are overexpressed in multiple comparisons
+
+For this query, we're starting with the `Gene` nodes and looking for those that have been found to be overexpressed (i.e., `regulated = "up"`) 
+in multiple `Comparison` nodes. We count the number of distinct comparisons for each gene where it is overexpressed and filter to only include 
+genes that are overexpressed in at least two comparisons. The results include the gene symbol, the count of times it was overexpressed, and the 
+names of the comparisons where it was overexpressed.
+
 [source, cypher, role=noheader]
 ----
+WITH 
+  0.05 AS adjPValueThreshold,
+  "up" AS regulationDirection
 MATCH (gene:Gene)<-[r:FOUND_DIFFERENTIAL]-(comp:Comparison)
-WHERE r.regulated = "up" AND r.adjPValue < 0.05
+WHERE r.regulated = regulationDirection AND r.adjPValue < adjPValueThreshold
 WITH gene, count(DISTINCT comp) AS compCount, collect(comp.name) AS comparisons
 WHERE compCount >= 2
-RETURN gene.symbol AS Gene,
-       compCount AS TimesOverexpressed,
-       comparisons AS OverexpressedInComparisons
+RETURN 
+  gene.symbol AS Gene,
+  compCount AS TimesOverexpressed,
+  comparisons AS OverexpressedInComparisons
 ORDER BY compCount DESC;
 ----
 
 ==== Compare gene signatures between two diseases
+
+Here we're looking to see how gene expression signatures compare between two diseases. We match `Gene` nodes that are differentially expressed between two known diseases.
+
 [source, cypher, role=noheader]
 ----
 // Compare gene signatures between two diseases
-MATCH (comp1:Comparison)-[:STUDIES_DISEASE]->(d1:Disease {name: "Non-alcoholic fatty liver disease"})
-MATCH (comp1)-[r1:FOUND_DIFFERENTIAL]->(gene:Gene)
-MATCH (comp2:Comparison)-[:STUDIES_DISEASE]->(d2:Disease {name: "Type 2 Diabetes"})
-MATCH (comp2)-[r2:FOUND_DIFFERENTIAL]->(gene)
-WHERE r1.significance = "significant" AND r2.significance = "significant"
-RETURN gene.symbol AS SharedGene,
-       r1.logFC AS NAFLD_LogFC,
-       r2.logFC AS T2D_LogFC,
-       r1.regulated AS NAFLD_Direction,
-       r2.regulated AS T2D_Direction;
+WITH "significant" AS significanceLevel
+MATCH 
+  (gene:Gene)<-[r1:FOUND_DIFFERENTIAL]-(comp1:Comparison)-[:STUDIES_DISEASE]->(d1:Disease {name: "Non-alcoholic fatty liver disease"}), 
+  (gene)<-[r2:FOUND_DIFFERENTIAL]-(comp2:Comparison)-[:STUDIES_DISEASE]->(d2:Disease {name: "Type 2 Diabetes"})
+WHERE 
+  r1.significance = significanceLevel
+  AND r2.significance = significanceLevel
+RETURN 
+  gene.symbol AS SharedGene,
+  r1.logFC AS NAFLD_LogFC,
+  r2.logFC AS T2D_LogFC,
+  r1.regulated AS NAFLD_Direction,
+  r2.regulated AS T2D_Direction;
+----
+
+This could be expanded to find _all_ the diseases associated with a given gene, and compare their signatures.
+
+[source, cypher, role=noheader]
+----
+WITH 
+  "significant" AS significanceLevel
+MATCH 
+  (gene:Gene)<-[r1:FOUND_DIFFERENTIAL]-(comp1:Comparison)-[:STUDIES_DISEASE]->(d1:Disease), 
+  (gene)<-[r2:FOUND_DIFFERENTIAL]-(comp2:Comparison)-[:STUDIES_DISEASE]->(d2:Disease)
+WHERE 
+  r1.significance = significanceLevel
+  AND r2.significance = significanceLevel 
+  AND d1 <> d2 
+  AND d1.name < d2.name
+RETURN
+  gene.symbol AS SharedGene,
+  d1.name,
+  r1.logFC AS NAFLD_LogFC,
+  r1.regulated AS NAFLD_Direction,
+  d2.name,
+  r2.logFC AS T2D_LogFC,
+  r2.regulated AS T2D_Direction;
 ----
 
 === Collect information for interesting gene(s)
 
+These queries are more gene-centric, focusing on retrieving various types of information related to a specific gene (or genes) of interest.
+
 ==== Return all synonyms for a given gene?
+
+Genes are not named consistently across different databases and resources. To help integrate data from multiple sources, 
+it's useful to retrieve all known synonyms for a given gene. Storing the synonyms also allows us to map experimental results
+that may use different names back to the gene name we're using.
+
 [source, cypher, role=noheader]
 ----
 // Find all synonyms for the gene PIK3CG
-MATCH (g:Gene {symbol: "PIK3CG"})-[:MAPPED]->(syn:ID)
+WITH "PIK3CG" AS geneSymbol
+MATCH (g:Gene {symbol: geneSymbol})-[:MAPPED]->(syn:ID)
 RETURN syn.sid AS ID, syn.source AS Source
 ORDER BY syn.name;
 ----
 
 ==== Show interesting result for a given gene
+
+Interesting results are ones that have a differential expression associated with a disease of interest. Here we start with a specific gene and 
+find all comparisons where that gene was found to be differentially expressed, along with the associated disease and relevant statistics.
+
 [source, cypher, role=noheader]
 ----
 // Show interesting result for a given gene
-MATCH (g:Gene {symbol: "PIK3CG"})<-[r:FOUND_DIFFERENTIAL]-(c:Comparison)-[:STUDIES_DISEASE]->(d:Disease)
+WITH "PIK3CG" AS geneSymbol
+MATCH (g:Gene {symbol: geneSymbol})<-[:FOUND_DIFFERENTIAL]-(c:Comparison)-[:STUDIES_DISEASE]->(d:Disease)
 RETURN g.symbol AS Gene,
        d.name AS Disease,
        r.logFC AS LogFoldChange,
@@ -685,59 +748,86 @@ RETURN g.symbol AS Gene,
        r.regulated AS Direction;
 ----
 
-==== Show  interesting results for a specific tissue type
+//CES: 
+==== Show interesting results for a specific tissue type
+
+Starting with with a particular tissue type (e.g., "liver"), we find all samples taken from that tissue, and the associated experiments. From there we traverse to 
+the genes that were measured in those experiments, returning relevant statistics for each gene.
+
 [source, cypher, role=noheader]
 ----
 // Show interesting results for a specific tissue type
-MATCH (t:Tissue {name: "Liver"})<-[:TAKEN_FROM]-(s:Sample)-[:HAS_EXPERIMENT]->(e:Experiment)-[r:HAS_VALUE]->(g:Gene)
-RETURN g.symbol AS Gene,
-       t.name AS Tissue,
-       r.logFC AS LogFoldChange,
-       r.pValue AS PValue,
-       r.adjPValue AS AdjustedPValue,
-       r.regulated AS Direction;
+WITH "liver" AS tissueName
+MATCH (t:Tissue {name: tissueName})<-[:TAKEN_FROM]-(s:Sample)-[:HAS_EXPERIMENT]->(e:Experiment)-[r:HAS_VALUE]->(g:Gene)
+RETURN 
+  g.symbol AS Gene,
+  t.name AS Tissue,
+  r.logFC AS LogFoldChange,
+  r.pValue AS PValue,
+  r.adjPValue AS AdjustedPValue,
+  r.regulated AS Direction;
 ----
 
 === Integrate across genes and proteins
 
+Our queries can integrate across genes and proteins, leveraging relationships such as gene-protein coding and protein-protein interactions.
+
 ==== Find the network neighborhood of a candidate gene target
+
+We start with a candidate gene of interest (e.g., "PIK3CG") and traverse from the `Gene` node to the associated `Protein` node. 
+From there we explore the protein-protein interaction network by following `INTERACTS_WITH` relationships to neighboring proteins. 
+Finally, we return the gene symbols of the target gene and its neighboring genes, along with the interaction score between the proteins.
 
 [source, cypher, role=noheader]
 ----
 // Find the network neighborhood of a candidate gene target
-MATCH (g:Gene {symbol: "PIK3CG"})-[:CODES]->(p:Protein)-[i:INTERACTS_WITH]-(neighbor:Protein)<-[:CODES]-(ng:Gene)
-RETURN g.symbol AS TargetGene,
-       ng.symbol AS NeighborGene,
-       neighbor.sid AS NeighborProtein,
-       i.score AS InteractionScore
+WITH "PIK3CG" AS geneSymbol
+MATCH (g:Gene {symbol: geneSymbol})-[:CODES]->(p:Protein)-[i:INTERACTS_WITH]-(neighbor:Protein)<-[:CODES]-(ng:Gene)
+RETURN 
+  g.symbol AS TargetGene,
+  ng.symbol AS NeighborGene,
+  neighbor.sid AS NeighborProtein,
+  i.score AS InteractionScore
 ORDER BY i.score DESC;
 ----
 ==== Trace network neighborhood of regulated genes from comparison to protein interactions
+
+In this query we start from a `Comparison` node (identified by its `sid` property) and find all `Gene` nodes that are differentially expressed in that comparison.
+From each of these genes, we traverse to the corresponding `Protein` nodes and then explore their interactions with other proteins in the network. 
+Finally, we return pairs of genes whose proteins interact, along with the interaction score.
+
 [source, cypher, role=noheader]
 ----
 // Trace network neighborhood of regulated genes from comparison to protein interactions
-MATCH (comp:Comparison {sid: "COMP001"})-[:FOUND_DIFFERENTIAL]->(g1:Gene)
-MATCH (g1)-[:CODES]->(p1:Protein)-[i:INTERACTS_WITH]->(p2:Protein)
-MATCH (p2)<-[:CODES]-(g2:Gene)
-RETURN g1.symbol AS Gene1,
-       g2.symbol AS Gene2,
-       // p1.name AS Protein1,
-       // p2.name AS Protein2,
-       i.score AS InteractionScore;
+WITH "COMP001" AS comparisonSid
+MATCH 
+  (comp:Comparison {sid: comparisonSid})-[:FOUND_DIFFERENTIAL]->(g1:Gene), 
+  (g1)-[:CODES]->(p1:Protein)-[i:INTERACTS_WITH]->(p2:Protein),
+  (p2)<-[:CODES]-(g2:Gene)
+RETURN 
+  g1.symbol AS Gene1,
+  g2.symbol AS Gene2,
+  i.score AS InteractionScore;
 ----
 
 === Find enriched pathways for regulated genes in a disease
+
+An enriched pathway analysis can help identify biological processes that are overrepresented among the differentially expressed genes associated with a disease.
+This query starts with a specific disease of interest (e.g., "Non-alcoholic fatty liver disease"), finds all genes differentially expressed in comparisons studying that disease,
+and returns the associated biological pathways (GO terms) along with the count of genes involved in each pathway.
 
 [source, cypher, role=noheader]
 ----
 // Find enriched pathways in the NAFLD vs Control comparison
 WITH "Non-alcoholic fatty liver disease" as diseaseName
-MATCH (d:Disease {name: diseaseName})<-[:STUDIES_DISEASE]-(comp)-[:FOUND_DIFFERENTIAL]->(gene:Gene)
-MATCH (gene)-[:CODES]->(protein:Protein)-[:ASSOCIATED_WITH]->(go:GO)
+MATCH 
+  (d:Disease {name: diseaseName})<-[:STUDIES_DISEASE]-(comp)-[:FOUND_DIFFERENTIAL]->(gene:Gene),
+  (gene)-[:CODES]->(protein:Protein)-[:ASSOCIATED_WITH]->(go:GO)
 WITH go, count(DISTINCT gene) AS geneCount
 //WHERE geneCount >= 2 // uncomment to filter for pathways with at least 2 genes
-RETURN go.name AS Pathway,
-       go.sid AS GO_ID,
-       geneCount AS GenesInPathway
+RETURN 
+  go.name AS Pathway,
+  go.sid AS GO_ID,
+  geneCount AS GenesInPathway
 ORDER BY geneCount DESC;
 ----
