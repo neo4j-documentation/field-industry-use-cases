@@ -1233,16 +1233,20 @@ Find proteins that change significantly without corresponding mRNA changes.
 [source, cypher, role=noheader]
 ----
 // Proteomics-only changes - Identify post-transcriptional regulation
-WITH "Proteomics" as experimentType
-MATCH (exp:Experiment {type: experimentType})-[r:HAS_VALUE]->(protein:Protein)
-WHERE r.pValue < 0.05 AND abs(r.foldChange) > 1.5
-MATCH (protein)<-[:CODES]-(gene:Gene)
-WHERE r.regulated = "up"
-RETURN protein.name AS Protein,
-       gene.symbol AS Gene,
-       r.foldChange AS `mRNA Fold Change`,
-       r.pValue AS `P-Value`,
-       r.regulated AS Direction;
+WITH 
+  "Proteomics" AS experimentType,
+  1.5 AS foldChangeThreshold,
+  0.05 AS pValueThreshold
+MATCH 
+    (exp:Experiment {type: experimentType})-[r:HAS_VALUE]->(protein:Protein),
+    (protein)<-[:CODES]-(gene:Gene)
+WHERE r.pValue < pValueThreshold AND r.foldChange > foldChangeThreshold
+RETURN 
+    protein.name AS Protein,
+    gene.symbol AS Gene,
+    r.foldChange AS FoldChange,
+    r.pValue AS PValue,
+    r.regulated AS Direction;
 ----
 
 === Which proteins/genes are associated with a given disease?
@@ -1307,111 +1311,151 @@ RETURN
 
 === Which genes are overexpressed at both the mRNA (transcript) and protein levels in a given disease?
 
+Starting with a disease (e.g., Non-alcoholic fatty liver disease), find the genes that are upregulated at both transcript and protein levels.
+
 [source, cypher, role=noheader]
 ----
 // Which genes are overexpressed at both the mRNA (transcript) and protein levels in a given disease?
-WITH "Non-alcoholic fatty liver disease" AS diseaseName
+WITH 
+  "Non-alcoholic fatty liver disease" AS diseaseName,
+  "up" AS regulationDirection
 MATCH 
   (disease:Disease {name: diseaseName}),
   (comp:Comparison)-[:STUDIES_DISEASE]->(disease),
   (comp)-[fd:FOUND_DIFFERENTIAL]->(gene:Gene)
-WHERE fd.regulated = "up"
+WHERE fd.regulated = regulationDirection
 RETURN 
-  DISTINCT disease.name AS Disease,
-  gene.symbol AS Gene,
+  DISTINCT gene.symbol AS Gene,
   gene.name AS GeneName,
   fd.logFC AS mRNA_FoldChange,
   fd.adjPValue AS mRNA_AdjPValue;
 ----
 
-=== Which proteins are in the network neighborhood — interacting proteins, upstream regulators, downstream effectors — of a candidate target?
+=== Which proteins are in the network neighborhood (e.g. interacting proteins, upstream regulators, downstream effectors) of a candidate Gene?
+
+Starting with a Gene of interest (e.g. PIK3CG), find its direct interacting proteins, and the proteins upstream and downstream from it.
 
 [source, cypher, role=noheader]
 ----
 // Find direct interacting proteins for PIK3CG
-MATCH (g:Gene {symbol: "PIK3CG"})-[:CODES]->(p:Protein)-[i:INTERACTS_WITH]-(neighbor:Protein)<-[:CODES]-(ng:Gene)
-RETURN g.symbol AS TargetGene,
-       ng.symbol AS NeighborGene,
-       neighbor.sid AS NeighborProtein,
-       i.score AS InteractionScore
+WITH "PIK3CG" AS targetGeneSymbol
+MATCH
+  (g:Gene {symbol: targetGeneSymbol})-[:CODES]->(p:Protein)-[i:INTERACTS_WITH]-(neighbor:Protein)<-[:CODES]-(ng:Gene)
+RETURN 
+  g.symbol AS TargetGene,
+  ng.symbol AS NeighborGene,
+  neighbor.sid AS NeighborProtein,
+  i.score AS InteractionScore
 ORDER BY i.score DESC;
 ----
 
 === Under-explored but potentially druggable targets close to disease nodes?
+
+This query looks for proteins that are 1-2 hops away from known disease-associated nodes but are not yet annotated to drugs, indicating potential novel targets.
 
 [source, cypher, role=noheader]
 ----
 // Find proteins 1-2 hops away from known disease-associated nodes that aren't annotated to drugs
 MATCH path = (d:Disease)<-[:RELATED_TO]-(g:Gene)-[:CODES]->(p:Protein)-[:INTERACTS_WITH*1..2]-(neighbor:Protein)<-[:CODES]-(ng:Gene)
 WHERE NOT (p)-[:ASSOCIATED_WITH]->(:Drug)
-RETURN g.symbol AS TargetGene,
-       ng.symbol AS NeighborGene,
-       neighbor.sid AS NeighborProtein,
-       length(path) AS Distance
+RETURN 
+  g.symbol AS TargetGene,
+  ng.symbol AS NeighborGene,
+  neighbor.sid AS NeighborProtein,
+  length(path) AS Distance
 ORDER BY Distance;
 ----
 
 === Among candidate targets for a disease, which have the strongest support from multiple evidence types (genetics, expression, pathway involvement, literature, etc.)?
 
+Starting with a Disease of interest, find novel candidate genes based on shared GO pathways with known disease-associated genes, 
+filtering out any genes already linked to the disease.
+
 [source, cypher, role=noheader]
 ----
 // Find novel candidate genes for Type 2 Diabetes through shared GO pathways
 // with known disease-associated genes
-
-MATCH (d:Disease {sid: "MONDO:0005015"})<-[:RELATED_TO]-(known:Gene)-[:CODES]->(kp:Protein)-[:ASSOCIATED_WITH]->(go:GO)
-MATCH (go)<-[:ASSOCIATED_WITH]-(cp:Protein)<-[:CODES]-(candidate:Gene)
-WHERE NOT (candidate)-[:RELATED_TO]->(d)
+WITH "Type 2 Diabetes" AS diseaseName
+MATCH 
+  (disease:Disease {name: diseaseName})<-[:RELATED_TO]-(known:Gene)-[:CODES]->(kp:Protein)-[:ASSOCIATED_WITH]->(go:GO),
+  (go)<-[:ASSOCIATED_WITH]-(cp:Protein)<-[:CODES]-(candidate:Gene)
+WHERE 
+  NOT (candidate)-[:RELATED_TO]->(disease)
   AND candidate <> known
-WITH candidate, d, count(DISTINCT go) AS sharedPathways, collect(DISTINCT go.name) AS pathways
+WITH 
+  candidate, disease, count(DISTINCT go) AS sharedPathways, collect(DISTINCT go.name) AS pathways
 WHERE sharedPathways >= 1  // Reduced from 2 to 1 due to smaller demo dataset
-RETURN candidate.symbol AS NovelCandidate,
-       candidate.name AS CandidateName,
-       d.name AS Disease,
-       sharedPathways AS SharedPathwayCount,
-       pathways AS SharedPathways
-ORDER BY sharedPathways DESC
+RETURN 
+  candidate.symbol AS `Novel Candidate`,
+  candidate.name AS `Candidate Name`,
+  sharedPathways AS `Shared Pathway Count`,
+  pathways AS `Shared Pathways`
+ORDER BY `Shared Pathways Count` DESC
 LIMIT 10;
 ----
 
 === Which candidate targets are expressed (or dysregulated) in the relevant tissue / cell type / biological context for the disease?
 
+In this query we look for genes that are co-expressed with known disease genes across multiple experiments.
+This is a way to identify genes that may be functionally related to disease processes.
+
 [source, cypher, role=noheader]
 ----
 // Find genes co-expressed with known disease genes across experiments
-MATCH (d:Disease)<-[:RELATED_TO]-(known:Gene)<-[hv1:HAS_VALUE]-(e:Experiment)-[hv2:HAS_VALUE]->(candidate:Gene)
-WHERE NOT (candidate)-[:RELATED_TO]->(d)
+WITH 
+  0.05 AS pValueThreshold,
+  2 AS minCoExpressionCount
+MATCH (disease:Disease)<-[:RELATED_TO]-(known:Gene)<-[hv1:HAS_VALUE]-(experiment:Experiment)-[hv2:HAS_VALUE]->(candidate:Gene)
+WHERE 
+  NOT (candidate)-[:RELATED_TO]->(disease)
   AND hv1.regulated = hv2.regulated
-  AND hv1.pValue < 0.05 AND hv2.pValue < 0.05
-WITH candidate, d, count(DISTINCT e) AS coExpressionCount
-WHERE coExpressionCount >= 2
-RETURN candidate.symbol AS NovelCandidate,
-       d.name AS Disease,
-       coExpressionCount AS TimesCoExpressed
+  AND hv1.pValue < pValueThreshold AND hv2.pValue < pValueThreshold
+WITH 
+  candidate, 
+  disease,
+  count(DISTINCT experiment) AS coExpressionCount
+WHERE coExpressionCount >= minCoExpressionCount
+RETURN 
+  candidate.symbol AS NovelCandidate,
+  disease.name AS Disease,
+  coExpressionCount AS TimesCoExpressed
 ORDER BY coExpressionCount DESC;
 ----
 
 === Which proteins are in the network neighborhood of a candidate target?
 
+Starting with a Gene of interest (e.g. PIK3CG), find its direct interacting proteins, and the Genes that code for those proteins.
+
 [source, cypher, role=noheader]
 ----
 // Which proteins are in the network neighborhood of a candidate target?
-MATCH (gene:Gene {symbol: "PIK3CG"})-[:CODES]->(p:Protein)-[i:INTERACTS_WITH]-(neighbor:Protein)<-[:CODES]-(ng:Gene)
-RETURN gene.symbol AS TargetGene,
-       ng.symbol AS NeighborGene,
-       neighbor.sid AS NeighborProtein,
-       i.score AS InteractionScore;
+WITH "PIK3CG" AS targetGeneSymbol
+MATCH 
+  (candidate:Gene {symbol: targetGeneSymbol})-[:CODES]->(p:Protein)-[i:INTERACTS_WITH]-(neighborProtein:Protein)<-[:CODES]-(neighbourGene:Gene)
+RETURN 
+  candidate.symbol AS `Candidate Gene`,
+  neighbourGene.symbol AS `Neighbor Gene`,
+  neighborProtein.sid AS `Neighbor Protein`,
+  i.score AS `Interaction Score`
+ORDER BY `Interaction Score` DESC;
 ----
 
-=== What are the protein-protein interactions in 1–2 hops of my overexpressed genes from my RNA-seq?
+=== What are the protein-protein interactions in 1-2 hops of my overexpressed genes from my RNA-seq?
+
+
 
 [source, cypher, role=noheader]
 ----
 // What are the protein-protein interactions in 1–2 hops of my overexpressed genes from my RNA-seq?
-MATCH path=(gene:Gene {symbol: "PIK3CG"})-[:CODES]->(p:Protein)-[i:INTERACTS_WITH*1..2]-(neighbor:Protein)<-[:CODES]-(ng:Gene)
-RETURN gene.symbol AS TargetGene,
-       ng.symbol AS NeighborGene,
-       neighbor.sid AS NeighborProtein,
-       length(path) AS Distance
+WITH 
+  "PIK3CG" AS geneSymbol
+MATCH 
+  path=(gene:Gene {symbol: geneSymbol})-[:CODES]->(p:Protein)-[i:INTERACTS_WITH*1..2]-(neighbor:Protein)<-[:CODES]-(neighbourGene:Gene)
+RETURN 
+  gene.symbol AS TargetGene,
+  neighbourGene.symbol AS NeighborGene,
+  neighbor.sid AS NeighborProtein,
+  length(path) AS Distance
 ORDER BY Distance;
 ----
 
