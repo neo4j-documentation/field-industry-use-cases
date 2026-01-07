@@ -1196,15 +1196,18 @@ These are just a few key examples within the dataset, and the queries that could
 
 [source, cypher, role=noheader]
 ----
-WITH "COMP001" AS sid
+WITH 
+  "COMP001" AS sid,
+  0 AS foldChangeThreshold
 MATCH (c:Comparison {sid: sid})-[fd1:FOUND_DIFFERENTIAL]->(g:Gene)-[:CODES]->(p:Protein)<-[fd2:FOUND_DIFFERENTIAL]-(c)
-RETURN g.symbol AS Gene,
-       g.name AS GeneName,
-       fd1.logFC AS `mRNA Fold Change`,
-       fd2.logFC AS `Protein Fold Change`,
-       CASE WHEN fd1.logFC > 0 and fd2.logFC > 0 THEN 'Concordant'
-            WHEN fd1.logFC < 0 and fd2.logFC < 0 THEN 'Concordant'
-            ELSE 'Discordant' END AS Regulation;
+RETURN 
+  g.symbol AS Gene,
+  g.name AS GeneName,
+  fd1.logFC AS `mRNA Fold Change`,
+  fd2.logFC AS `Protein Fold Change`,
+  CASE WHEN fd1.logFC > foldChangeThreshold AND fd2.logFC > foldChangeThreshold THEN 'Concordant (Overexpression)'
+       WHEN fd1.logFC < foldChangeThreshold AND fd2.logFC < foldChangeThreshold THEN 'Concordant (Underexpression)'
+       ELSE 'Discordant' END AS Regulation;
 ----
 
 ==== T2D Concordant Overexpression (COMP002):
@@ -1213,13 +1216,18 @@ RETURN g.symbol AS Gene,
 
 [source, cypher, role=noheader]
 ----
-WITH "COMP002" AS sid
-MATCH (c:Comparison {sid: sid})-[fd1:FOUND_DIFFERENTIAL]->(g:Gene)-[:CODES]->(p:Protein)<-[fd2:FOUND_DIFFERENTIAL]-(c)
-WHERE fd1.logFC > 0 AND fd2.logFC > 0
-RETURN g.symbol AS Gene,
-       g.name AS GeneName,
-       fd1.logFC AS `mRNA Fold Change`,
-       fd2.logFC AS `Protein Fold Change`
+WITH 
+  "COMP002" AS sid,
+  0 AS foldChangeThreshold
+MATCH 
+  (c:Comparison {sid: sid})-[fd1:FOUND_DIFFERENTIAL]->(g:Gene)-[:CODES]->(p:Protein)<-[fd2:FOUND_DIFFERENTIAL]-(c)
+WHERE 
+  fd1.logFC > foldChangeThreshold AND fd2.logFC > foldChangeThreshold
+RETURN 
+  g.symbol AS Gene,
+  g.name AS GeneName,
+  fd1.logFC AS `mRNA Fold Change`,
+  fd2.logFC AS `Protein Fold Change`
 ----
 
 ==== Multi-Omics Integration (COMP009):
@@ -1238,15 +1246,15 @@ WITH
   1.5 AS foldChangeThreshold,
   0.05 AS pValueThreshold
 MATCH 
-    (exp:Experiment {type: experimentType})-[r:HAS_VALUE]->(protein:Protein),
-    (protein)<-[:CODES]-(gene:Gene)
+  (exp:Experiment {type: experimentType})-[r:HAS_VALUE]->(protein:Protein),
+  (protein)<-[:CODES]-(gene:Gene)
 WHERE r.pValue < pValueThreshold AND r.foldChange > foldChangeThreshold
 RETURN 
-    protein.name AS Protein,
-    gene.symbol AS Gene,
-    r.foldChange AS FoldChange,
-    r.pValue AS PValue,
-    r.regulated AS Direction;
+  protein.name AS Protein,
+  gene.symbol AS Gene,
+  r.foldChange AS FoldChange,
+  r.pValue AS PValue,
+  r.regulated AS Direction;
 ----
 
 === Which proteins/genes are associated with a given disease?
@@ -1280,6 +1288,7 @@ RETURN
   hv.foldChange AS FoldChange, 
   hv.pValue AS PValue
 ORDER BY hv.pValue;
+----
 
 === Which diseases or phenotypes are linked to a given gene/protein (i.e. what else might targeting this protein affect)?
 
@@ -1442,7 +1451,7 @@ ORDER BY `Interaction Score` DESC;
 
 === What are the protein-protein interactions in 1-2 hops of my overexpressed genes from my RNA-seq?
 
-
+== CES -- SEE NOTES
 
 [source, cypher, role=noheader]
 ----
@@ -1460,195 +1469,268 @@ ORDER BY Distance;
 ----
 
 === Multi-omics correlation - genes with matching transcriptomics and proteomics changes
+
+Starting with a specific `Comparison`, find genes that show concordant changes at both the mRNA and protein levels.
+
 [source, cypher, role=noheader]
 ----
 // Multi-omics correlation - genes with matching transcriptomics and proteomics changes
-MATCH (comp:Comparison {sid: "COMP001"})-[r1:FOUND_DIFFERENTIAL]->(gene:Gene)
-MATCH (gene)-[:CODES]->(protein:Protein)
-MATCH (comp)-[r2:FOUND_DIFFERENTIAL]->(protein)
-WHERE r1.significance = "significant" AND r2.significance = "significant" AND r1.regulated = r2.regulated
-RETURN gene.symbol AS Gene,
-       protein.name AS Protein,
-       r1.logFC AS mRNA_LogFC,
-       r2.logFC AS Protein_LogFC,
-       r1.regulated AS Direction,
-       abs(r1.logFC - r2.logFC) AS Correlation_Delta
+WITH 
+  "COMP001" AS comparisonSid,
+  "significant" AS significanceLevel
+MATCH 
+  (comp:Comparison {sid: comparisonSid})-[r1:FOUND_DIFFERENTIAL]->(gene:Gene),
+  (gene)-[:CODES]->(protein:Protein)<-[r2:FOUND_DIFFERENTIAL]-(comp)
+WHERE 
+  r1.significance = significanceLevel 
+  AND r2.significance = significanceLevel 
+  AND r1.regulated = r2.regulated
+RETURN 
+  gene.symbol AS Gene,
+  protein.name AS Protein,
+  r1.logFC AS mRNA_LogFC,
+  r2.logFC AS Protein_LogFC,
+  r1.regulated AS Direction,
+  abs(r1.logFC - r2.logFC) AS Correlation_Delta
 ORDER BY Correlation_Delta;
 ----
 
 === Proteomics data quality metrics
-Assess proteomics experiment quality based on coverage and peptide counts
+
+Assess proteomics experiments quality based on coverage and peptide counts.
+
 [source, cypher, role=noheader]
 ----
 // Proteomics data quality metrics
-MATCH (exp:Experiment {type: "Proteomics"})-[r:HAS_VALUE]->(protein:Protein)
-WITH exp, 
-     count(protein) AS ProteinsDetected,
-     avg(r.coverage) AS AvgCoverage,
-     avg(r.peptides) AS AvgPeptides,
-     avg(r.intensity) AS AvgIntensity
-RETURN exp.sid AS Experiment,
-       exp.platform AS Platform,
-       exp.method AS Method,
-       ProteinsDetected,
-       round(AvgCoverage, 1) AS AvgCoverage_Percent,
-       round(AvgPeptides, 1) AS AvgPeptides,
-       AvgIntensity AS AvgIntensity
+WITH "Proteomics" AS type
+MATCH 
+  (exp:Experiment {type: type})-[r:HAS_VALUE]->(protein:Protein)
+WITH 
+  exp, 
+  count(protein) AS ProteinsDetected,
+  avg(r.coverage) AS AvgCoverage,
+  avg(r.peptides) AS AvgPeptides,
+  avg(r.intensity) AS AvgIntensity
+RETURN
+  exp.sid AS Experiment,
+  exp.platform AS Platform,
+  exp.method AS Method,
+  ProteinsDetected,
+  round(AvgCoverage, 1) AS AvgCoverage_Percent,
+  round(AvgPeptides, 1) AS AvgPeptides,
+  round(AvgIntensity, 1) AS AvgIntensity
 ORDER BY ProteinsDetected DESC;
 ----
 
 === Cross-platform proteomics comparison
-Compare same proteins across different proteomics platforms
+
+Compare same proteins across different proteomics platforms. This allows us to see how consistent the measurements are across platforms, providing validation of findings.
+
 [source, cypher, role=noheader]
 ----
 // Cross-platform proteomics comparison
-MATCH (p:Protein {sid: "P48736"})
-MATCH (exp:Experiment {type: "Proteomics"})-[r:HAS_VALUE]->(p)
-RETURN p.name AS Protein,
-       exp.sid AS Experiment,
-       exp.platform AS Platform,
-       exp.method AS Method,
-       r.foldChange AS FoldChange,
-       r.pValue AS PValue,
-       r.peptides AS Peptides,
-       r.coverage AS Coverage
+WITH 
+  "P48736" AS proteinSid,
+  "Proteomics" AS experimentType
+MATCH (exp:Experiment {type: experimentType})-[r:HAS_VALUE]->(p:Protein {sid: proteinSid})
+RETURN 
+  p.name AS Protein,
+  exp.sid AS Experiment,
+  exp.platform AS Platform,
+  exp.method AS Method,
+  r.foldChange AS FoldChange,
+  r.pValue AS PValue,
+  r.peptides AS Peptides,
+  r.coverage AS Coverage
 ORDER BY exp.sid;
 ----
 
 === Multi-omics integration pathway analysis
+
 Find GO pathways enriched across both transcriptomics and proteomics
+
 [source, cypher, role=noheader]
 ----
 // MATCH (comp:Comparison {sid: "COMP009"})-[:FOUND_DIFFERENTIAL]->(gene:Gene)
+WITH 2 AS geneCount
 MATCH (gene)-[:CODES]->(protein:Protein)-[:ASSOCIATED_WITH]->(go:GO)
-WITH go, 
-     count(DISTINCT gene) AS GeneCount,
-     collect(DISTINCT gene.symbol) AS Genes
-WHERE GeneCount >= 2
-RETURN go.name AS Pathway,
-       go.sid AS GO_ID,
-       GeneCount AS GenesInPathway,
-       Genes
+WITH 
+  go, 
+  count(DISTINCT gene) AS GeneCount,
+  collect(DISTINCT gene.symbol) AS Genes
+WHERE GeneCount >= geneCount
+RETURN 
+  go.name AS Pathway,
+  go.sid AS goId,
+  GeneCount AS GenesInPathway,
+  Genes
 ORDER BY GeneCount DESC;
 ----
 
 === Genes overexpressed at both mRNA and protein levels give a disease-specific signature
+
+We start with a specific `Disease` (this time via it's MONDO ID) that is being studied via a `Comparison`. 
+From that `Comparison` find genes that are upregulated at both the transcript and protein levels.
+
+This is useful to identify robust disease signatures that are supported by multiple layers of omics data, and provide high-confidence targets for further investigation.
+
 [source, cypher, role=noheader]
 ----
-MATCH (disease:Disease {sid: "MONDO:0005359"})  // Can change disease here
-MATCH (comp:Comparison)-[:STUDIES_DISEASE]->(disease)
-MATCH (comp)-[rnaR:FOUND_DIFFERENTIAL]->(gene:Gene)
-WHERE rnaR.regulated = "up" AND rnaR.data_type = "transcriptomics"
-MATCH (gene)-[:CODES]->(protein:Protein)
-MATCH (comp)-[protR:FOUND_DIFFERENTIAL]->(protein)
-WHERE protR.regulated = "up" AND protR.data_type = "proteomics"
-RETURN disease.name AS Disease,
-       gene.symbol AS Gene,
-       rnaR.logFC AS Transcript_FC,
-       protR.logFC AS Protein_FC,
-       (rnaR.logFC + protR.logFC) / 2 AS Avg_FoldChange,
-       abs(rnaR.logFC - protR.logFC) AS mRNA_Protein_Correlation_Delta
+WITH 
+  "MONDO:0005359" AS diseaseSid,  // Non-alcoholic fatty liver disease
+  "up" AS regulationDirection,
+  "transcriptomics" AS rnaDataType,
+  "proteomics" AS proteomicsDataType
+MATCH 
+  (disease:Disease {sid: diseaseSid})<-[:STUDIES_DISEASE]-(comp:Comparison)-[rnaR:FOUND_DIFFERENTIAL]->(gene:Gene)
+WHERE rnaR.regulated = regulationDirection AND rnaR.data_type = rnaDataType
+MATCH 
+  (gene)-[:CODES]->(protein:Protein)<-[protR:FOUND_DIFFERENTIAL]-(comp)
+WHERE protR.regulated = regulationDirection AND protR.data_type = proteomicsDataType
+RETURN 
+  disease.name AS Disease,
+  gene.symbol AS Gene,
+  rnaR.logFC AS Transcript_FC,
+  protR.logFC AS Protein_FC,
+  (rnaR.logFC + protR.logFC) / 2.0 AS Avg_FoldChange,
+  round(abs(rnaR.logFC - protR.logFC), 2) AS mRNA_Protein_Correlation_Delta
 ORDER BY Avg_FoldChange DESC;
 ----
 
 === Druggable proteins in the PPI neighborhood
 
-Find proteins that are druggable and in the PPI neighborhood of overexpressed genes (RNA-seq).
+Find proteins that are druggable and in the https://en.wikipedia.org/wiki/Protein%E2%80%93protein_interaction[PPI] neighbourhood of overexpressed genes (RNA-seq).
+This is important because even if your target protein isn't druggable - its interaction partners might be, providing alternative therapeutic strategies.
 
 [source, cypher, role=noheader]
 ----
-MATCH (exp:Experiment {sid: "EXP001", type: "RNA-seq"})-[r:HAS_VALUE]->(gene:Gene)
-WHERE r.regulated = "up" AND r.pValue < 0.05
-MATCH (gene)-[:CODES]->(protein:Protein)
-MATCH (protein)-[:INTERACTS_WITH*1..2]-(neighbor:Protein)
-MATCH (neighbor)<-[:CODES]-(neighborGene:Gene)
-OPTIONAL MATCH (neighborGene)-[:RELATED_TO]->(disease:Disease)
-WITH DISTINCT neighbor, 
-     count(DISTINCT disease) AS DiseaseAssociations,
-     collect(DISTINCT disease.name) AS AssociatedDiseases
-WHERE DiseaseAssociations > 0
-RETURN neighbor.name AS PotentialDrugTarget,
-       neighbor.sid AS UniProt,
-       DiseaseAssociations,
-       AssociatedDiseases,
-       "Druggable neighbor" AS TargetClass
-ORDER BY DiseaseAssociations DESC;
+WITH 
+  "EXP001" AS experimentSid,
+  "RNA-seq" AS experimentType,
+  "up" AS regulationDirection,
+  0.05 AS pValueThreshold
+MATCH 
+  (exp:Experiment {sid: experimentSid, type: experimentType})-[r:HAS_VALUE]->(gene:Gene)
+WHERE 
+  r.regulated = regulationDirection AND r.pValue < pValueThreshold
+MATCH 
+  (gene)-[:CODES]->(protein:Protein)-[:INTERACTS_WITH*1..2]-(neighbor:Protein)<-[:CODES]-(neighborGene:Gene)
+OPTIONAL MATCH 
+  (neighborGene)-[:RELATED_TO]->(disease:Disease)
+WITH 
+  DISTINCT neighbor, 
+  count(DISTINCT disease) AS `Disease Associations`,
+  collect(DISTINCT disease.name) AS `Associated Diseases`
+WHERE 
+  `Disease Associations` > 0
+RETURN 
+  neighbor.name AS `Potential Drug Target`,
+  neighbor.sid AS UniProt,
+  `Disease Associations`,
+  `Associated Diseases`
+ORDER BY `Disease Associations` DESC;
 ----
 
 === Provenance and confidence of evidence for a target?
 
+Starting with a Gene of interest (e.g. PIK3CG), find all supporting evidence from literature, expression data, and pathway associations, along with confidence scores where available.
+
 [source, cypher, role=noheader]
 ----
 // Get all evidence and provenance for PIK3CG
-MATCH (g:Gene {symbol: "PIK3CG"})
+WITH "PIK3CG" AS geneSymbol
+MATCH (g:Gene {symbol: geneSymbol})
 OPTIONAL MATCH (g)-[r1:RELATED_TO]->(d:Disease)
 OPTIONAL MATCH (g)<-[hv:HAS_VALUE]-(e:Experiment)<-[:COMPARES]-(c:Comparison)
 OPTIONAL MATCH (g)-[:CODES]->(p:Protein)-[r2:ASSOCIATED_WITH]->(go:GO)
-RETURN g.symbol AS Gene,
-       collect(DISTINCT {
-         evidenceType: "Literature",
-         source: r1.source,
-         disease: d.name,
-         confidence: r1.score
-       }) AS literatureEvidence,
-       collect(DISTINCT {
-         evidenceType: "Expression",
-         experiment: e.sid,
-         comparison: c.name,
-         foldChange: hv.foldChange,
-         pValue: hv.pValue,
-         regulation: hv.regulated
-       }) AS expressionEvidence,
-       collect(DISTINCT {
-         evidenceType: "Pathway",
-         source: r2.source,
-         pathway: go.name,
-         goId: go.sid
-       }) AS pathwayEvidence;
+RETURN 
+  g.symbol AS Gene,
+  collect(DISTINCT {
+    source: r1.source,
+    disease: d.name,
+    confidence: r1.score
+  }) AS `Literature Evidence`,
+  collect(DISTINCT {
+    experiment: e.sid,
+    comparison: c.name,
+    foldChange: hv.foldChange,
+    pValue: hv.pValue,
+    regulation: hv.regulated
+  }) AS `Expression Evidence`,
+  collect(DISTINCT {
+    source: r2.source,
+    pathway: go.name,
+    goId: go.sid
+  }) AS `Pathway Evidence`;
 ----
 
 === Are there functional modules or sub-networks (pathways, protein complexes) enriched among disease-associated proteins that might be more robust therapeutic targets than single proteins?
 
+These analyses can help identify key biological processes driving disease, and highlight potential intervention points that might be more effective than targeting individual proteins alone.
+
 [source, cypher, role=noheader]
 ----
 // Find pathways enriched for disease-associated proteins
-MATCH (d:Disease)<-[:RELATED_TO]-(g:Gene)-[:CODES]->(p:Protein)-[:ASSOCIATED_WITH]->(go:GO)
-WITH d, go, COUNT(DISTINCT g) AS proteinCount
-MATCH (go)-[:IS_PART_OF]->(pathway:Pathway)
-RETURN pathway.name AS Pathway,
-       proteinCount AS ProteinCount
+MATCH 
+  (disease:Disease)<-[:RELATED_TO]-(:Gene)-[:CODES]->(p:Protein)-[:ASSOCIATED_WITH]->(go:GO)
+WITH 
+  disease, go, COLLECT(DISTINCT p.name) AS proteins
+MATCH 
+  (go)-[:IS_PART_OF]->(pathway:Pathway)
+RETURN 
+  pathway.name AS Pathway,
+  size(proteins) AS ProteinCount,
+  proteins AS ProteinsInPathway
 ORDER BY ProteinCount DESC;
 
-// Find GO terms enriched among NAFLD-associated genes
-MATCH (d:Disease)-[:RELATED_TO]-(g:Gene)-[:CODES]->(p:Protein)-[:ASSOCIATED_WITH]-(go:GO)
-WITH go, count(DISTINCT g) AS geneCount
-WHERE geneCount >= 2
-RETURN go.sid AS GOTerm,
-       go.name AS GOName,
-       geneCount AS NumGenesInModule
+// Find GO terms enriched among Type 2 Diabetes-associated genes
+WITH
+  "Type 2 Diabetes" AS diseaseName,
+  2 AS geneCountThreshold
+MATCH (d:Disease {name: diseaseName})-[:RELATED_TO]-(g:Gene)-[:CODES]->(p:Protein)-[:ASSOCIATED_WITH]-(go:GO)
+WITH geneCountThreshold, go, count(DISTINCT g) AS geneCount
+WHERE geneCount >= geneCountThreshold
+RETURN 
+  go.sid AS GOTerm,
+  go.name AS GOName,
+  geneCount AS NumGenesInModule
 ORDER BY geneCount DESC;
 
 // Find interconnected protein complexes in disease
-MATCH path = (d:Disease {name: "Type 2 Diabetes"})<-[:RELATED_TO]-(g1:Gene)-[:CODES]->(p1:Protein)-[:INTERACTS_WITH]-(p2:Protein)<-[:CODES]-(g2:Gene)-[:RELATED_TO]->(d)
-RETURN g1.symbol AS Gene1,
-       g2.symbol AS Gene2,
-       p1.sid AS Protein1,
-       p2.sid AS Protein2
+WITH "Type 2 Diabetes" AS diseaseName
+MATCH 
+  path=(d:Disease {name: diseaseName})<-[:RELATED_TO]-(g1:Gene)-[:CODES]->(p1:Protein)-[:INTERACTS_WITH]-(p2:Protein)<-[:CODES]-(g2:Gene)-[:RELATED_TO]->(d)
+RETURN 
+  g1.symbol AS Gene1,
+  g2.symbol AS Gene2,
+  p1.sid AS Protein1,
+  p2.sid AS Protein2
 LIMIT 20;
 ----
 
 === Find genes that share multiple GO terms with known disease genes but aren't annotated to the disease
 
+We're looking to find novel candidate genes for a disease (e.g., Type 2 Diabetes) based on shared GO pathways with known disease-associated genes. 
+
 [source, cypher, role=noheader]
 ----
 // Find genes that share multiple GO terms with known disease genes but aren't annotated to the disease
-MATCH (d:Disease {name: "Type 2 Diabetes"})<-[:RELATED_TO]-(known:Gene)-[:CODES]->(kp:Protein)-[:ASSOCIATED_WITH]->(go:GO)
-MATCH (go)<-[:ASSOCIATED_WITH]-(cp:Protein)<-[:CODES]-(candidate:Gene)
-WHERE NOT (candidate)-[:RELATED_TO]->(d)
+WITH 
+  "Type 2 Diabetes" AS diseaseName,
+  2 AS minSharedPathways
+MATCH 
+  (disease:Disease {name: diseaseName})<-[:RELATED_TO]-(known:Gene)-[:CODES]->(kp:Protein)-[:ASSOCIATED_WITH]->(go:GO),
+  (go)<-[:ASSOCIATED_WITH]-(cp:Protein)<-[:CODES]-(candidate:Gene)
+WHERE 
+  NOT (candidate)-[:RELATED_TO]->(disease)
   AND candidate <> known
-WITH candidate, d, count(DISTINCT go) AS sharedPathways, collect(DISTINCT go.name) AS pathways
-WHERE sharedPathways >= 2
-RETURN candidate.symbol AS NovelCandidate,
-       d.name AS Disease,
-       sharedPathways AS SharedPathwayCount,
-       pathways AS SharedPathways 
+WITH 
+  candidate, disease, minSharedPathways,
+  count(DISTINCT go) AS sharedPathways, 
+  collect(DISTINCT go.name) AS pathways
+WHERE sharedPathways >= minSharedPathways
+RETURN 
+  candidate.symbol AS NovelCandidate,
+  disease.name AS Disease,
+  sharedPathways AS SharedPathwayCount,
+  pathways AS SharedPathways 
