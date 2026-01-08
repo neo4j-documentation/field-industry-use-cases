@@ -1,4 +1,4 @@
-= Single-Omics Data Integration
+= Single-omics Data Integration
 
 Integrating omics data into https://neo4j.com/use-cases/knowledge-graph/[Knowledge Graphs] typically begins with a single data type, such as https://en.wikipedia.org/wiki/RNA-Seq[RNA-seq] 
 experiments, which provides a foundation for subsequent multi-omics integration. By representing RNA-seq data in Neo4j, researchers can move 
@@ -73,7 +73,7 @@ omics projects.
 .Single OMICs Data Model
 image::life-sciences/research-development/Industry_Use_Cases_single-omics.png[width=800]
 
-We will continue to build on this model by adding more Omics data types and ontologies
+We will continue to build on this model by adding more omics data types and ontologies
 in the xref:life-sciences/research-development/multi-omics.adoc[Multi-OMICs Data Integration] page.
 
 == Demo Data

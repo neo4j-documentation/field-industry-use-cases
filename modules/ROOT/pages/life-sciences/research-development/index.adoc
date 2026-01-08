@@ -7,8 +7,8 @@ molecular measurements, omics technologies generate unprecedented volumes of dat
 
 The true power of omics data emerges not from individual datasets in isolation, but from their integration. Connecting genomic variants 
 to transcript abundance, linking protein expression patterns to metabolic profiles, and mapping these relationships across different biological 
-contexts reveals the complex molecular mechanisms underlying health and disease. *However, this integration presents substantial 
-data management challenges.* Omics datasets vary dramatically in structure, scale, and standardization—from the linear sequences of 
+contexts reveals the complex molecular mechanisms underlying health and disease. *However, this integration presents substantial data management challenges*.
+Omics datasets vary dramatically in structure, scale, and standardization—from the linear sequences of 
 genomics to the multidimensional matrices of metabolomics.
 
 Effective omics data management requires *flexible data models*, robust infrastructure for storage, annotation, and retrieval, along with 
