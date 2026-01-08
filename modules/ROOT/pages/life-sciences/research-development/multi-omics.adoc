@@ -21,7 +21,7 @@ This data model extends the xref:life-sciences/research-development/single-omics
 
 The `(Experiment)-[:HAS_VALUE]->(Protein)` relationships now include:
 
-* foldChange: Protein abundance change1
+* logFC: Protein abundance change1
 * pValue: Statistical significance
 * regulated: up/down direction
 * intensity: MS intensity values
@@ -447,36 +447,36 @@ MERGE (c)-[:STUDIES_DISEASE]->(d);
 
 // EXP001 - NAFLD signature
 MATCH (e:Experiment {sid: "EXP001"}), (g:Gene {symbol: "PIK3CG"})
-MERGE (e)-[:HAS_VALUE {foldChange: 2.5, pValue: 0.001, regulated: "up", baseMean: 1250.3}]->(g);
+MERGE (e)-[:HAS_VALUE {logFC: 2.5, pValue: 0.001, regulated: "up", baseMean: 1250.3}]->(g);
 
 MATCH (e:Experiment {sid: "EXP001"}), (g:Gene {symbol: "CXCL10"})
-MERGE (e)-[:HAS_VALUE {foldChange: 3.2, pValue: 0.0005, regulated: "up", baseMean: 890.5}]->(g);
+MERGE (e)-[:HAS_VALUE {logFC: 3.2, pValue: 0.0005, regulated: "up", baseMean: 890.5}]->(g);
 
 MATCH (e:Experiment {sid: "EXP001"}), (g:Gene {symbol: "CD36"})
-MERGE (e)-[:HAS_VALUE {foldChange: 2.8, pValue: 0.0008, regulated: "up", baseMean: 3200.1}]->(g);
+MERGE (e)-[:HAS_VALUE {logFC: 2.8, pValue: 0.0008, regulated: "up", baseMean: 3200.1}]->(g);
 
 MATCH (e:Experiment {sid: "EXP001"}), (g:Gene {symbol: "ALB"})
-MERGE (e)-[:HAS_VALUE {foldChange: -1.5, pValue: 0.02, regulated: "down", baseMean: 45000.8}]->(g);
+MERGE (e)-[:HAS_VALUE {logFC: -1.5, pValue: 0.02, regulated: "down", baseMean: 45000.8}]->(g);
 
 // EXP002 - T2D signature
 MATCH (e:Experiment {sid: "EXP002"}), (g:Gene {symbol: "MTOR"})
-MERGE (e)-[:HAS_VALUE {foldChange: -1.8, pValue: 0.01, regulated: "down", baseMean: 1580.2}]->(g);
+MERGE (e)-[:HAS_VALUE {logFC: -1.8, pValue: 0.01, regulated: "down", baseMean: 1580.2}]->(g);
 
 MATCH (e:Experiment {sid: "EXP002"}), (g:Gene {symbol: "AKT1"})
-MERGE (e)-[:HAS_VALUE {foldChange: 2.1, pValue: 0.002, regulated: "up", baseMean: 2100.4}]->(g);
+MERGE (e)-[:HAS_VALUE {logFC: 2.1, pValue: 0.002, regulated: "up", baseMean: 2100.4}]->(g);
 
 MATCH (e:Experiment {sid: "EXP002"}), (g:Gene {symbol: "PPARG"})
-MERGE (e)-[:HAS_VALUE {foldChange: -2.3, pValue: 0.0003, regulated: "down", baseMean: 980.6}]->(g);
+MERGE (e)-[:HAS_VALUE {logFC: -2.3, pValue: 0.0003, regulated: "down", baseMean: 980.6}]->(g);
 
 MATCH (e:Experiment {sid: "EXP002"}), (g:Gene {symbol: "CXCL8"})
-MERGE (e)-[:HAS_VALUE {foldChange: 2.9, pValue: 0.0006, regulated: "up", baseMean: 1340.2}]->(g);
+MERGE (e)-[:HAS_VALUE {logFC: 2.9, pValue: 0.0006, regulated: "up", baseMean: 1340.2}]->(g);
 
 // EXP003 - Metabolic Syndrome signature
 MATCH (e:Experiment {sid: "EXP003"}), (g:Gene {symbol: "CD36"})
-MERGE (e)-[:HAS_VALUE {foldChange: 3.5, pValue: 0.0001, regulated: "up", baseMean: 2890.7}]->(g);
+MERGE (e)-[:HAS_VALUE {logFC: 3.5, pValue: 0.0001, regulated: "up", baseMean: 2890.7}]->(g);
 
 MATCH (e:Experiment {sid: "EXP003"}), (g:Gene {symbol: "PIK3CG"})
-MERGE (e)-[:HAS_VALUE {foldChange: 1.9, pValue: 0.004, regulated: "up", baseMean: 1100.3}]->(g);
+MERGE (e)-[:HAS_VALUE {logFC: 1.9, pValue: 0.004, regulated: "up", baseMean: 1100.3}]->(g);
 
 // ============================================
 // RELATIONSHIPS: EXPERIMENT -> PROTEIN (Proteomics data)
@@ -485,9 +485,9 @@ MERGE (e)-[:HAS_VALUE {foldChange: 1.9, pValue: 0.004, regulated: "up", baseMean
 // EXP004 - NAFLD Proteomics (TMT-MS)
 MATCH (e:Experiment {sid: "EXP004"}), (p:Protein {sid: "P48736"})
 MERGE (e)-[:HAS_VALUE {
-  foldChange: 2.3, 
+  logFC: -2.3, 
   pValue: 0.002, 
-  regulated: "up",
+  regulated: "down",
   intensity: 2.5e7,
   peptides: 12,
   coverage: 45.2
@@ -495,7 +495,7 @@ MERGE (e)-[:HAS_VALUE {
 
 MATCH (e:Experiment {sid: "EXP004"}), (p:Protein {sid: "P16671"})
 MERGE (e)-[:HAS_VALUE {
-  foldChange: 3.1, 
+  logFC: 3.1, 
   pValue: 0.0003, 
   regulated: "up",
   intensity: 5.8e7,
@@ -505,7 +505,7 @@ MERGE (e)-[:HAS_VALUE {
 
 MATCH (e:Experiment {sid: "EXP004"}), (p:Protein {sid: "P02778"})
 MERGE (e)-[:HAS_VALUE {
-  foldChange: 2.8, 
+  logFC: 2.8, 
   pValue: 0.0008, 
   regulated: "up",
   intensity: 1.2e6,
@@ -515,7 +515,7 @@ MERGE (e)-[:HAS_VALUE {
 
 MATCH (e:Experiment {sid: "EXP004"}), (p:Protein {sid: "P02768"})
 MERGE (e)-[:HAS_VALUE {
-  foldChange: -1.6, 
+  logFC: -1.6, 
   pValue: 0.015, 
   regulated: "down",
   intensity: 8.9e8,
@@ -525,7 +525,7 @@ MERGE (e)-[:HAS_VALUE {
 
 MATCH (e:Experiment {sid: "EXP004"}), (p:Protein {sid: "P01375"})
 MERGE (e)-[:HAS_VALUE {
-  foldChange: 2.5, 
+  logFC: 2.5, 
   pValue: 0.001, 
   regulated: "up",
   intensity: 3.2e6,
@@ -535,7 +535,7 @@ MERGE (e)-[:HAS_VALUE {
 
 MATCH (e:Experiment {sid: "EXP004"}), (p:Protein {sid: "P35354"})
 MERGE (e)-[:HAS_VALUE {
-  foldChange: 3.4, 
+  logFC: 3.4, 
   pValue: 0.0002, 
   regulated: "up",
   intensity: 4.5e6,
@@ -546,7 +546,7 @@ MERGE (e)-[:HAS_VALUE {
 // EXP005 - T2D Proteomics (TMT-MS)
 MATCH (e:Experiment {sid: "EXP005"}), (p:Protein {sid: "P42345"})
 MERGE (e)-[:HAS_VALUE {
-  foldChange: -1.7, 
+  logFC: -1.7, 
   pValue: 0.012, 
   regulated: "down",
   intensity: 1.8e7,
@@ -556,7 +556,7 @@ MERGE (e)-[:HAS_VALUE {
 
 MATCH (e:Experiment {sid: "EXP005"}), (p:Protein {sid: "P31749"})
 MERGE (e)-[:HAS_VALUE {
-  foldChange: 2.0, 
+  logFC: 2.0, 
   pValue: 0.003, 
   regulated: "up",
   intensity: 2.1e7,
@@ -566,7 +566,7 @@ MERGE (e)-[:HAS_VALUE {
 
 MATCH (e:Experiment {sid: "EXP005"}), (p:Protein {sid: "P37231"})
 MERGE (e)-[:HAS_VALUE {
-  foldChange: -2.1, 
+  logFC: -2.1, 
   pValue: 0.0005, 
   regulated: "down",
   intensity: 8.5e6,
@@ -576,7 +576,7 @@ MERGE (e)-[:HAS_VALUE {
 
 MATCH (e:Experiment {sid: "EXP005"}), (p:Protein {sid: "P01308"})
 MERGE (e)-[:HAS_VALUE {
-  foldChange: -3.2, 
+  logFC: -3.2, 
   pValue: 0.0001, 
   regulated: "down",
   intensity: 5.2e5,
@@ -586,7 +586,7 @@ MERGE (e)-[:HAS_VALUE {
 
 MATCH (e:Experiment {sid: "EXP005"}), (p:Protein {sid: "P48736"})
 MERGE (e)-[:HAS_VALUE {
-  foldChange: 1.8, 
+  logFC: 1.8, 
   pValue: 0.008, 
   regulated: "up",
   intensity: 1.9e7,
@@ -597,7 +597,7 @@ MERGE (e)-[:HAS_VALUE {
 // EXP006 - Metabolic Syndrome Proteomics (Label-free)
 MATCH (e:Experiment {sid: "EXP006"}), (p:Protein {sid: "P16671"})
 MERGE (e)-[:HAS_VALUE {
-  foldChange: 4.2, 
+  logFC: 4.2, 
   pValue: 0.00005, 
   regulated: "up",
   intensity: 7.8e7,
@@ -607,7 +607,7 @@ MERGE (e)-[:HAS_VALUE {
 
 MATCH (e:Experiment {sid: "EXP006"}), (p:Protein {sid: "P48736"})
 MERGE (e)-[:HAS_VALUE {
-  foldChange: 2.1, 
+  logFC: 2.1, 
   pValue: 0.002, 
   regulated: "up",
   intensity: 2.8e7,
@@ -617,7 +617,7 @@ MERGE (e)-[:HAS_VALUE {
 
 MATCH (e:Experiment {sid: "EXP006"}), (p:Protein {sid: "P37231"})
 MERGE (e)-[:HAS_VALUE {
-  foldChange: -1.9, 
+  logFC: -1.9, 
   pValue: 0.006, 
   regulated: "down",
   intensity: 6.5e6,
@@ -627,7 +627,7 @@ MERGE (e)-[:HAS_VALUE {
 
 MATCH (e:Experiment {sid: "EXP006"}), (p:Protein {sid: "P01375"})
 MERGE (e)-[:HAS_VALUE {
-  foldChange: 3.6, 
+  logFC: 3.6, 
   pValue: 0.0001, 
   regulated: "up",
   intensity: 5.1e6,
@@ -638,7 +638,7 @@ MERGE (e)-[:HAS_VALUE {
 // EXP007 - NAFLD DIA-PASEF Proteomics
 MATCH (e:Experiment {sid: "EXP007"}), (p:Protein {sid: "P48736"})
 MERGE (e)-[:HAS_VALUE {
-  foldChange: 2.4, 
+  logFC: 2.4, 
   pValue: 0.0015, 
   regulated: "up",
   intensity: 3.2e7,
@@ -648,7 +648,7 @@ MERGE (e)-[:HAS_VALUE {
 
 MATCH (e:Experiment {sid: "EXP007"}), (p:Protein {sid: "P16671"})
 MERGE (e)-[:HAS_VALUE {
-  foldChange: 2.9, 
+  logFC: 2.9, 
   pValue: 0.0006, 
   regulated: "up",
   intensity: 6.1e7,
@@ -658,7 +658,7 @@ MERGE (e)-[:HAS_VALUE {
 
 MATCH (e:Experiment {sid: "EXP007"}), (p:Protein {sid: "P31749"})
 MERGE (e)-[:HAS_VALUE {
-  foldChange: 1.7, 
+  logFC: 1.7, 
   pValue: 0.01, 
   regulated: "up",
   intensity: 1.5e7,
@@ -668,7 +668,7 @@ MERGE (e)-[:HAS_VALUE {
 
 MATCH (e:Experiment {sid: "EXP007"}), (p:Protein {sid: "P05067"})
 MERGE (e)-[:HAS_VALUE {
-  foldChange: 1.4, 
+  logFC: 1.4, 
   pValue: 0.025, 
   regulated: "up",
   intensity: 8.2e6,
@@ -678,7 +678,7 @@ MERGE (e)-[:HAS_VALUE {
 
 MATCH (e:Experiment {sid: "EXP007"}), (p:Protein {sid: "P10636"})
 MERGE (e)-[:HAS_VALUE {
-  foldChange: 1.6, 
+  logFC: 1.6, 
   pValue: 0.018, 
   regulated: "up",
   intensity: 5.5e6,
@@ -688,7 +688,7 @@ MERGE (e)-[:HAS_VALUE {
 
 MATCH (e:Experiment {sid: "EXP007"}), (p:Protein {sid: "P02768"})
 MERGE (e)-[:HAS_VALUE {
-  foldChange: -1.5, 
+  logFC: -1.5, 
   pValue: 0.02, 
   regulated: "down",
   intensity: 9.2e8,
@@ -1198,15 +1198,15 @@ These are just a few key examples within the dataset, and the queries that could
 ----
 WITH 
   "COMP001" AS sid,
-  0 AS foldChangeThreshold
+  0 AS logFCThreshold
 MATCH (c:Comparison {sid: sid})-[fd1:FOUND_DIFFERENTIAL]->(g:Gene)-[:CODES]->(p:Protein)<-[fd2:FOUND_DIFFERENTIAL]-(c)
 RETURN 
   g.symbol AS Gene,
   g.name AS GeneName,
   fd1.logFC AS `mRNA Fold Change`,
   fd2.logFC AS `Protein Fold Change`,
-  CASE WHEN fd1.logFC > foldChangeThreshold AND fd2.logFC > foldChangeThreshold THEN 'Concordant (Overexpression)'
-       WHEN fd1.logFC < foldChangeThreshold AND fd2.logFC < foldChangeThreshold THEN 'Concordant (Underexpression)'
+  CASE WHEN fd1.logFC > logFCThreshold AND fd2.logFC > logFCThreshold THEN 'Concordant (Overexpression)'
+       WHEN fd1.logFC < logFCThreshold AND fd2.logFC < logFCThreshold THEN 'Concordant (Underexpression)'
        ELSE 'Discordant' END AS Regulation;
 ----
 
@@ -1218,11 +1218,11 @@ RETURN
 ----
 WITH 
   "COMP002" AS sid,
-  0 AS foldChangeThreshold
+  0 AS logFCThreshold
 MATCH 
   (c:Comparison {sid: sid})-[fd1:FOUND_DIFFERENTIAL]->(g:Gene)-[:CODES]->(p:Protein)<-[fd2:FOUND_DIFFERENTIAL]-(c)
 WHERE 
-  fd1.logFC > foldChangeThreshold AND fd2.logFC > foldChangeThreshold
+  fd1.logFC > logFCThreshold AND fd2.logFC > logFCThreshold
 RETURN 
   g.symbol AS Gene,
   g.name AS GeneName,
@@ -1234,7 +1234,12 @@ RETURN
 
 * Demonstrates correlation between transcript and protein levels with correlation coefficients (0.85-0.92)
 
-//CES BRING OUT THE COMP009 and Proteins with correlations between values
+[source, cypher, role=noheader]
+----
+MATCH (c:Comparison {sid: 'COMP009'})-[fd:FOUND_DIFFERENTIAL]->(p:Protein)
+WHERE fd.correlation >= 0.85 AND fd.correlation <= 0.92
+RETURN c,fd,p
+----
 
 === Proteomics-only changes - Identify post-transcriptional regulation
 
@@ -1245,16 +1250,18 @@ Find proteins that change significantly without corresponding mRNA changes.
 // Proteomics-only changes - Identify post-transcriptional regulation
 WITH 
   "Proteomics" AS experimentType,
-  1.5 AS foldChangeThreshold,
+  1.5 AS logFCThreshold,
   0.05 AS pValueThreshold
 MATCH 
   (exp:Experiment {type: experimentType})-[r:HAS_VALUE]->(protein:Protein),
-  (protein)<-[:CODES]-(gene:Gene)
-WHERE r.pValue < pValueThreshold AND r.foldChange > foldChangeThreshold
+  (protein)<-[:CODES]-(gene:Gene)<-[fd:FOUND_DIFFERENTIAL]-(comp:Comparison)-[:COMPARES]->(exp)
+WHERE 
+  r.pValue < pValueThreshold AND abs(r.logFC) > logFCThreshold
+  AND fd.regulated <> r.regulated
 RETURN 
   protein.name AS Protein,
   gene.symbol AS Gene,
-  r.foldChange AS FoldChange,
+  r.logFC AS logFC,
   r.pValue AS PValue,
   r.regulated AS Direction;
 ----
@@ -1287,7 +1294,7 @@ MATCH (ph:EFO {name: phenotypeName})<-[:HAS_PHENOTYPE]-(s:Sample)-[:HAS_EXPERIME
 WHERE hv.pValue < 0.05
 RETURN 
   g.symbol AS Gene, 
-  hv.foldChange AS FoldChange, 
+  hv.logFC AS logFC, 
   hv.pValue AS PValue
 ORDER BY hv.pValue;
 ----
@@ -1338,7 +1345,7 @@ WHERE fd.regulated = regulationDirection
 RETURN 
   DISTINCT gene.symbol AS Gene,
   gene.name AS GeneName,
-  fd.logFC AS mRNA_FoldChange,
+  fd.logFC AS mRNA_logFC,
   fd.adjPValue AS mRNA_AdjPValue;
 ----
 
@@ -1460,11 +1467,11 @@ We're looking for `Protein` interactions starting from a specific overexpressed 
 // What are the protein-protein interactions in 1–2 hops of my overexpressed genes from my RNA-seq?
 WITH 
   "PIK3CG" AS geneSymbol,
-  0 AS foldChangeThreshold
+  0 AS logFCThreshold
 MATCH 
   path=(:Comparison)-[fd1:FOUND_DIFFERENTIAL]->(gene:Gene {symbol: geneSymbol})-[:CODES]->(p:Protein)-[i:INTERACTS_WITH*1..2]-(neighbor:Protein)<-[:CODES]-(neighbourGene:Gene)<-[fd2:FOUND_DIFFERENTIAL]-(:Comparison)
 WHERE
-  fd1.logFC > foldChangeThreshold AND fd2.logFC > foldChangeThreshold
+  fd1.logFC > logFCThreshold AND fd2.logFC > logFCThreshold
 RETURN 
   gene.symbol AS TargetGene,
   neighbourGene.symbol AS NeighborGene,
@@ -1543,7 +1550,7 @@ RETURN
   exp.sid AS Experiment,
   exp.platform AS Platform,
   exp.method AS Method,
-  r.foldChange AS FoldChange,
+  r.logFC AS logFC,
   r.pValue AS PValue,
   r.peptides AS Peptides,
   r.coverage AS Coverage
@@ -1597,9 +1604,9 @@ RETURN
   gene.symbol AS Gene,
   rnaR.logFC AS Transcript_FC,
   protR.logFC AS Protein_FC,
-  (rnaR.logFC + protR.logFC) / 2.0 AS Avg_FoldChange,
+  (rnaR.logFC + protR.logFC) / 2.0 AS Avg_logFC,
   round(abs(rnaR.logFC - protR.logFC), 2) AS mRNA_Protein_Correlation_Delta
-ORDER BY Avg_FoldChange DESC;
+ORDER BY Avg_logFC DESC;
 ----
 
 === Druggable proteins in the PPI neighborhood
@@ -1658,7 +1665,7 @@ RETURN
   collect(DISTINCT {
     experiment: e.sid,
     comparison: c.name,
-    foldChange: hv.foldChange,
+    logFC: hv.logFC,
     pValue: hv.pValue,
     regulation: hv.regulated
   }) AS `Expression Evidence`,
