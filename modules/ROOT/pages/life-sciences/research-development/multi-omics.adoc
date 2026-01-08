@@ -1234,6 +1234,8 @@ RETURN
 
 * Demonstrates correlation between transcript and protein levels with correlation coefficients (0.85-0.92)
 
+//CES BRING OUT THE COMP009 and Proteins with correlations between values
+
 === Proteomics-only changes - Identify post-transcriptional regulation
 
 Find proteins that change significantly without corresponding mRNA changes.
@@ -1451,15 +1453,18 @@ ORDER BY `Interaction Score` DESC;
 
 === What are the protein-protein interactions in 1-2 hops of my overexpressed genes from my RNA-seq?
 
-== CES -- SEE NOTES
+We're looking for `Protein` interactions starting from a specific overexpressed `Gene` (e.g., PIK3CG) identified in RNA-seq data, and exploring its interaction network up to 2 hops away, focusing on other proteins coded by overexpressed genes allowing us to potentially target not just the primary gene product but also its immediate network.
 
 [source, cypher, role=noheader]
 ----
 // What are the protein-protein interactions in 1–2 hops of my overexpressed genes from my RNA-seq?
 WITH 
-  "PIK3CG" AS geneSymbol
+  "PIK3CG" AS geneSymbol,
+  0 AS foldChangeThreshold
 MATCH 
-  path=(gene:Gene {symbol: geneSymbol})-[:CODES]->(p:Protein)-[i:INTERACTS_WITH*1..2]-(neighbor:Protein)<-[:CODES]-(neighbourGene:Gene)
+  path=(:Comparison)-[fd1:FOUND_DIFFERENTIAL]->(gene:Gene {symbol: geneSymbol})-[:CODES]->(p:Protein)-[i:INTERACTS_WITH*1..2]-(neighbor:Protein)<-[:CODES]-(neighbourGene:Gene)<-[fd2:FOUND_DIFFERENTIAL]-(:Comparison)
+WHERE
+  fd1.logFC > foldChangeThreshold AND fd2.logFC > foldChangeThreshold
 RETURN 
   gene.symbol AS TargetGene,
   neighbourGene.symbol AS NeighborGene,
@@ -1625,7 +1630,7 @@ WHERE
   `Disease Associations` > 0
 RETURN 
   neighbor.name AS `Potential Drug Target`,
-  neighbor.sid AS UniProt,
+  neighbor.sid AS `UniProt Identifier`,
   `Disease Associations`,
   `Associated Diseases`
 ORDER BY `Disease Associations` DESC;
