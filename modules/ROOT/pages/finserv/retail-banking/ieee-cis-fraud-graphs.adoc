@@ -1,4 +1,4 @@
-= Financial Fraud Detection with Graph Data Science
+= A Graph-Based Approach to Financial Fraud Detection
 :slug: financial-fraud-detection
 :author: Pedro Leitao
 :category: financial-services
@@ -8,30 +8,30 @@ image::https://raw.githubusercontent.com/pedroleitao-neo4j/finance-ieee-cis-frau
 
 == The Challenge
 
-Financial fraud is evolving rapidly, with criminals using increasingly sophisticated methods to bypass traditional security measures. Standard fraud detection systems often rely on discrete rules or tabular machine learning models that analyze transactions in isolation.
+Financial fraud has moved from simple, isolated incidents to highly sophisticated, interconnected schemes, with criminals using increasingly sophisticated methods to bypass traditional security measures. Standard fraud detection systems often rely on discrete rules or tabular machine learning models that analyze transactions in isolation.
 
-These traditional approaches struggle to detect complex, interconnected fraud schemes such as:
+These traditional approaches have served institutions well but can struggle to detect complex, interconnected fraud schemes such as:
 
 * **Fraud Rings:** Organized groups of fraudsters sharing resources (devices, credentials) to commit wide-scale abuse.
-* **Synthetic Identities:** Identities cobbled together from real and fake information (e.g., a real SSN with a fake name) to build credit profiles before "busting out."
+* **Synthetic Identities:** Identities cobbled together from real and fake information (e.g., a real SSN with a fake name) to build credit profiles before "busting out".
 * **Layered Money Laundering:** Complex chains of transactions designed to obscure the origin of illicit funds.
 
-In these scenarios, the *individual* transaction often looks legitimate. The fraud signal only becomes visible when analyzing the *network* of relationships, shared devices, common IP addresses, or circular money flows.
+In these scenarios, the *individual* transaction often looks legitimate. The fraud signal only becomes apparent when analyzing the *network* of relationships, shared devices, common IP addresses, or circular money flows.
 
 == The Solution
 
-This solution utilizes **Neo4j Graph Data Science (GDS)** to detect fraud by analyzing the topology of transaction networks. By ingesting the IEEE-CIS Fraud Detection dataset into a graph, we can uncover hidden connections between seemingly unrelated entities.
+This solution utilizes https://neo4j.com/product/graph-data-science/[**Neo4j Graph Data Science (GDS)**] to compute topological signals of fraud. We demonstrate this by ingesting the https://www.kaggle.com/c/ieee-fraud-detection[IEEE-CIS Fraud Detection dataset] into a graph, and showing how to uncover hidden connections between seemingly unrelated entities.
 
-The system moves beyond simple "blacklists" to identify **"Fraud Islands"**, tightly connected communities of devices and cards that engage in illicit activity, and uses these structural insights to train more accurate machine learning models.
+Prediction moves beyond simple "blacklists" to identify *"Fraud Islands"*, tightly connected communities of devices and cards that engage in illicit activity, and uses these structural insights to train more accurate machine learning models.
 
 === Data Model and Network Structure
 
-The data model connects transactions to the digital footprints left by users. The graph consists of the following nodes:
-`Transaction`, `Card`, `Device`, `Email`, `Address`, and `Identity`.
+The data model connects transactions to the digital footprints left by users. The graph consists of the following nodes: `Transaction`, `Card`, `Device`, `Email`, `Address`, and `Identity`.
 
 image::https://raw.githubusercontent.com/pedroleitao-neo4j/finance-ieee-cis-fraud/main/renderings/fraud_island_graph.png[Fraud Islands - High Risk Communities]
 
 This structure allows for the detection of suspicious patterns, such as:
+
 * **Device Sharing:** A single device ID linked to multiple distinct credit cards (a strong signal of a compromised device or a fraud farm).
 * **Identity Reuse:** Multiple accounts sharing the same email address or physical address.
 
@@ -48,24 +48,24 @@ Instead of relying solely on transaction amounts and timestamps, the system gene
 * **FastRP (Node Embeddings):** Generates vector representations of nodes, capturing their structural role in the network for use in downstream ML models.
 
 === 2. Graph-Enhanced Machine Learning
-These graph features are extracted and combined with traditional tabular data (Time, Amount) to train an **XGBoost Classifier**.
+These graph features are extracted and combined with traditional tabular data (Time, Amount) to train an https://xgboost.readthedocs.io/en/stable/[**XGBoost Classifier**].
 
 image::https://raw.githubusercontent.com/pedroleitao-neo4j/finance-ieee-cis-fraud/main/renderings/model_comparison_roc_pr.png[Model Performance Comparison]
 
-As shown above, the **Graph-Enhanced Model** significantly outperforms the baseline tabular model in both ROC-AUC and Precision-Recall (PR-AUC) metrics. This demonstrates that structural context allows the model to differentiate between legitimate high-value transactions and actual fraud.
+As shown above, the **Graph-Enhanced Model** significantly outperforms the baseline tabular model  Precision-Recall (PR-AUC) metrics (orange means better). This demonstrates that structural context allows the model to differentiate between legitimate high-value transactions and actual fraud.
 
 == Enterprise Integration Architecture
 
 In a production banking environment, this Fraud Knowledge Graph acts as a central **Intelligence Layer**:
 
-* **Hot Path (Real-Time):** Transactions are streamed via Kafka into Neo4j. The graph instantly updates relationships (e.g., Device-to-Card) and calculates a "Network Risk Score" (e.g., *Is this card 3 hops away from a known fraudster?*), which is fed to the authorization engine in milliseconds.
+* **Hot Path (Real-Time):** Transactions are streamed via https://kafka.apache.org/[Kafka] or other real-time streaming platforms into Neo4j. The graph instantly updates relationships (e.g., Device-to-Card) and calculates a "Network Risk Score" (e.g., *Is this card 3 hops away from a known fraudster?*), which is fed to the authorization engine in regularly.
 * **Cold Path (Batch & feedback):** Historical data is loaded from data lakes for deep investigation. When analysts confirm a fraud ring in tools like **Neo4j Bloom**, the "Confirmed Fraud" label is propagated back to the graph, automatically flagging any new accounts that connect to that ring.
 
 == Business Benefits
 
 * **Reduced False Positives:** By understanding the *context* of a transaction (e.g., a user traveling vs. a stolen card), banks can approve more legitimate transactions.
 * **Detection of Novel Attacks:** Graph centrality and community detection can identify new fraud rings based on their shape and behavior, even before specific rules are written for them.
-* **Visual Forensics:** The graph provides an intuitive way for analysts to "follow the money" and visually investigate complex rings, drastically reducing investigation time.
+* **Visual Forensics:** The graph provides an intuitive way for analysts and forensic investigators to "follow the money" and visually investigate complex rings, drastically reducing investigation time.
 
 == Resources
 

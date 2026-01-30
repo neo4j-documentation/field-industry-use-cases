@@ -1,24 +1,22 @@
-= Finance Churn Prediction with Graph Data Science
+= A Graph-Aware Finance Churn Prediction Model
 :slug: finance-churn-prediction
 :author: Pedro Leitao
 :category: financial-services
 :tags: churn-prediction, graph-data-science, machine-learning, retail-banking, customer-retention, neo4j-gds
 
-image::https://raw.githubusercontent.com/pedroleitao-neo4j/finance-churn/main/customer-churn.png[Customer Churn Overview]
-
 == The Challenge
 
-Customer Churn (customer attrition) refers to the phenomenon where customers stop doing business with a company. In the context of finance and retail banking, acquiring a new customer is significantly more expensive than retaining an existing one, making churn prediction a critical imperative.
+Customer Churn (customer attrition) refers to the phenomenon where customers stop doing business with a company. In finance and retail banking, acquiring a new customer is significantly more expensive than retaining an existing one, making churn prediction a critical imperative.
 
 However, financial churn presents unique challenges compared to subscription-based industries (like Netflix or Spotify):
 
 * **Silent Churn (Dormancy):** In banking, churn is often non-contractual. A customer rarely calls to say, "I am leaving." Instead, they simply stop using a card, move their direct deposit, or leave an account dormant for an extended period. Therefore, financial churn prediction is really about detecting **dormancy**, identifying users whose activity has dropped to a level where they are effectively gone.
-* **Class Imbalance:** In a healthy financial institution, the vast majority of customers (95% to 99%) are active. This extreme "Class Imbalance" makes it difficult for traditional Machine Learning models to learn what a churner looks like (finding a needle in a haystack).
+* **Class Imbalance:** In a healthy financial institution, the vast majority of customers (95% to 99%) are active. This extreme https://neo4j.com/docs/graph-data-science/current/machine-learning/linkprediction-pipelines/theory/#linkprediction-pipelines-classimbalance["Class Imbalance"] makes it difficult for traditional Machine Learning models to learn what a churner looks like (finding a needle in a haystack).
 * **Behavioral vs. Structural:** Traditional methods (like RFM analysis) often view customers in isolation. They miss the **network effects** - for example, if a user's household moves banks, or if a user stops shopping at key "sticky" merchants (like a daily commuter train), these structural changes are strong predictors of churn that tabular data often misses.
 
 == The Solution
 
-This solution leverages **Neo4j Graph Data Science (GDS)** to predict customer churn by analyzing transaction patterns as a graph. Unlike traditional methods that only look at individual user demographics, this approach uses graph features to understand the relationships between users, cards, and merchants.
+This solution leverages https://neo4j.com/product/graph-data-science/[**Neo4j Graph Data Science (GDS)**] to predict customer churn by analyzing transaction patterns as a graph. Unlike traditional methods that only look at individual user demographics, this approach uses graph features to understand the relationships between users, cards, and merchants.
 
 By identifying active users who exhibit the structural patterns of those who have previously churned, financial institutions can take proactive measures, such as targeted campaigns or personalized offers, to retain high-value customers before they become dormant.
 
@@ -62,6 +60,7 @@ The model also incorporates geospatial data (`user_latitude`, `user_longitude`) 
 
 === 3. Model Training and Inference
 A **Random Forest Classifier** (50 trees, max depth 5) is trained using the enriched feature set.
+
 * **Training:** The model learns to distinguish between the "Churned" and "Active" labels using the balanced cohort.
 * **Inference:** The trained model is then applied to the **Full Graph** (all currently active users). It assigns a "Risk Probability" to every active user.
 
