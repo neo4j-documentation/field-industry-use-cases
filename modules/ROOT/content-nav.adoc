@@ -52,6 +52,9 @@
 * xref:agnostic/index.adoc[]
 ** xref:agnostic/entity-resolution.adoc[Entity Resolution]
 ** xref:agnostic/it-service-graph/it-service-graph.adoc[]
+** xref:agnostic/iam/iam.adoc[Identity and Access Management]
+*** xref:agnostic/iam/access-and-authorization/index.adoc[Access and Authorization]
+**** xref:agnostic/iam/access-and-authorization/effective-access-analysis.adoc[Effective Access Analysis]
 
 * xref:whitepapers/index.adoc[Whitepapers]
 ** xref:whitepapers/finserv/index.adoc[Financial Services]

@@ -1,0 +1,13 @@
+= Identity and Access Management
+
+Identity and Access Management underpins security, compliance, and day-to-day operations across modern organisations. As enterprises adopt cloud services, SaaS applications, distributed infrastructure, and external partners, access is no longer governed by a single system or a simple role hierarchy.
+
+Instead, IAM environments span multiple platforms and teams, with identities, groups, roles, entitlements, and resources evolving continuously over time. This complexity makes it increasingly challenging to maintain visibility, enforce least privilege, and reason confidently about access across the organisation.
+
+Graph technology provides a natural foundation for IAM analysis by modelling identities and access structures as connected data. By representing IAM as a graph, organisations can better understand relationships, dependencies, and inheritance across systems, enabling deeper insight into how identity and access operate at scale.
+
+== Access and Authorization
+
+=== Effective Access Analysis
+
+* xref:agnostic/iam/access-and-authorization/effective-access-analysis.adoc[]

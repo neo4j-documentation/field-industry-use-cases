@@ -1,0 +1,19 @@
+= Access and Authorization
+
+Access and authorization determine who can access which resources — and under what conditions — across an organisation. In practice, access is rarely granted directly. It emerges through layers of group membership, shared roles, inherited entitlements, and exceptions spread across cloud platforms, SaaS applications, and internal systems.
+
+As organisations scale and change, these access paths accumulate, creating access sprawl that is difficult to see and explain. While traditional IAM tools provide essential authentication and enforcement controls, they often struggle to answer fundamental questions about effective access: who can access a given resource, how that access was obtained, and whether it is still appropriate.
+
+By modelling access relationships as a graph, organisations can analyse authorization as it actually exists. This enables explainable effective access analysis, clearer access reviews, and a stronger foundation for least-privilege enforcement across both business and operational environments.
+
+== Architectural patterns for access graphs
+
+Access and authorisation graphs are typically introduced using one of three architectural patterns.
+
+In some environments, the graph acts as an *authoritative access model*, representing identities, groups, roles, and resources directly and supporting fine-grained authorisation decisions. This pattern is most common in greenfield systems or platforms where relationship-aware access control is a core design requirement.
+
+More commonly, the graph *augments an existing IAM stack*. Authentication and enforcement remain with identity providers and policy engines, while Neo4j models effective access to explain authorisation outcomes, surface non-obvious access paths, and enrich security decisions with contextual insight.
+
+A third pattern uses the graph for *analysis and audit* only. Access data is imported from directories and SaaS platforms to visualise entitlements, support access reviews, and detect risk patterns such as privilege accumulation or complex group inheritance—without affecting runtime authorisation.
+
+These patterns are often adopted incrementally, with organisations starting from visibility and analysis before integrating graph-driven insights into operational access control.

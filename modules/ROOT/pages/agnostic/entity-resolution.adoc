@@ -1,4 +1,4 @@
-= Entity Resolution - Technical Walkthrough
+= Entity Resolution
 
 == 1. Industry Introductions
 

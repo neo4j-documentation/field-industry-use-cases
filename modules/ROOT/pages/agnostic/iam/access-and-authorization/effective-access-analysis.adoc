@@ -1,0 +1,488 @@
+= Effective Access Analysis
+
+== 1. Introduction
+Modern organisations struggle to answer a deceptively simple question:
+*Who can access what, and why?*
+
+Access is rarely granted directly. It accumulates over time through roles, groups, and policies spread across cloud platforms, SaaS applications, and internal systems, creating access sprawl that is difficult to see or explain.
+
+While traditional IAM tools provide essential controls, they often focus on how access is assigned rather than the access users actually have. Without a clear view of effective access, organisations face increased audit friction, over-entitlement, and unintended exposure of sensitive resources.
+
+== 2. Scenarios
+Most organisations manage access to documents, applications, and systems through a mix of groups, roles, and direct assignments, often spread across multiple identity platforms.
+
+Employees are typically organised into departments such as Finance, Operations, and Payroll, with access granted through shared roles and nested group memberships. Over time, project-based groups, temporary role assignments, and business exceptions introduce additional access paths, meaning a single individual may reach the same resource through multiple, independent routes.
+
+Operational access to IT systems is often managed separately. Contractors and managed service providers may exist outside the core employee directory, while still requiring privileged access to internal systems.
+
+While access controls may be correctly configured within individual systems, this structure creates several persistent challenges:
+
+* **Fragmented visibility** into who can access a given resource
+* **Indirect and inherited** access that is difficult to trace back to its source
+* **Overlapping access paths** created unintentionally through group nesting, projects, or exceptions
+* **Limited explainability** during access reviews, audits, or remediation
+
+Traditional access reviews and reporting struggle because access is not assigned in one place. It emerges from the interaction of identities, groups, roles, and entitlements across systems.
+
+Effective access analysis addresses this by focusing on how access is actually granted and inherited, producing clear, explainable answers that reflect real-world access rather than intended policy.
+
+== 3. Solution
+Effective access analysis focuses on how access actually emerges across the organisation, not just how it is configured in individual systems.
+
+Access to documents, applications, and systems results from the interaction of groups, roles, inheritance, and exceptions spread across multiple platforms, making it difficult to reason about holistically.
+
+Neo4j models access as a connected system of relationships. By representing identities, groups, roles, entitlements, and resources as a graph, effective access is computed dynamically by traversing the paths through which access is granted, reflecting real-world access rather than static assignments.
+
+This enables organisations to answer critical access questions consistently across domains - from business documents to operational IT systems - without changing existing IAM platforms or enforcement mechanisms.
+
+=== 3.1. Why Graph Databases?
+Access structures are inherently relational and multi-path. A single identity may reach the same resource through several independent routes, involving different groups, roles, or entitlements. Traditional relational approaches struggle to represent and explain this kind of access inheritance without complex joins, recursive logic, or custom reporting layers.
+
+Graph databases are well suited to this challenge because they:
+
+Model access as relationships, not tables::
+Identities, groups, roles, entitlements, and resources are connected explicitly, mirroring how access is granted and inherited in practice.
+
+Handle nested and indirect access naturally::
+Group nesting and role inheritance are traversed directly, without recursive queries or precomputed views.
+
+Expose multiple access paths transparently::
+When access exists through more than one route, all paths can be discovered and compared — including unintended or less obvious ones.
+
+Provide explainability by design::
+Queries return not only who has access, but why, by revealing the full chain of groups, roles, and entitlements involved.
+
+Remain flexible across access domains::
+Business access to documents and data, and operational access to IT systems can coexist in the same graph even when managed by different teams or tools.
+
+== 4. Modelling
+Effective access analysis focuses on how access is derived, rather than how it is configured within any single system. The goal of the model is to represent access relationships in a way that is consistent, explainable, and extensible across different access domains.
+
+Neo4j represents access as a connected graph of identities, groups, roles, entitlements, and resources. These elements are linked in ways that reflect how access is actually granted and inherited in real organisations, allowing effective access to be analysed directly from the structure of the graph.
+
+=== 4.1 Data Model
+
+image::agnostic/iam/effective_access_model.png[width=600]
+
+The core access model is built around five primary concepts:
+
+Identity::
+An Identity represents an access-bearing principal, such as a user or service account. Identities are modelled independently of organisational or HR structures, ensuring access analysis focuses on how access is granted rather than where identity data originates.
+
+Group::
+A Group represents a logical collection of identities. Groups may be nested to reflect organisational structure, functional teams, or project-based access, making indirect and inherited access explicit.
+
+Role::
+A Role represents a reusable access construct that groups related access rights. Roles can be assigned to groups or directly to identities to support exceptions, temporary access, or operational requirements.
+
+Entitlement::
+An Entitlement represents an access right describing what actions can be performed on a resource. Entitlements abstract low-level system permissions, keeping the model system-agnostic and aligned with how access is reviewed and reasoned about, without introducing enforcement or policy evaluation semantics.
+
+Resource::
+A Resource represents anything access is granted to, such as documents, folders, applications, or IT systems.
+
+Access is derived by traversing the following relationships:
+
+* `(Identity)-[:MEMBER_OF]->(Group)`
+* `(Group)-[:MEMBER_OF]->(Group)` (nested groups)
+* `(Group)-[:GRANTS_ROLE]->(Role)`
+* `(Identity)-[:ASSIGNED_ROLE]->(Role)` (direct assignment)
+* `(Role)-[:GRANTS]->(Entitlement)`
+* `(Entitlement)-[:APPLIES_TO]->(Resource)`
+
+This structure supports:
+
+* indirect access through group nesting
+* multiple independent access paths to the same resource
+* direct role assignments as real-world exceptions
+* explainability through explicit traversal paths
+
+==== 4.1.1 Required Fields
+
+To enable effective access analysis, only a minimal set of attributes is required.
+
+**`Identity` Node:**
+
+* `id`: Unique identifier for the identity
+* `type`: Identity type (for example, employee, contractor, service account)
+
+**`Group` Node:**
+
+* `id`: Unique identifier for the group
+* `name`: Human-readable group name
+
+**`Role` Node:**
+
+* `id`: Unique identifier for the role
+* `name`: Human-readable role name
+
+**`Entitlement` Node:**
+
+* `action`: Action permitted by the entitlement (for example, read, write, administer)
+
+**`Resource` Node:**
+
+* `id`: Unique identifier for the resource
+* `type`: Resource type (for example, document, folder, application, system)
+
+Optional attributes such as system of origin, policy source, or ownership can be layered onto the model as needed, but is not required for deriving or explaining effective access.
+
+=== 4.2. Demo Data
+This dataset focuses on documents and shared folders, with a small number of IT assets included to show that the same access modelling patterns apply across different access domains.
+
+Access is managed through departmental and project-based groups, nested teams, shared roles, and occasional direct role assignments, resulting in inherited and overlapping access paths.
+
+Operational access to IT systems is modelled separately to reflect outsourced support scenarios, while following the same access modelling and traversal patterns.
+
+The dataset is intentionally small to remain easy to understand, but expressive enough to surface non-obvious access paths and demonstrate effective access in practice.
+
+```cypher
+// ------------------
+// Constraints
+//-------------------
+CREATE CONSTRAINT identity_id
+FOR (i:Identity) REQUIRE i.id IS UNIQUE;
+
+CREATE CONSTRAINT group_id
+FOR (g:Group) REQUIRE g.id IS UNIQUE;
+
+CREATE CONSTRAINT role_id
+FOR (r:Role) REQUIRE r.id IS UNIQUE;
+
+CREATE CONSTRAINT resource_id
+FOR (r:Resource) REQUIRE r.id IS UNIQUE;
+
+//--------------------
+// Create Identities
+//--------------------
+CREATE (alice:Identity {id:"alice", type:"user"})      // Operations employee
+CREATE (bob:Identity {id:"bob", type:"user"})          // Payroll specialist
+CREATE (charlie:Identity {id:"charlie", type:"user"})  // Outsourced IT support contractor
+CREATE (dana:Identity {id:"dana", type:"user"})        // Direct access exception
+CREATE (svcBackup:Identity {id:"svc-backup", type:"service_account", status:"active"}) //Service account
+
+//--------------------
+// Create Groups
+//--------------------
+CREATE (gEmployees:Group {id:"group-emp", name:"Employees"})
+CREATE (gOps:Group {id:"group-ops", name:"Operations"})
+CREATE (gFinance:Group {id:"group-fin", name:"Finance"})
+CREATE (gPayroll:Group {id:"group-payroll", name:"Payroll Team"})
+CREATE (gIT:Group {id:"group-it", name:"IT Support (Outsourced)"})
+CREATE (gProcProject:Group {id:"group-proc-project", name:"Procurement Project"})
+
+//-------------------------
+// Create Group Hierarchies
+//-------------------------
+CREATE (gPayroll)-[:MEMBER_OF]->(gFinance)
+CREATE (gFinance)-[:MEMBER_OF]->(gEmployees)
+CREATE (gOps)-[:MEMBER_OF]->(gEmployees)
+
+//--------------------
+// Create Roles
+//--------------------
+CREATE (rReader:Role  {id:"role-content-reader", name:"Content Reader", system:"content"})
+CREATE (rEditor:Role  {id:"role-content-editor", name:"Content Editor", system:"content"})
+CREATE (rPayroll:Role {id:"role-payroll-processor", name:"Payroll Processor", system:"hr"})
+CREATE (rITOps:Role   {id:"role-it-operator", name:"IT Operator", system:"it"})
+
+//--------------------
+// Create Entitlements
+//--------------------
+CREATE (eRead:Entitlement {action:"read"})
+CREATE (eEdit:Entitlement {action:"edit"})
+CREATE (eViewPayslips:Entitlement {action:"view_payslips"})
+CREATE (eApprovePayroll:Entitlement {action:"approve_payroll"})
+CREATE (eLogin:Entitlement {action:"login"})
+CREATE (eRestart:Entitlement {action:"restart_service"})
+
+//--------------------------------------------------
+// Create Resources (documents/folders + IT assets)
+//--------------------------------------------------
+CREATE (resKB:Resource {id:"folder-knowledge-base", type:"folder"})
+CREATE (resVendorContracts:Resource {id:"doc-vendor-contracts", type:"document"})
+CREATE (resPayrollFolder:Resource {id:"folder-payroll", type:"folder"})
+CREATE (resPayslips:Resource {id:"doc-payslips-q4", type:"document"})
+CREATE (resHRPortal:Resource {id:"app-hr-portal", type:"application"})
+CREATE (resFileServer:Resource {id:"server-fileshare-01", type:"server"})
+
+//-------------------------------------
+// Create Identity → Group memberships
+//-------------------------------------
+CREATE (alice)-[:MEMBER_OF]->(gOps)
+CREATE (bob)-[:MEMBER_OF]->(gPayroll)
+CREATE (bob)-[:MEMBER_OF]->(gProcProject)
+CREATE (charlie)-[:MEMBER_OF]->(gIT)
+CREATE (svcBackup)-[:MEMBER_OF]->(gIT)
+CREATE (dana)-[:MEMBER_OF]->(gEmployees)
+
+//-----------------------------
+// Create Group → Role grants
+//-----------------------------
+CREATE (gEmployees)-[:GRANTS_ROLE]->(rReader)
+CREATE (gFinance)-[:GRANTS_ROLE]->(rEditor)
+CREATE (gPayroll)-[:GRANTS_ROLE]->(rPayroll)
+CREATE (gProcProject)-[:GRANTS_ROLE]->(rEditor)
+CREATE (gIT)-[:GRANTS_ROLE]->(rITOps)
+
+//-----------------------------------
+// Direct role assignment (exception)
+//-----------------------------------
+CREATE (dana)-[:ASSIGNED_ROLE]->(rEditor)
+
+//----------------------------------
+// Create Role → Entitlement grants
+//----------------------------------
+CREATE (rReader)-[:GRANTS]->(eRead)
+
+CREATE (rEditor)-[:GRANTS]->(eRead)
+CREATE (rEditor)-[:GRANTS]->(eEdit)
+
+CREATE (rPayroll)-[:GRANTS]->(eViewPayslips)
+CREATE (rPayroll)-[:GRANTS]->(eApprovePayroll)
+
+CREATE (rITOps)-[:GRANTS]->(eLogin)
+CREATE (rITOps)-[:GRANTS]->(eRestart)
+
+//-------------------------------
+// Create Entitlement → Resource
+//-------------------------------
+CREATE (eRead)-[:APPLIES_TO]->(resKB)
+CREATE (eRead)-[:APPLIES_TO]->(resVendorContracts)
+
+CREATE (eEdit)-[:APPLIES_TO]->(resVendorContracts)
+CREATE (eApprovePayroll)-[:APPLIES_TO]->(resPayrollFolder)
+CREATE (eViewPayslips)-[:APPLIES_TO]->(resPayslips)
+
+CREATE (eLogin)-[:APPLIES_TO]->(resHRPortal)
+CREATE (eRestart)-[:APPLIES_TO]->(resFileServer)
+```
+
+Here's what the dataset looks like:
+
+image::agnostic/iam/dataset.png[width=800]
+
+== 5. Cypher Queries
+=== 5.1. What resources can this identity access?
+Traverses the access graph to compute effective access and entitlements for an identity.
+
+```cypher
+MATCH p=(i:Identity {id:"bob"})-->{1,50}(e:Entitlement)-[:APPLIES_TO]->(r:Resource)
+RETURN r.id AS resource, e.action AS action
+ORDER BY resource, action
+```
+
+The table below shows the results of this query.
+
+[cols="1,1", options="header"]
+|===
+| resource                | action
+
+| "doc-payslips-q4"       | "view_payslips"
+| "doc-vendor-contracts"  | "edit"
+| "doc-vendor-contracts"  | "read"
+| "folder-knowledge-base" | "read"
+| "folder-payroll"        | "approve_payroll"
+|===
+
+Tracing through the graph from identity `bob` through all his access paths shows how he was granted access to these resources:
+
+image::agnostic/iam/WhatResourcesCanBobAccess.png[width=300, height=300]
+
+=== 5.2. What documents and folders can this identity access?
+Returns all documents and folders an identity can access, including the actions permitted and the access paths that grant them.
+
+```cypher
+MATCH p=(i:Identity {id:$id})-->{1,}(e:Entitlement)-[:APPLIES_TO]->(r:Resource WHERE r.type IN ["folder","document"])
+RETURN distinct r.id AS resource, r.type AS type, e.action AS entitlement
+```
+
+With $id=`charlie`, no results are found: this identity is an IT contractor and has no access to any folders or documents. Switch to identity id `dana` and the results show:
+
+[cols="1,1,1", options="header"]
+|===
+| resource                | type       | entitlement
+
+| "folder-knowledge-base" | "folder"   | "read"
+| "doc-vendor-contracts"  | "document" | "read"
+| "doc-vendor-contracts"  | "document" | "edit"
+|===
+
+The visual path representation depicts this clearly:
+
+image::agnostic/iam/WhatDocumentsFoldersIdentityAccess.png[width=300, height=300]
+
+=== 5.3. Who can access this specific resource?
+Returns all identities that can access a specific resource, either due to inherited access or directly.
+
+```cypher
+MATCH p=(r:Resource {id:"doc-vendor-contracts"})<-[:APPLIES_TO]-(:Entitlement)<--{1,}(i:Identity)
+RETURN distinct i.id AS identity
+ORDER BY identity
+```
+
+Results:
+
+[cols="1", options="header"]
+|===
+| identity
+
+| "alice"
+| "bob"
+| "dana"
+|===
+
+=== 5.4. Why does this identity have access to this resource?
+Shows all access paths that explain why an identity can access a specific resource, including non-obvious or overlapping routes.
+
+```cypher
+MATCH p=(r:Resource {id:"doc-vendor-contracts"})<-[:APPLIES_TO]-(:Entitlement)<--{1,}(i:Identity)
+RETURN i.id AS identity, reverse([n in nodes(p) | COALESCE(n.id, n.action)]) AS accessPath
+ORDER BY identity, size(accessPath)
+```
+
+Results:
+[cols="1,4", options="header"]
+|===
+| identity | accessPath
+
+| "alice" | ["alice", "group-ops", "group-emp", "role-content-reader", "read", "doc-vendor-contracts"]
+
+| "bob" | ["bob", "group-proc-project", "role-content-editor", "read", "doc-vendor-contracts"]
+| "bob" | ["bob", "group-proc-project", "role-content-editor", "edit", "doc-vendor-contracts"]
+| "bob" | ["bob", "group-payroll", "group-fin", "role-content-editor", "read", "doc-vendor-contracts"]
+| "bob" | ["bob", "group-payroll", "group-fin", "role-content-editor", "edit", "doc-vendor-contracts"]
+| "bob" | ["bob", "group-payroll", "group-fin", "group-emp", "role-content-reader", "read", "doc-vendor-contracts"]
+
+| "dana" | ["dana", "role-content-editor", "read", "doc-vendor-contracts"]
+| "dana" | ["dana", "role-content-editor", "edit", "doc-vendor-contracts"]
+| "dana" | ["dana", "group-emp", "role-content-reader", "read", "doc-vendor-contracts"]
+|===
+
+=== 5.4. Shortest explanation path
+When multiple paths exist, the shortest explanation path provides a concise, human-readable reason for access, suitable for reviews and audits.
+
+```cypher
+MATCH path = SHORTEST 1 (i:Identity {id:"bob"})-->{1,}(e:Entitlement {action:"edit"})-[:APPLIES_TO]->(r:Resource {id:"doc-vendor-contracts"})
+RETURN path
+```
+
+The shortest access path for identity `bob` to the vendor contract documents is:
+
+image::agnostic/iam/shortest-access-path.png[width=400, height=400]
+
+=== 5.5. Which identities have direct role assignments?
+Identifies identities with roles assigned directly, highlighting access exceptions outside standard group-based assignments.
+
+MATCH (i:Identity)-[:ASSIGNED_ROLE]->(r:Role)
+RETURN i.id AS identity, i.type AS identityType, r.id AS role, r.system AS system
+ORDER BY identity
+
+In this case, identity `dana` has been granted direct access to a role, without having inherited it from one or more groups.
+
+[cols="1,1,2,1", options="header"]
+|===
+| identity | identityType | role                  | system
+
+| "dana"   | "user"       | "role-content-editor" | "content"
+|===
+
+=== 5.6. Which service accounts have access to IT assets?
+Returns all service accounts with access to IT assets, including the access paths and actions permitted.
+
+```cypher
+MATCH p=(i:Identity {type:
+"service_account"})-->{1,}(e:Entitlement)-[:APPLIES_TO]->(r:Resource WHERE r.type IN ["server","application"])
+RETURN distinct r.id AS resource, r.type AS type, e.action AS entitlement
+```
+
+[cols="1,1,1", options="header"]
+|===
+| resource              | type          | entitlement
+
+| "app-hr-portal"       | "application" | "login"
+| "server-fileshare-01" | "server"      | "restart_service"
+|===
+
+=== 5.7. What entitlements does a role grant?
+Returns all entitlements granted by a role, showing what actions the role enables across resources.
+
+```cypher
+MATCH (:Role {id: "role-content-editor"})-[:GRANTS]->(e:Entitlement)-[:APPLIES_TO]->(r:Resource)
+RETURN r.id AS resource, r.type AS type, e.action AS entitlement
+ORDER BY resource
+```
+
+Results:
+[cols="1,1,1", options="header"]
+|===
+| resource                | type       | entitlement
+
+| "doc-vendor-contracts"  | "document" | "read"
+| "doc-vendor-contracts"  | "document" | "edit"
+| "folder-knowledge-base" | "folder"   | "read"
+|===
+
+=== 5.8. How is a role inherited through the organisation?
+Shows how a role is inherited through group memberships, revealing which identities receive it and why.
+
+```
+MATCH (r:Role {id: $id})
+CALL(r) {
+MATCH path=(r)<-[:GRANTS_ROLE]-(g:Group)<-[:MEMBER_OF]-{1,}(i:Identity)
+RETURN path
+
+UNION
+
+MATCH path=(r)<-[:ASSIGNED_ROLE]-(i:Identity)
+RETURN path
+}
+
+RETURN path
+```
+
+For role `role-content-reader`, access is through the `Employees` group.
+
+image::agnostic/iam/content-reader-inheritance.png[width=400, height=400]
+
+However, the role `role-content-editor` shows that access is also granted directly to identity `dana`.
+
+image::agnostic/iam/content-editor-inheritance.png[width=400, height=400]
+
+== 6. Getting value with your own data
+
+This use case is designed to map cleanly to how access data already exists in most organisations, without requiring changes to existing IAM, directory, or application platforms.
+
+Access data is typically distributed across familiar sources, including identity providers and directories, IAM platforms, SaaS applications, document management systems, and infrastructure platforms.
+
+By mapping existing users, groups, roles, and access rights to the identities, groups, roles, entitlements, and resources in this model, organisations can begin analysing effective access immediately. Because access is derived dynamically through traversal, there is no need to precompute access lists or reconcile policies across systems upfront.
+
+Teams can start small- for example, with a single document repository or application, and incrementally add additional sources over time. As new access data is added, it becomes automatically explorable using the same queries, without changes to the underlying model.
+
+This approach enables organisations to quickly answer high-value access questions using familiar data, while keeping the model simple and flexible as access requirements evolve.
+
+== 7. Business Outcomes
+
+By modelling and analysing access relationships as a graph, organisations gain a clear, explainable view of who can access what, and why- turning access from a blind spot into a measurable security control.
+
+Key outcomes aligned to CISO priorities include:
+
+*Reduced access risk and attack surface*::
+Effective access is derived from real relationships, making hidden, overlapping, or unintended access paths visible before they are exploited.
+
+*Stronger audit readiness and defensibility*::
+Access decisions can be explained clearly and consistently, with full lineage showing how access is granted—supporting faster audits and more confident attestations.
+
+*Improved least-privilege enforcement*::
+Excess access and unnecessary inheritance become visible, enabling targeted remediation without disrupting legitimate business access.
+
+*Clearer understanding of blast radius*::
+Security teams can assess the true impact of compromised identities, roles, or groups by understanding exactly what access they enable.
+
+*Better alignment between security, IT, and the business*::
+Access can be reasoned about and communicated in plain terms, improving collaboration and reducing friction between stakeholders.
+
+*Scalable foundation for access intelligence*::
+The same model supports more advanced security use cases over time—including access optimisation, policy validation, and cross-domain risk analysis—without redesigning core access structures.
+
+Together, these outcomes help CISOs move from reactive access reporting to proactive, explainable access control—improving security posture while supporting the pace of modern organisations.
