@@ -21,6 +21,11 @@ All these use cases use the same base data model, which you can find xref:data-m
 * xref:finserv/retail-banking/synthetic-identity-fraud.adoc[]
 * xref:finserv/retail-banking/transaction-ring.adoc[]
 * xref:finserv/retail-banking/transaction-monitoring/transaction-monitoring-introduction.adoc[]
+* xref:finserv/retail-banking/ieee-cis-fraud-graphs.adoc[Transaction Fraud Detection]
+
+==== Customer Churn
+
+* xref:finserv/retail-banking/customer-churn.adoc[Customer Churn Prediction]
 
 === Other
 
