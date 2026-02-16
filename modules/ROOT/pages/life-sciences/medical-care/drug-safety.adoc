@@ -28,25 +28,29 @@ Traditional relational approaches to *FAERS data require extensive table joins* 
 The Neo4j data model for adverse event analytics centers around key entities and their relationships:
 Core Node Labels
 
-* `Drug` - Pharmaceutical products with properties including drug name, active ingredients, NDC codes, ATC classification, and manufacturer
-* `AdverseEvent` - Reported adverse events with MedDRA preferred terms, severity, and event categorization
-* `Report` - Individual FAERS case reports with report ID, submission date, version, and report type
-* `Patient` - De-identified patient information including age group, gender, weight, and relevant medical history
-* `Outcome` - Clinical outcomes such as death, hospitalization, life-threatening, disability, or required intervention
-* `Reporter` - Information about who submitted the report (physician, pharmacist, consumer, etc.)
-* `Indication` - The medical condition for which the drug was prescribed
-* `ReactionGroup` - MedDRA System Organ Class (SOC) groupings for adverse events
+* `Case` - A case represents an overview of the adverse report case, containing basic demographics (age, gender, weight) and information on who reported it and where it was reported. `Case` nodes also have secondary labels for grouping the cases, e.g. `Adult`, `Infant`, `Child`, `Male`, `Female` etc
+* `Drug` - This is the name of the drug, with the active ingredient when available, and a note on whether the drug name is using a validated trade name or not.
+* `DrugCase` - This represents a specific instance of a drug being involved in an adverse event, with details on the role of the drug (primary suspect, secondary suspect, concomitant, or not administered)- A `Case` can have multiple `DrugCase` nodes if multiple drugs are involved in the adverse event.
+* `Manufacturer` - The company that reported the adverse event, which can be a pharmaceutical company, healthcare provider, or consumer.
+* `Outcome` - The clinical outcome of the adverse event, such as hospitalization, disability, life-threatening condition, or death.
+* `MedDraTerm` - The Medical Dictionary for Regulatory Activities (MedDRA) is a standardized medical terminology used to classify adverse events. `MedDraTerm` nodes represent specific adverse events, symptoms, or conditions reported in the adverse reactions data.
+
 
 Key Relationships
 
-* `SUSPECTED_IN` - (Drug)-[:SUSPECTED_IN]->(Report): Primary drug suspected of causing the adverse event
-* `CONCOMITANT_IN` - (Drug)-[:CONCOMITANT_IN]->(Report): Drugs taken concurrently with the suspected drug
-* `REPORTS` - (Report)-[:REPORTS]->(AdverseEvent): Links reports to specific adverse events
-* `INVOLVES` - (Report)-[:INVOLVES]->(Patient): Connects reports to patient demographics
-* `RESULTED_IN` - (Report)-[:RESULTED_IN]->(Outcome): Links reports to clinical outcomes
-* `SUBMITTED_BY` - (Report)-[:SUBMITTED_BY]->(Reporter): Tracks report source
-* `PRESCRIBED_FOR` - (Drug)-[:PRESCRIBED_FOR]->(Indication): Therapeutic use at time of event
-* `CLASSIFIED_AS` - (AdverseEvent)-[:CLASSIFIED_AS]->(ReactionGroup): MedDRA hierarchy mapping
+* `CONCERNS_DRUG` - (:DrugCase)-[:CONCERNS_DRUG]->(:Drug): Connects specific `DrugCase` instances to the `Drug` involved in the adverse event
+* `PRIMARY_SUSPECT_DRUG` - (:Case)-[:PRIMARY_SUSPECT_DRUG]->(:DrugCase): Identifies the primary drug suspected of causing the adverse event
+* `SECONDARY_SUSPECT_DRUG` - (:Case)-[:SECONDARY_SUSPECT_DRUG]->(:DrugCase): Identifies secondary drugs suspected of causing the adverse event
+* `INTERACTING_DRUG` - (:Drug)-[:INTERACTING_DRUG]->(:Drug): Identifies drugs that interact with each other
+* `CONCOMITANT_DRUG` - (:Case)-[:CONCOMITANT_DRUG]->(:DrugCase): Identifies drugs taken concurrently with the suspected drug in a case
+* `DRUG_NOT_ADMINISTERED` - (:Case)-[:DRUG_NOT_ADMINISTERED]->(:DrugCase): Identifies drugs that were not administered in a case
+* `HAS_OUTCOME` - (:Case)-[:HAS_OUTCOME]->(:Outcome): Links a Case to its clinical outcome
+* `HAS_REACTION` - (:Case)-[:HAS_REACTION]->(:MedDraTerm): Links a drug case to its specific adverse reaction
+* `INDICATION_FOR_USE` - (:DrugCase)-[:INDICATION_FOR_USE]->(:MedDraTerm): Links a drug case to its indication for use
+* `REPORTED_BY` - (:Case)-[:REPORTED_BY]->(:Manufacturer): Connects a case to the manufacturer that reported it
+
+.An example model
+image::life-sciences/drug-safety/model.png[width=800]
 
 == Demo Data
 
