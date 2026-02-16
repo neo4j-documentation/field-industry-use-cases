@@ -23,6 +23,7 @@ Traditional relational approaches to *FAERS data require extensive table joins* 
 * Integration with external knowledge sources like DrugBank, clinical trials, and scientific literature
 
 
+
 == Data Model
 
 The Neo4j data model for adverse event analytics centers around key entities and their relationships:
