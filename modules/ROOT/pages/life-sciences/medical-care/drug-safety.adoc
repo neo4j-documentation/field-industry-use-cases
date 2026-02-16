@@ -1,0 +1,54 @@
+= Drug Safety
+
+== Introduction
+
+The FDA Adverse Event Reporting System (https://www.fda.gov/drugs/fdas-adverse-event-reporting-system-faers/fda-adverse-event-reporting-system-faers-public-dashboard[FAERS]) contains millions of reports linking drugs to adverse events, patient outcomes, and reporter information, creating a complex web of relationships that is difficult to analyze with traditional relational databases. Pharmaceutical companies and regulatory agencies face significant challenges in detecting safety signals, understanding multi-drug interactions, and identifying patient populations at risk when adverse event data is scattered across multiple normalized tables. Graph databases like Neo4j excel at modeling these interconnected relationships, enabling rapid traversal across drug-event-patient-outcome networks to uncover hidden patterns and causal pathways. The ability to perform multi-hop queries across heterogeneous data types rangingfrom molecular targets to real-world patient outcomes makes graph technology ideal for pharmacovigilance and post-market surveillance. By representing adverse events as a knowledge graph, analysts can quickly identify drug-drug interactions, detect emerging safety signals, and assess causality through relationship patterns that would require complex joins in relational systems.
+
+== Scenario
+In this scenario, we will use Neo4j to model the FAERS data and answer the following questions:
+- How many adverse events are there for a given drug?
+- What are the most common adverse events for a given drug?
+- What are the most common adverse events for a given patient?
+- What are the most common adverse events for a given reporter?
+- What are the most common adverse events for a given outcome?
+
+== Solution
+
+Traditional relational approaches to *FAERS data require extensive table joins* to connect drugs, adverse events, patients, outcomes, and co-medications. Graph databases eliminate this complexity by representing each entity as a node and relationships as first-class citizens in the data model. This enables:
+
+* Instant relationship traversal across drug-event-patient networks without expensive joins
+* Pattern detection for complex drug interactions and multi-hop causal pathways
+* Signal detection through graph algorithms identifying unusual clustering of events
+* Real-time queries connecting molecular targets to real-world outcomes
+* Integration with external knowledge sources like DrugBank, clinical trials, and scientific literature
+
+
+== Data Model
+
+The Neo4j data model for adverse event analytics centers around key entities and their relationships:
+Core Node Labels
+
+* `Drug` - Pharmaceutical products with properties including drug name, active ingredients, NDC codes, ATC classification, and manufacturer
+* `AdverseEvent` - Reported adverse events with MedDRA preferred terms, severity, and event categorization
+* `Report` - Individual FAERS case reports with report ID, submission date, version, and report type
+* `Patient` - De-identified patient information including age group, gender, weight, and relevant medical history
+* `Outcome` - Clinical outcomes such as death, hospitalization, life-threatening, disability, or required intervention
+* `Reporter` - Information about who submitted the report (physician, pharmacist, consumer, etc.)
+* `Indication` - The medical condition for which the drug was prescribed
+* `ReactionGroup` - MedDRA System Organ Class (SOC) groupings for adverse events
+
+Key Relationships
+
+* `SUSPECTED_IN` - (Drug)-[:SUSPECTED_IN]->(Report): Primary drug suspected of causing the adverse event
+* `CONCOMITANT_IN` - (Drug)-[:CONCOMITANT_IN]->(Report): Drugs taken concurrently with the suspected drug
+* `REPORTS` - (Report)-[:REPORTS]->(AdverseEvent): Links reports to specific adverse events
+* `INVOLVES` - (Report)-[:INVOLVES]->(Patient): Connects reports to patient demographics
+* `RESULTED_IN` - (Report)-[:RESULTED_IN]->(Outcome): Links reports to clinical outcomes
+* `SUBMITTED_BY` - (Report)-[:SUBMITTED_BY]->(Reporter): Tracks report source
+* `PRESCRIBED_FOR` - (Drug)-[:PRESCRIBED_FOR]->(Indication): Therapeutic use at time of event
+* `CLASSIFIED_AS` - (AdverseEvent)-[:CLASSIFIED_AS]->(ReactionGroup): MedDRA hierarchy mapping
+
+== Demo Data
+
+== Cypher Statements
+
