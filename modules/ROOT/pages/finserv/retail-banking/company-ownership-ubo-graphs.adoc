@@ -31,6 +31,7 @@ To demonstrate what graph technology can achieve for UBO analysis, I built a dem
 Using these datasets, I transformed and modeled the data as a graph and ingested millions of records into Neo4j using the Spark Connector for Neo4j
 
 The resulting graph contains:
+
 * Over 16 million nodes
 * Over 18 million relationships
 The model includes companies, individuals, legal entities, addresses, industry codes, and ownership relationships. Even though this demo already operates at a multi-million scale, the same modeling approach extends to graphs containing billions of nodes and relationships. Neo4j is designed to efficiently traverse deeply connected structures, meaning that multi-level ownership analysis remains performant even as datasets grow to enterprise scale.
@@ -88,6 +89,7 @@ Cypher is powerful, but not every user wants to write queries. Different roles i
 Neo4j Bloom provides a visual exploration layer on top of the graph. Analysts can search, expand paths, and trace ownership structures without writing Cypher.
 
 Bloom makes it easy to:
+
 * Follow indirect ownership and control paths
 * Spot unusual or complex structures visually
 * Explain relationships during reviews or investigations
@@ -111,6 +113,7 @@ image::https://github.com/erikbijl/neo4j-company-house-demo/blob/main/images/das
 Graph technology transforms the inherently connected world of ownership and control into a structure that is easy to query, explore, visualize, and reason over. From detailed Cypher investigations to visual exploration in Bloom, operational dashboards, and natural language interaction via Aura Agents, organizations can bring transparency and scalability to UBO analysis.
 
 To explore the demo yourself:
+
 * **Repository:** All materials (including the data model, ingestion scripts, and example queries) are available in the https://github.com/erikbijl/neo4j-company-house-demo?tab=readme-ov-file[neo4j-company-house-demo^]
 * **Blog:** The blogpost can be found on https://neo4j.com/blog/graph-database/exploring-ultimate-beneficial-ownership-with-graph-technology[Exploring Ultimate Beneficial Ownership with Graph Technology^]
 * **Recording**: You can watch the full demo walkthrough in the webinar recording: [https://go.neo4j.com/WBREDU260210FinServ_On-Demand.html?mkt_tok=NzEwLVJSQy0zMzUAAAGf6y-hj63Si9L8pVQqTJb6Q6Qj9kza16Tf7K7zYyB6ABJ6mp17zbPcc9elt7oXO37nPw0nfq2LDs0FqDwe4ms](Watch the Webinar Recording)
