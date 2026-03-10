@@ -37,6 +37,10 @@ All these use cases use the same base data model, which you can find xref:data-m
 
 * xref:finserv/retail-banking/customer-churn.adoc[Customer Churn Prediction]
 
+===== Ultimate Beneficial Ownership (UBO) and Company Ownership
+
+* xref:finserv/retail-banking/company-ownership-ubo-graphs.adoc[Company Ownership and UBO Analysis]
+
 === Other
 
 * xref:finserv/retail-banking/entity-resolution.adoc[]
