@@ -561,38 +561,148 @@ RETURN d.name AS Name, d.activeIngredient AS `Active Ingredient`, count(d) AS `N
 ORDER BY `Num times Reported` DESC;
 ----
 
+==== What `Drug`s have the most side effects (`MedDraTerm`)?
 
-==== What top ten `Drug` combinations have the most side effects (`MedDraTerm`) when administered together?
+This query starts with the `Drug`s in the database, and pulls all the reactions (`MedDraTerm`) that are connected to it via `Case` nodes. 
+It then collects those reactions together and returns the name of the drug, the active ingredients and the reactions. 
 
 [source, cypher, role=noheader]
 ----
-MATCH (d:Drug)<--(:DrugCase)<-[:PRIMARY_SUSPECT_DRUG]-(c:Case)-[:HAS_REACTION]->(m:MedDraTerm)
-WITH DISTINCT c, d.name AS drugName, COLLECT(DISTINCT m) AS Reactions
-RETURN drugName, size(Reactions) AS numReactions, Reactions
+MATCH (d:Drug)<--(:DrugCase)<-[:PRIMARY_SUSPECT_DRUG]-(:Case)-[:HAS_REACTION]->(m:MedDraTerm)
+WITH d.name AS drugName, d.activeIngredient AS activeIngredient, COLLECT(DISTINCT m.name) AS Reactions
+RETURN drugName, activeIngredient, size(Reactions) AS numReactions, Reactions
+ORDER BY numReactions DESC
+----
+
+Extending this to find out which drugs which are not only primary suspects, but also secondary suspects:
+
+[source, cypher, role=noheader]
+----
+MATCH (d:Drug)<--(:DrugCase)<-[:PRIMARY_SUSPECT_DRUG|SECONDARY_SUSPECT_DRUG]-(:Case)-[:HAS_REACTION]->(m:MedDraTerm)
+WITH d.name AS drugName, d.activeIngredient AS activeIngredient, COLLECT(DISTINCT m.name) AS Reactions
+RETURN drugName, activeIngredient, size(Reactions) AS numReactions, Reactions
+ORDER BY numReactions DESC
+----
+
+And of course, you can get both primary and secondary effects together.
+
+[source, cypher, role=noheader]
+----
+OPTIONAL MATCH (d:Drug)<--(:DrugCase)<-[:PRIMARY_SUSPECT_DRUG]-(:Case)-[:HAS_REACTION]->(m:MedDraTerm)
+WITH 
+    d,
+    COLLECT(DISTINCT m.name) AS primaryReactions,
+    d.name AS drugName, 
+    d.activeIngredient AS activeIngredient
+OPTIONAL MATCH (d)<--(:DrugCase)<-[:SECONDARY_SUSPECT_DRUG]-(:Case)-[:HAS_REACTION]->(m:MedDraTerm)
+WITH 
+    d, primaryReactions,
+    COLLECT(DISTINCT m.name) AS secondaryReactions,
+    drugName, 
+    activeIngredient
+RETURN drugName, activeIngredient, size(primaryReactions) + size(secondaryReactions) AS numReactions, primaryReactions, secondaryReactions
 ORDER BY numReactions DESC
 ----
 
 ==== What age group reported the highest side effects (`MedDraTerm`), and what are those side effects?
 
-```
+This query will give the count by age group of numbers of adverse effects.
+This is the _total_ number of reactions, for example, if two `Adult`s had the same reaction (e.g. Headache) that would be counted twice.
+
+[source, cypher, role=noheader]
+----
 UNWIND ['Adult', 'Elderly', 'Child', 'Adolescent', 'Neonate', 'Infant'] AS ageGroup
 MATCH (c:Case)-[:HAS_REACTION]->(r:MedDraTerm)
 WHERE ageGroup IN labels(c)
 RETURN DISTINCT ageGroup, count(r)
 ORDER BY count(r) desc
-```
+----
 
-```
+We can also break up those groups up by `sex`:
+
+[source, cypher, role=noheader]
+----
 UNWIND ['Male', 'Female'] AS sex
 UNWIND ['Adult', 'Elderly', 'Child', 'Adolescent', 'Neonate', 'Infant'] AS ageGroup
 MATCH (c:Case)-[:HAS_REACTION]->(r:MedDraTerm)
 WHERE ageGroup IN labels(c) AND sex IN labels(c)
 RETURN DISTINCT sex, ageGroup, count(r)
 ORDER BY count(r) desc
-```
+----
 
-```
-MATCH (c:Case)-[:HAS_REACTION]->(r:MedDraTerm)
-RETURN DISTINCT labels(c), count(r)
-ORDER BY count(r) desc
-```
+==== How many adverse events are there for a given drug?
+
+We take a given drug ('Aspirin') and look for the primary and secondary reactions associated with it.
+
+[source, cypher, role=noheader]
+----
+WITH "Aspirin" AS searchTerm
+OPTIONAL MATCH (d:Drug {name:searchTerm})<--(:DrugCase)<-[:PRIMARY_SUSPECT_DRUG]-(:Case)-[:HAS_REACTION]->(m:MedDraTerm)
+WITH 
+    d,
+    COLLECT(DISTINCT m.name) AS primaryReactions,
+    d.name AS drugName, 
+    d.activeIngredient AS activeIngredient
+OPTIONAL MATCH (d)<--(:DrugCase)<-[:SECONDARY_SUSPECT_DRUG]-(:Case)-[:HAS_REACTION]->(m:MedDraTerm)
+WITH 
+    d, primaryReactions,
+    COLLECT(DISTINCT m.name) AS secondaryReactions,
+    drugName, 
+    activeIngredient
+RETURN drugName, activeIngredient, size(primaryReactions) AS numPrimaryReactions, primaryReactions, size(secondaryReactions) AS numSecondaryReactions, secondaryReactions
+ORDER BY numReactions DESC
+----
+
+==== What are the most common adverse events associated with a given drug?
+
+[source, cypher, role=noheader]
+----
+WITH "Ibuprofen" AS searchTerm
+MATCH (d:Drug {name:searchTerm})<--(:DrugCase)<-[:PRIMARY_SUSPECT_DRUG]-(:Case)-[:HAS_REACTION]->(m:MedDraTerm)
+RETURN m.name AS reaction, count(m) AS numberOfTimes
+ORDER BY numberOfTimes DESC
+----
+
+But we can also see that across all the drugs
+
+[source, cypher, role=noheader]
+----
+MATCH (d:Drug)<--(:DrugCase)<-[:PRIMARY_SUSPECT_DRUG]-(:Case)-[:HAS_REACTION]->(m:MedDraTerm)
+RETURN d.name, m.name AS reaction, count(m) AS numberOfTimes
+ORDER BY numberOfTimes DESC
+----
+
+==== What are the drugs associated with an adverse event?
+
+If we're seeing an adverse event, we might want to see what drugs have been associated with that event:
+
+[source, cypher, role=noheader]
+----
+WITH "Nausea" AS adverseEffect
+MATCH (d:Drug)<--(:DrugCase)<-[:PRIMARY_SUSPECT_DRUG]-(:Case)-[:HAS_REACTION]->(m:MedDraTerm {name: adverseEffect})
+WITH m.name AS reaction, d.name AS drugName, count(d) AS numberOfTimes
+RETURN reaction, drugName, numberOfTimes
+ORDER BY numberOfTimes DESC
+----
+
+We can also look globally and see which drugs are associated with the reactions:
+
+[source, cypher, role=noheader]
+----
+MATCH (d:Drug)<--(:DrugCase)<-[:PRIMARY_SUSPECT_DRUG]-(:Case)-[:HAS_REACTION]->(m:MedDraTerm)
+WITH m.name AS reaction, COLLECT(DISTINCT d.name) AS drugsAssociated
+RETURN reaction, size(drugsAssociated) AS numberOfDrugs, drugsAssociated
+ORDER BY numberOfDrugs DESC
+----
+
+==== What are the most common adverse events for a given patient?
+
+
+
+==== What are the most common adverse events for a given reporter?
+
+==== What are the most common adverse events for a given outcome?
+
+
+
+==== What top ten `Drug` combinations have the most side effects (`MedDraTerm`) when administered together?
