@@ -9,8 +9,7 @@ In this scenario, we will use Neo4j to model the FAERS data and answer the follo
 
 - How many adverse events are there for a given drug?
 - What are the most common adverse events for a given drug?
-- What are the most common adverse events for a given patient?
-- What are the most common adverse events for a given reporter?
+- What are the most common adverse events for a given reporter type?
 - What are the most common adverse events for a given outcome?
 
 == Solution
@@ -663,7 +662,7 @@ RETURN m.name AS reaction, count(m) AS numberOfTimes
 ORDER BY numberOfTimes DESC
 ----
 
-But we can also see that across all the drugs
+We can also see that across all the drugs
 
 [source, cypher, role=noheader]
 ----
@@ -695,14 +694,56 @@ RETURN reaction, size(drugsAssociated) AS numberOfDrugs, drugsAssociated
 ORDER BY numberOfDrugs DESC
 ----
 
-==== What are the most common adverse events for a given patient?
+==== What are the most common adverse events for a given reporter type?
+
+Adverse reactions are reported by a variety of different groups, including manufacturers, healthcare professsionals and consumers. 
+By filtering on the reporter type, we can see whether specific reactions are associated with specific reporters, and therefore 
+where those reactions are seen.
+
+[source, cypher, role=noheader]
+----
+WITH "Healthcare Professional" AS reporterType
+MATCH (c:Case {reporterOccupation: reporterType})-[:HAS_REACTION]->(m:MedDraTerm)
+RETURN m.name AS reaction, count(m) AS numberOfTimes
+----
+
+==== What are the most common adverse events for a given `Outcome`?
+
+The `Outcome` is the result of the reactions and patient interactions. We can use the outcomes see what reactions are associated with particular outcomes. 
+
+[source, cypher, role=noheader]
+----
+WITH "HO" AS outcomeCode //"Hospitalization - Initial or Prolonged"
+MATCH (o:Outcome {code:outcomeCode})<-[:HAS_OUTCOME]-(:Case)-[:HAS_REACTION]->(m:MedDraTerm)
+RETURN m.name AS reaction, count(m) AS numberOfTimes
+----
+
+==== What are the most common reactions reported by a manufacturer?
+
+[source, cypher, role=noheader]
+----
+WITH "Sanofi S.A." AS manufacturer
+MATCH (m:Manufacturer {name: manufacturer})<-[:REPORTED_BY]-(:Case)-[:HAS_REACTION]->(reaction:MedDraTerm)
+RETURN reaction.name AS reaction, count(reaction) AS numberOfTimes
+----
 
 
+==== What are the most common drugs reported by a manufacturer?
 
-==== What are the most common adverse events for a given reporter?
-
-==== What are the most common adverse events for a given outcome?
-
-
+[source, cypher, role=noheader]
+----
+WITH "Sanofi S.A." AS manufacturer
+MATCH (m:Manufacturer {name: manufacturer})<-[:REPORTED_BY]-(:Case)-[:PRIMARY_SUSPECT_DRUG]->(:DrugCase)-[:CONCERNS_DRUG]->(drug:Drug)
+RETURN drug.name AS drug, drug.activeIngredient AS activeIngredient, count(drug) AS numberOfTimes
+----
 
 ==== What top ten `Drug` combinations have the most side effects (`MedDraTerm`) when administered together?
+
+[source, cypher, role=noheader]
+----
+MATCH 
+    (ssd:DrugCase)<-[:CONCOMITANT_DRUG|SECONDARY_SUSPECT_DRUG]-(c:Case)-[:PRIMARY_SUSPECT_DRUG]->(psd:DrugCase),
+    (c)-[:HAS_REACTION]->(r:MedDraTerm)
+RETURN ssd.name, psd.name, COLLECT(DISTINCT r.name) AS reactions, count(DISTINCT r.name) AS numberOfReactions
+ORDER BY numberOfReactions DESC LIMIT 10
+----
