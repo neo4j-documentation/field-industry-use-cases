@@ -5,6 +5,7 @@
 The FDA Adverse Event Reporting System (https://www.fda.gov/drugs/fdas-adverse-event-reporting-system-faers/fda-adverse-event-reporting-system-faers-public-dashboard[FAERS]) contains millions of reports linking drugs to adverse events, patient outcomes, and reporter information, creating a complex web of relationships that is difficult to analyze with traditional relational databases. Pharmaceutical companies and regulatory agencies face significant challenges in detecting safety signals, understanding multi-drug interactions, and identifying patient populations at risk when adverse event data is scattered across multiple normalized tables. Graph databases like Neo4j excel at modeling these interconnected relationships, enabling rapid traversal across drug-event-patient-outcome networks to uncover hidden patterns and causal pathways. The ability to perform multi-hop queries across heterogeneous data types rangingfrom molecular targets to real-world patient outcomes makes graph technology ideal for pharmacovigilance and post-market surveillance. By representing adverse events as a knowledge graph, analysts can quickly identify drug-drug interactions, detect emerging safety signals, and assess causality through relationship patterns that would require complex joins in relational systems.
 
 == Scenario
+
 In this scenario, we will use Neo4j to model the FAERS data and answer the following questions:
 
 - How many adverse events are there for a given drug?
@@ -547,7 +548,7 @@ This section provides a set of example Cypher queries that can be used to explor
 
 These queries are focused on exploring and getting aggregate data from the dataset.
 
-==== Which `Drug`s are reported the most by consumers?
+==== Which `Drug`pass:[s] are reported the most by consumers?
 
 This query gets you all the drugs reported by consumers and the number of times they were reported. This is useful to see what the drugs with the highest number of adverse effects are.
 
@@ -560,7 +561,7 @@ RETURN d.name AS Name, d.activeIngredient AS `Active Ingredient`, count(d) AS `N
 ORDER BY `Num times Reported` DESC;
 ----
 
-==== What `Drug`s have the most side effects (`MedDraTerm`)?
+==== What `Drug`pass:[s] have the most side effects (`MedDraTerm`)?
 
 This query starts with the `Drug`s in the database, and pulls all the reactions (`MedDraTerm`) that are connected to it via `Case` nodes. 
 It then collects those reactions together and returns the name of the drug, the active ingredients and the reactions. 
@@ -617,7 +618,7 @@ RETURN DISTINCT ageGroup, count(r)
 ORDER BY count(r) desc
 ----
 
-We can also break up those groups up by `sex`:
+We can also break up those groups up by sex
 
 [source, cypher, role=noheader]
 ----
@@ -671,7 +672,7 @@ RETURN d.name, m.name AS reaction, count(m) AS numberOfTimes
 ORDER BY numberOfTimes DESC
 ----
 
-==== What are the drugs associated with an adverse event?
+==== What are the `Drug`pass:[s] associated with an adverse event?
 
 If we're seeing an adverse event, we might want to see what drugs have been associated with that event:
 
@@ -707,7 +708,7 @@ MATCH (c:Case {reporterOccupation: reporterType})-[:HAS_REACTION]->(m:MedDraTerm
 RETURN m.name AS reaction, count(m) AS numberOfTimes
 ----
 
-==== What are the most common adverse events for a given `Outcome`?
+==== What are the most common adverse events for a given `Outcome`pass:[?]
 
 The `Outcome` is the result of the reactions and patient interactions. We can use the outcomes see what reactions are associated with particular outcomes. 
 
@@ -720,6 +721,8 @@ RETURN m.name AS reaction, count(m) AS numberOfTimes
 
 ==== What are the most common reactions reported by a manufacturer?
 
+What reactions are commonly reported by a particular manufacturer?
+
 [source, cypher, role=noheader]
 ----
 WITH "Sanofi S.A." AS manufacturer
@@ -727,8 +730,9 @@ MATCH (m:Manufacturer {name: manufacturer})<-[:REPORTED_BY]-(:Case)-[:HAS_REACTI
 RETURN reaction.name AS reaction, count(reaction) AS numberOfTimes
 ----
 
+==== What are the most common `Drug`pass:[s] reported by a manufacturer?
 
-==== What are the most common drugs reported by a manufacturer?
+What are the drugs being reported by a particular manufacturer?
 
 [source, cypher, role=noheader]
 ----
@@ -737,7 +741,9 @@ MATCH (m:Manufacturer {name: manufacturer})<-[:REPORTED_BY]-(:Case)-[:PRIMARY_SU
 RETURN drug.name AS drug, drug.activeIngredient AS activeIngredient, count(drug) AS numberOfTimes
 ----
 
-==== What top ten `Drug` combinations have the most side effects (`MedDraTerm`) when administered together?
+==== What top ten `Drug` combinations have the most reactions (`MedDraTerm`) when administered together?
+
+What pairings of `Drug`pass:[s] have the most reactions? This could indicate a possible interaction between those drugs that warrants more investigation.
 
 [source, cypher, role=noheader]
 ----
