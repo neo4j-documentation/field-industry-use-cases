@@ -19,7 +19,13 @@ Neo4j, specifically designed to store and process connected data, enables life s
 
 == Medical Care
 
-Medical care isn't just about individual records, it's about relationships. A patient interacts with multiple providers, receives various diagnoses, takes medications that may interact with each other, has allergies that contraindicate certain treatments, and belongs to family units with shared genetic risks. These connections are first-class citizens in graph databases, making queries about relationships fast and intuitive.
+xref:life-sciences/medical-care/index.adoc[Medical care] isn't just about individual records, it's about relationships. A patient interacts with multiple providers, receives various diagnoses, takes medications that may interact with each other, has allergies that contraindicate certain treatments, and belongs to family units with shared genetic risks. These connections are first-class citizens in graph databases, making queries about relationships fast and intuitive.
+
+=== Drug Safety
+
+Drug safety is a critical aspect of medical care, and is a key use case for graph databases. It is used to identify potential safety issues with drugs, and to investigate the causes of adverse events.
+
+* xref:life-sciences/medical-care/drug-safety.adoc[]
 
 === Drug Safety
 
@@ -35,22 +41,39 @@ The patient journey encompasses all the interactions a patient has with the heal
 
 == Competitive Intelligence
 
-Competitive intelligence is the process of gathering, analyzing, and using information to gain a competitive advantage. It is a key part of business intelligence and is used to make informed decisions about market trends and customer needs.
+xref:life-sciences/competitive-intelligence/index.adoc[Competitive intelligence] is the process of gathering, analyzing, and using information to gain a competitive advantage. It is a key part of business intelligence and is used to make informed decisions about market trends and customer needs.
 
-== Pipeline Intelligence    
+=== Pipeline Intelligence    
 
 What drugs competitors are developing, at what stage, for which diseases, and targeting which biological mechanisms?
 
 * xref:life-sciences/competitive-intelligence/pipeline-intelligence.adoc[]
 
-== Publication Intelligence
+=== Publication Intelligence
 
 Scientific publications reveal competitive research directions years before patents or clinical trials appear.
 
 * xref:life-sciences/competitive-intelligence/publication-intelligence.adoc[]
 
-== Patent Intelligence
+=== Patent Intelligence
 
 Patent-based competitive intelligence reveals critical insights into competitors' R&D pipelines, therapeutic strategies, and potential market moves .
 
 * xref:life-sciences/competitive-intelligence/patent-intelligence.adoc[]
+
+== Research and Development
+
+Integrating omics data is rapidly becoming a core capability for xref:life-sciences/research-development/index.adoc[Research and Development] (R&D) organisations, offering a path from raw molecular measurements to actionable biological insight. For drug discovery and precision medicine programmes, the ability to trace a genomic variant through its downstream transcriptional and proteomic effects - and ultimately to disease phenotypes - has the potential to dramatically improve target identification, patient stratification, and mechanistic understanding. The key R&D challenge lies in building the data infrastructure and knowledge graph frameworks needed to make that integration scalable and reproducible across programmes.
+
+
+=== Single-omics
+
+Single-omics data integration focuses on combining datasets within a single omics domain, such as genomics or proteomics.
+
+* xref:life-sciences/research-development/single-omics.adoc[]
+
+=== Multi-omics
+
+Multi-omics data integration evolves the single-omics implementation into a more comprehensive view of biological systems.
+
+* xref:life-sciences/research-development/multi-omics.adoc[]
