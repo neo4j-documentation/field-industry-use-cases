@@ -23,6 +23,10 @@ All these use cases use the same base data model, which you can find xref:data-m
 * xref:finserv/retail-banking/transaction-monitoring/transaction-monitoring-introduction.adoc[]
 * xref:finserv/retail-banking/ieee-cis-fraud-graphs.adoc[Transaction Fraud Detection]
 
+===== Ultimate Beneficial Ownership (UBO) and Company Ownership
+
+* xref:finserv/retail-banking/company-ownership-ubo-graphs.adoc[Company Ownership and UBO Analysis]
+
 ==== Customer Churn
 
 * xref:finserv/retail-banking/customer-churn.adoc[Customer Churn Prediction]

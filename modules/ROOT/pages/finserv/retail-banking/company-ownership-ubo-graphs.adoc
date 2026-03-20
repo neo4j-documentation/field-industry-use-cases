@@ -1,0 +1,122 @@
+= Ultimate Beneficial Owner (UBO) and company ownership
+:slug: ultimate-beneficial-owner
+:author: Erik Bijl
+:category: financial-services
+:tags: company structure, company hierarchy, company ownership, ultimate-beneficial-owner, UBO, Neo4j, Bloom, Dashboards, Aura Agent, Company House
+
+image::finserv/fs-ubo-subsidiaries.png[Company hierarchy structure]
+
+== The Challenge
+Understanding who ultimately owns or controls a company is central to modern compliance and risk management. A UBO is the individual who ultimately owns or exercises effective control over an organization, directly or indirectly.
+
+In practice, ownership structures are rarely simple. Companies are often embedded in multi-layered hierarchies spanning jurisdictions, holding entities and indirect control paths. Tracing these relationships using traditional approaches quickly becomes complex and difficult. In large financial institutions, answering a seemingly simple question like ‘Who ultimately owns this entity?’ can take days of manual investigation across disconnected systems.
+
+== The Solution
+Ownership and control are fundamentally about relationships. People own companies, companies own other companies, and influence flows through chains of ownership connections. In graphs, these relationships are modeled explicitly. Structures that are difficult to trace in spreadsheets or relational tables become intuitive when represented as a graph.
+
+With a graph database, you gain:
+
+* A consistent source of truth across ownership and control data
+* Real-time answers to complex, multi-level questions
+* Greater accuracy and reduced compliance risk through relationship-based logic
+* Lower operational costs by minimizing manual investigation
+* Clear transparency through visual and interactive exploration
+* These advantages make graph databases a powerful platform for UBO analysis and explainable insights.
+
+=== Datasets and Data Model
+To demonstrate what graph technology can achieve for UBO analysis, I built a demo using two datasets from UK Companies House:
+
+* https://download.companieshouse.gov.uk/en_output.html[The Companies data product]
+* https://download.companieshouse.gov.uk/en_pscdata.html[The People with Significant Control (PSC) snapshot]
+
+Using these datasets, I transformed and modeled the data as a graph and ingested millions of records into Neo4j using the Spark Connector for Neo4j
+
+The resulting graph contains:
+
+* Over 16 million nodes
+* Over 18 million relationships
+
+The model includes companies, individuals, legal entities, addresses, industry codes, and ownership relationships. Even though this demo already operates at a multi-million scale, the same modeling approach extends to graphs containing billions of nodes and relationships. Neo4j is designed to efficiently traverse deeply connected structures, meaning that multi-level ownership analysis remains performant even as datasets grow to enterprise scale.
+
+```cypher
+CALL db.schema.visualization()
+```
+image::finserv/fs-ubo-data-model.png[The Database schema]
+
+
+== Example Queries - Explore Ownership Networks Visually
+With the graph in place, you can run powerful ownership queries such as:
+
+=== Subsidiary tree for a single company
+We can find a company and explore all its subsidiaries. Below, we start from a company and query the organizational structure downwards. The query can easily be extended to filter by ownership percentages and calculate total ownership across indirect paths.
+
+```cypher 
+MATCH p=(e:Company {company_number: "05310128"})-[:OWNS*]->(:Company)
+WHERE all(r IN relationships(p) WHERE coalesce(r.ownership_pct_min, 0) >= 0)
+RETURN DISTINCT p
+```
+image::finserv/fs-ubo-subsidiaries.png[Company Structure]
+
+=== Reverse ownership exploration
+Cypher allows us to traverse ownership relationships flexibly and detect patterns that would be difficult to identify otherwise. Below is an example of a company structure containing a circular ownership pattern:
+
+```cypher
+MATCH p=(:Company {company_number: "02852924"})-[:OWNS*]-()
+WHERE all(r IN relationships(p) WHERE coalesce(r.ownership_pct_min, 0) >= 0)
+RETURN p
+```
+image::finserv/fs-ubo-circular-ownership.png[Circular Ownership Structure]
+
+=== Finding entire Corporate Group
+Using the https://neo4j.com/docs/apoc/current/overview/apoc.path/apoc.path.expand/[apoc.path.expand] function we can find the corporate groups of all related companies. This can result in big groups of related companies. 
+
+```cypher
+MATCH (e:Company {company_number: "00521970"})
+CALL apoc.path.expandConfig(e, {
+  relationshipFilter: "OWNS",
+  minLevel: 1,
+  maxLevel: -1,
+  uniqueness: "RELATIONSHIP_GLOBAL",
+  filterStartNode: false
+})
+YIELD path
+RETURN DISTINCT path
+```
+image::finserv/fs-ubo-corporate-group.png[Corporate Group]
+
+== Making Ownership Data Accessible Across the Organization
+
+Cypher is powerful, but not every user wants to write queries. Different roles interact with data in different ways, and a single interface doesn’t fit everyone. That’s why Neo4j provides multiple tools tailored to specific use cases. Let me introduce a few of them.
+
+=== Neo4j Bloom
+Neo4j Bloom provides a visual exploration layer on top of the graph. Analysts can search, expand paths, and trace ownership structures without writing Cypher.
+
+Bloom makes it easy to:
+
+* Follow indirect ownership and control paths
+* Spot unusual or complex structures visually
+* Explain relationships during reviews or investigations
+
+image::finserv/fs-ubo-bloom.png[Neo4j Bloom Visualization]
+
+=== Dashboards
+Business users and decision-makers benefit from dashboards that aggregate graph insights into operational views.
+
+Dashboards can highlight:
+
+* Companies without identified UBOs
+* Individuals with influence across many entities
+* Ownership depth and structural complexity
+
+This enables organizations to monitor risk, track trends, and support compliance efforts at scale.
+
+image::finserv/fs-ubo-dashboard.png[Neo4j Dashboards]
+
+== Resources
+Graph technology transforms the inherently connected world of ownership and control into a structure that is easy to query, explore, visualize, and reason over. From detailed Cypher investigations to visual exploration in Bloom, operational dashboards, and natural language interaction via Aura Agents, organizations can bring transparency and scalability to UBO analysis.
+
+To explore the demo yourself:
+
+* **Repository:** All materials (including the data model, ingestion scripts, and example queries) are available in the https://github.com/erikbijl/neo4j-company-house-demo?tab=readme-ov-file[neo4j-company-house-demo^]
+* **Blog:** The blogpost can be found on https://neo4j.com/blog/graph-database/exploring-ultimate-beneficial-ownership-with-graph-technology[Exploring Ultimate Beneficial Ownership with Graph Technology^]
+* **Recording**: You can watch the full demo walkthrough in the webinar recording: https://go.neo4j.com/WBREDU260210FinServ_On-Demand.html?mkt_tok=NzEwLVJSQy0zMzUAAAGf6y-hj63Si9L8pVQqTJb6Q6Qj9kza16Tf7K7zYyB6ABJ6mp17zbPcc9elt7oXO37nPw0nfq2LDs0FqDwe4ms[Watch the Webinar Recording]

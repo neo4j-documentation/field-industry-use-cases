@@ -18,6 +18,7 @@
 **** xref:finserv/retail-banking/transaction-monitoring/rules/transaction-monitoring-high-risk-jurisdictions.adoc[]
 *** xref:finserv/retail-banking/ieee-cis-fraud-graphs.adoc[]
 *** xref:finserv/retail-banking/customer-churn.adoc[]
+*** xref:finserv/retail-banking/company-ownership-ubo-graphs.adoc[]
 
 * xref:insurance/index.adoc[]
 ** xref:insurance/claims-fraud.adoc[]

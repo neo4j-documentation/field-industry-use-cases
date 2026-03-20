@@ -410,10 +410,10 @@ FOR (e:Email) REQUIRE e.address IS NODE KEY;
 CREATE CONSTRAINT phone_number IF NOT EXISTS
 FOR (p:Phone) REQUIRE p.number IS NODE KEY;
 
-CREATE CONSTRAINT passport_number IF NOT EXISTS
+CREATE CONSTRAINT passport_composite IF NOT EXISTS
 FOR (p:Passport) REQUIRE (p.passportNumber, p.issuingCountry) IS NODE KEY;
 
-CREATE CONSTRAINT driving_licence_number IF NOT EXISTS
+CREATE CONSTRAINT driving_license_composite IF NOT EXISTS
 FOR (d:DrivingLicense) REQUIRE (d.licenseNumber, d.issuingCountry) IS NODE KEY;
 
 CREATE CONSTRAINT device_id IF NOT EXISTS
