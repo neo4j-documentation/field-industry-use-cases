@@ -23,8 +23,6 @@ Traditional relational approaches to *FAERS data require extensive table joins* 
 * Real-time queries connecting molecular targets to real-world outcomes
 * Integration with external knowledge sources like DrugBank, clinical trials, and scientific literature
 
-
-
 == Data Model
 
 The Neo4j data model for adverse event analytics centers around key entities and their relationships:
@@ -40,23 +38,23 @@ The Neo4j data model for adverse event analytics centers around key entities and
 
 === Key Relationships
 
-* `CONCERNS_DRUG` - (:DrugCase)-[:CONCERNS_DRUG]->(:Drug): Connects specific `DrugCase` instances to the `Drug` involved in the adverse event
-* `PRIMARY_SUSPECT_DRUG` - (:Case)-[:PRIMARY_SUSPECT_DRUG]->(:DrugCase): Identifies the primary drug suspected of causing the adverse event
-* `SECONDARY_SUSPECT_DRUG` - (:Case)-[:SECONDARY_SUSPECT_DRUG]->(:DrugCase): Identifies secondary drugs suspected of causing the adverse event
-* `INTERACTING_DRUG` - (:Drug)-[:INTERACTING_DRUG]->(:Drug): Identifies drugs that interact with each other
-* `CONCOMITANT_DRUG` - (:Case)-[:CONCOMITANT_DRUG]->(:DrugCase): Identifies drugs taken concurrently with the suspected drug in a case
-* `DRUG_NOT_ADMINISTERED` - (:Case)-[:DRUG_NOT_ADMINISTERED]->(:DrugCase): Identifies drugs that were not administered in a case
-* `HAS_OUTCOME` - (:Case)-[:HAS_OUTCOME]->(:Outcome): Links a Case to its clinical outcome
-* `HAS_REACTION` - (:Case)-[:HAS_REACTION]->(:MedDraTerm): Links a drug case to its specific adverse reaction
-* `INDICATION_FOR_USE` - (:DrugCase)-[:INDICATION_FOR_USE]->(:MedDraTerm): Links a drug case to its indication for use
-* `REPORTED_BY` - (:Case)-[:REPORTED_BY]->(:Manufacturer): Connects a case to the manufacturer that reported it
+* `CONCERNS_DRUG` - _(:DrugCase)-[:CONCERNS_DRUG]->(:Drug)_: Connects specific `DrugCase` instances to the `Drug` involved in the adverse event
+* `PRIMARY_SUSPECT_DRUG` - _(:Case)-[:PRIMARY_SUSPECT_DRUG]->(:DrugCase)_: Identifies the primary drug suspected of causing the adverse event
+* `SECONDARY_SUSPECT_DRUG` - _(:Case)-[:SECONDARY_SUSPECT_DRUG]->(:DrugCase)_: Identifies secondary drugs suspected of causing the adverse event
+* `INTERACTING_DRUG` - _(:Drug)-[:INTERACTING_DRUG]->(:Drug)_: Identifies drugs that interact with each other
+* `CONCOMITANT_DRUG` - _(:Case)-[:CONCOMITANT_DRUG]->(:DrugCase)_: Identifies drugs taken concurrently with the suspected drug in a case
+* `DRUG_NOT_ADMINISTERED` - _(:Case)-[:DRUG_NOT_ADMINISTERED]->(:DrugCase)_: Identifies drugs that were not administered in a case
+* `HAS_OUTCOME` - _(:Case)-[:HAS_OUTCOME]->(:Outcome):_ Links a Case to its clinical outcome
+* `HAS_REACTION` - _(:Case)-[:HAS_REACTION]->(:MedDraTerm)_: Links a drug case to its specific adverse reaction
+* `INDICATION_FOR_USE` - _(:DrugCase)-[:INDICATION_FOR_USE]->(:MedDraTerm)_: Links a drug case to its indication for use
+* `REPORTED_BY` - _(:Case)-[:REPORTED_BY]->(:Manufacturer)_: Connects a case to the manufacturer that reported it
 
 .An example model
 image::life-sciences/drug-safety/model.png[width=800]
 
 == Demo Data
 
-This Cypher statement will create the example graph in the Neo4j database:
+This Cypher statement will create the example graph in the Neo4j database (_nb. this is simulated data_):
 
 [source, cypher, role=noheader]
 ----
@@ -544,9 +542,9 @@ MATCH (a:Drug {name: "Lantus"}), (b:Drug {name: "Glucophage"}) CREATE (a)-[:INTE
 
 This section provides a set of example Cypher queries that can be used to explore the patient journey graph from different perspectives.
 
-=== Exploring the data
+=== Drug focused
 
-These queries are focused on exploring and getting aggregate data from the dataset.
+Starting from a `Drug` point of view, what are the adverse events?
 
 ==== Which `Drug`pass:[s] are reported the most by consumers?
 
@@ -578,7 +576,8 @@ Extending this to find out which drugs which are not only primary suspects, but 
 
 [source, cypher, role=noheader]
 ----
-MATCH (d:Drug)<--(:DrugCase)<-[:PRIMARY_SUSPECT_DRUG|SECONDARY_SUSPECT_DRUG]-(:Case)-[:HAS_REACTION]->(m:MedDraTerm)
+MATCH 
+    (d:Drug)<--(:DrugCase)<-[:PRIMARY_SUSPECT_DRUG|SECONDARY_SUSPECT_DRUG]-(:Case)-[:HAS_REACTION]->(m:MedDraTerm)
 WITH d.name AS drugName, d.activeIngredient AS activeIngredient, COLLECT(DISTINCT m.name) AS Reactions
 RETURN drugName, activeIngredient, size(Reactions) AS numReactions, Reactions
 ORDER BY numReactions DESC
@@ -600,9 +599,83 @@ WITH
     COLLECT(DISTINCT m.name) AS secondaryReactions,
     drugName, 
     activeIngredient
-RETURN drugName, activeIngredient, size(primaryReactions) + size(secondaryReactions) AS numReactions, primaryReactions, secondaryReactions
+RETURN 
+    drugName,
+    activeIngredient, 
+    size(primaryReactions) + size(secondaryReactions) AS numReactions, 
+    primaryReactions, 
+    secondaryReactions
 ORDER BY numReactions DESC
 ----
+
+==== How many adverse events are there for a given drug?
+
+We take a given drug (`'Aspirin'`) and look for the primary and secondary reactions associated with it.
+
+[source, cypher, role=noheader]
+----
+WITH "Aspirin" AS searchTerm
+OPTIONAL MATCH 
+    (d:Drug {name:searchTerm})<--(:DrugCase)<-[:PRIMARY_SUSPECT_DRUG]-(:Case)-[:HAS_REACTION]->(m:MedDraTerm)
+WITH 
+    d,
+    COLLECT(DISTINCT m.name) AS primaryReactions,
+    d.name AS drugName, 
+    d.activeIngredient AS activeIngredient
+OPTIONAL MATCH 
+    (d)<--(:DrugCase)<-[:SECONDARY_SUSPECT_DRUG]-(:Case)-[:HAS_REACTION]->(m:MedDraTerm)
+WITH 
+    d, primaryReactions,
+    COLLECT(DISTINCT m.name) AS secondaryReactions,
+    drugName, 
+    activeIngredient
+RETURN 
+    drugName, 
+    activeIngredient, 
+    size(primaryReactions) AS numPrimaryReactions, 
+    primaryReactions, size(secondaryReactions) AS numSecondaryReactions, 
+    secondaryReactions
+ORDER BY numReactions DESC
+----
+
+==== What are the most common adverse events associated with a given drug?
+
+Taking a particular drug (`'Ibuprofen'`) what are the most common side effects associated with it? 
+
+[source, cypher, role=noheader]
+----
+WITH "Ibuprofen" AS searchTerm
+MATCH 
+    (d:Drug {name:searchTerm})<--(:DrugCase)<-[:PRIMARY_SUSPECT_DRUG]-(:Case)-[:HAS_REACTION]->(m:MedDraTerm)
+RETURN m.name AS reaction, count(m) AS numberOfTimes
+ORDER BY numberOfTimes DESC
+----
+
+We can also see that across all the drugs:
+
+[source, cypher, role=noheader]
+----
+MATCH (d:Drug)<--(:DrugCase)<-[:PRIMARY_SUSPECT_DRUG]-(:Case)-[:HAS_REACTION]->(m:MedDraTerm)
+RETURN d.name, m.name AS reaction, count(m) AS numberOfTimes
+ORDER BY numberOfTimes DESC
+----
+
+==== What top ten `Drug` combinations have the most reactions (`MedDraTerm`) when administered together?
+
+What pairings of `Drug`pass:[s] have the most reactions? This could indicate a possible interaction between those drugs that warrants more investigation.
+
+[source, cypher, role=noheader]
+----
+MATCH 
+    (ssd:DrugCase)<-[:CONCOMITANT_DRUG|SECONDARY_SUSPECT_DRUG]-(c:Case)-[:PRIMARY_SUSPECT_DRUG]->(psd:DrugCase),
+    (c)-[:HAS_REACTION]->(r:MedDraTerm)
+RETURN ssd.name, psd.name, COLLECT(DISTINCT r.name) AS reactions, count(DISTINCT r.name) AS numberOfReactions
+ORDER BY numberOfReactions DESC LIMIT 10
+----
+
+=== Adverse event focus
+
+Querying from the point of view of the Adverse events
 
 ==== What age group reported the highest side effects (`MedDraTerm`), and what are those side effects?
 
@@ -630,48 +703,6 @@ RETURN DISTINCT sex, ageGroup, count(r)
 ORDER BY count(r) desc
 ----
 
-==== How many adverse events are there for a given drug?
-
-We take a given drug ('Aspirin') and look for the primary and secondary reactions associated with it.
-
-[source, cypher, role=noheader]
-----
-WITH "Aspirin" AS searchTerm
-OPTIONAL MATCH (d:Drug {name:searchTerm})<--(:DrugCase)<-[:PRIMARY_SUSPECT_DRUG]-(:Case)-[:HAS_REACTION]->(m:MedDraTerm)
-WITH 
-    d,
-    COLLECT(DISTINCT m.name) AS primaryReactions,
-    d.name AS drugName, 
-    d.activeIngredient AS activeIngredient
-OPTIONAL MATCH (d)<--(:DrugCase)<-[:SECONDARY_SUSPECT_DRUG]-(:Case)-[:HAS_REACTION]->(m:MedDraTerm)
-WITH 
-    d, primaryReactions,
-    COLLECT(DISTINCT m.name) AS secondaryReactions,
-    drugName, 
-    activeIngredient
-RETURN drugName, activeIngredient, size(primaryReactions) AS numPrimaryReactions, primaryReactions, size(secondaryReactions) AS numSecondaryReactions, secondaryReactions
-ORDER BY numReactions DESC
-----
-
-==== What are the most common adverse events associated with a given drug?
-
-[source, cypher, role=noheader]
-----
-WITH "Ibuprofen" AS searchTerm
-MATCH (d:Drug {name:searchTerm})<--(:DrugCase)<-[:PRIMARY_SUSPECT_DRUG]-(:Case)-[:HAS_REACTION]->(m:MedDraTerm)
-RETURN m.name AS reaction, count(m) AS numberOfTimes
-ORDER BY numberOfTimes DESC
-----
-
-We can also see that across all the drugs
-
-[source, cypher, role=noheader]
-----
-MATCH (d:Drug)<--(:DrugCase)<-[:PRIMARY_SUSPECT_DRUG]-(:Case)-[:HAS_REACTION]->(m:MedDraTerm)
-RETURN d.name, m.name AS reaction, count(m) AS numberOfTimes
-ORDER BY numberOfTimes DESC
-----
-
 ==== What are the `Drug`pass:[s] associated with an adverse event?
 
 If we're seeing an adverse event, we might want to see what drugs have been associated with that event:
@@ -679,7 +710,8 @@ If we're seeing an adverse event, we might want to see what drugs have been asso
 [source, cypher, role=noheader]
 ----
 WITH "Nausea" AS adverseEffect
-MATCH (d:Drug)<--(:DrugCase)<-[:PRIMARY_SUSPECT_DRUG]-(:Case)-[:HAS_REACTION]->(m:MedDraTerm {name: adverseEffect})
+MATCH 
+    (d:Drug)<--(:DrugCase)<-[:PRIMARY_SUSPECT_DRUG]-(:Case)-[:HAS_REACTION]->(m:MedDraTerm {name: adverseEffect})
 WITH m.name AS reaction, d.name AS drugName, count(d) AS numberOfTimes
 RETURN reaction, drugName, numberOfTimes
 ORDER BY numberOfTimes DESC
@@ -719,6 +751,10 @@ MATCH (o:Outcome {code:outcomeCode})<-[:HAS_OUTCOME]-(:Case)-[:HAS_REACTION]->(m
 RETURN m.name AS reaction, count(m) AS numberOfTimes
 ----
 
+=== Manufactuer focus
+
+Queries from the perspective of the manufacturer.
+
 ==== What are the most common reactions reported by a manufacturer?
 
 What reactions are commonly reported by a particular manufacturer?
@@ -737,19 +773,8 @@ What are the drugs being reported by a particular manufacturer?
 [source, cypher, role=noheader]
 ----
 WITH "Sanofi S.A." AS manufacturer
-MATCH (m:Manufacturer {name: manufacturer})<-[:REPORTED_BY]-(:Case)-[:PRIMARY_SUSPECT_DRUG]->(:DrugCase)-[:CONCERNS_DRUG]->(drug:Drug)
+MATCH 
+    (m:Manufacturer {name: manufacturer})<-[:REPORTED_BY]-(:Case)-[:PRIMARY_SUSPECT_DRUG]->(:DrugCase)-[:CONCERNS_DRUG]->(drug:Drug)
 RETURN drug.name AS drug, drug.activeIngredient AS activeIngredient, count(drug) AS numberOfTimes
 ----
 
-==== What top ten `Drug` combinations have the most reactions (`MedDraTerm`) when administered together?
-
-What pairings of `Drug`pass:[s] have the most reactions? This could indicate a possible interaction between those drugs that warrants more investigation.
-
-[source, cypher, role=noheader]
-----
-MATCH 
-    (ssd:DrugCase)<-[:CONCOMITANT_DRUG|SECONDARY_SUSPECT_DRUG]-(c:Case)-[:PRIMARY_SUSPECT_DRUG]->(psd:DrugCase),
-    (c)-[:HAS_REACTION]->(r:MedDraTerm)
-RETURN ssd.name, psd.name, COLLECT(DISTINCT r.name) AS reactions, count(DISTINCT r.name) AS numberOfReactions
-ORDER BY numberOfReactions DESC LIMIT 10
-----
