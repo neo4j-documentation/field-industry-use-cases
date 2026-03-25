@@ -8,6 +8,12 @@ Neo4j's graph database model naturally represents patients, conditions, treatmen
 
 Patient care can be broken down into a variety of use cases that leverage the power of graph databases to garner better insights and improve patient outcomes.
 
+=== Drug Safety
+
+Drug safety is a critical aspect of medical care, and is a key use case for graph databases. It is used to identify potential safety issues with drugs, and to investigate the causes of adverse events.
+
+* xref:life-sciences/medical-care/drug-safety.adoc[]
+
 === Patient Journey
 
 A Patient Journey encompasses the interactions a patient has with a healthcare system, and can be viewed from a holistic 'lifetime' perspective through

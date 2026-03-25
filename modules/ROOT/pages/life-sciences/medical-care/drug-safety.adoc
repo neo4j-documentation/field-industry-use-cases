@@ -1,0 +1,780 @@
+= Drug Safety
+
+== Introduction
+
+The FDA Adverse Event Reporting System (https://www.fda.gov/drugs/fdas-adverse-event-reporting-system-faers/fda-adverse-event-reporting-system-faers-public-dashboard[FAERS]) contains millions of reports linking drugs to adverse events, patient outcomes, and reporter information, creating a complex web of relationships that is difficult to analyze with traditional relational databases. Pharmaceutical companies and regulatory agencies face significant challenges in detecting safety signals, understanding multi-drug interactions, and identifying patient populations at risk when adverse event data is scattered across multiple normalized tables. Graph databases like Neo4j excel at modeling these interconnected relationships, enabling rapid traversal across drug-event-patient-outcome networks to uncover hidden patterns and causal pathways. The ability to perform multi-hop queries across heterogeneous data types rangingfrom molecular targets to real-world patient outcomes makes graph technology ideal for pharmacovigilance and post-market surveillance. By representing adverse events as a knowledge graph, analysts can quickly identify drug-drug interactions, detect emerging safety signals, and assess causality through relationship patterns that would require complex joins in relational systems.
+
+== Scenario
+
+In this scenario, we will use Neo4j to model the FAERS data and answer the following questions:
+
+- How many adverse events are there for a given drug?
+- What are the most common adverse events for a given drug?
+- What are the most common adverse events for a given reporter type?
+- What are the most common adverse events for a given outcome?
+
+== Solution
+
+Traditional relational approaches to *FAERS data require extensive table joins* to connect drugs, adverse events, patients, outcomes, and co-medications. Graph databases eliminate this complexity by representing each entity as a node and relationships as first-class citizens in the data model. This enables:
+
+* Instant relationship traversal across drug-event-patient networks without expensive joins
+* Pattern detection for complex drug interactions and multi-hop causal pathways
+* Signal detection through graph algorithms identifying unusual clustering of events
+* Real-time queries connecting molecular targets to real-world outcomes
+* Integration with external knowledge sources like DrugBank, clinical trials, and scientific literature
+
+== Data Model
+
+The Neo4j data model for adverse event analytics centers around key entities and their relationships:
+
+=== Core Node Labels
+
+* `Case` - A case represents an overview of the adverse report case, containing basic demographics (age, gender, weight) and information on who reported it and where it was reported. `Case` nodes also have secondary labels for grouping the cases, e.g. `Adult`, `Infant`, `Child`, `Male`, `Female` etc
+* `Drug` - This is the name of the drug, with the active ingredient when available, and a note on whether the drug name is using a validated trade name or not.
+* `DrugCase` - This represents a specific instance of a drug being involved in an adverse event, with details on the role of the drug (primary suspect, secondary suspect, concomitant, or not administered)- A `Case` can have multiple `DrugCase` nodes if multiple drugs are involved in the adverse event.
+* `Manufacturer` - The company that reported the adverse event, which can be a pharmaceutical company, healthcare provider, or consumer.
+* `Outcome` - The clinical outcome of the adverse event, such as hospitalization, disability, life-threatening condition, or death.
+* `MedDraTerm` - The (https://www.meddra.org/[Medical Dictionary for Regulatory Activities]) (MedDRA) is a standardized medical terminology used to classify adverse events. `MedDraTerm` nodes represent specific adverse events, symptoms, or conditions reported in the adverse reactions data.
+
+=== Key Relationships
+
+* `CONCERNS_DRUG` - _(:DrugCase)-[:CONCERNS_DRUG]->(:Drug)_: Connects specific `DrugCase` instances to the `Drug` involved in the adverse event
+* `PRIMARY_SUSPECT_DRUG` - _(:Case)-[:PRIMARY_SUSPECT_DRUG]->(:DrugCase)_: Identifies the primary drug suspected of causing the adverse event
+* `SECONDARY_SUSPECT_DRUG` - _(:Case)-[:SECONDARY_SUSPECT_DRUG]->(:DrugCase)_: Identifies secondary drugs suspected of causing the adverse event
+* `INTERACTING_DRUG` - _(:Drug)-[:INTERACTING_DRUG]->(:Drug)_: Identifies drugs that interact with each other
+* `CONCOMITANT_DRUG` - _(:Case)-[:CONCOMITANT_DRUG]->(:DrugCase)_: Identifies drugs taken concurrently with the suspected drug in a case
+* `DRUG_NOT_ADMINISTERED` - _(:Case)-[:DRUG_NOT_ADMINISTERED]->(:DrugCase)_: Identifies drugs that were not administered in a case
+* `HAS_OUTCOME` - _(:Case)-[:HAS_OUTCOME]->(:Outcome):_ Links a Case to its clinical outcome
+* `HAS_REACTION` - _(:Case)-[:HAS_REACTION]->(:MedDraTerm)_: Links a drug case to its specific adverse reaction
+* `INDICATION_FOR_USE` - _(:DrugCase)-[:INDICATION_FOR_USE]->(:MedDraTerm)_: Links a drug case to its indication for use
+* `REPORTED_BY` - _(:Case)-[:REPORTED_BY]->(:Manufacturer)_: Connects a case to the manufacturer that reported it
+
+.An example model
+image::life-sciences/drug-safety/model.png[width=800]
+
+== Demo Data
+
+This Cypher statement will create the example graph in the Neo4j database (_nb. this is simulated data_):
+
+[source, cypher, role=noheader]
+----
+// --- Outcomes (6) ---
+MERGE (o1:Outcome {code: "DE", description: "Death"})
+MERGE (o2:Outcome {code: "LT", description: "Life-Threatening"})
+MERGE (o3:Outcome {code: "HO", description: "Hospitalization - Initial or Prolonged"})
+MERGE (o4:Outcome {code: "DS", description: "Disability"})
+MERGE (o5:Outcome {code: "CA", description: "Congenital Anomaly"})
+MERGE (o6:Outcome {code: "OT", description: "Other Serious (Important Medical Events)"});
+
+// --- Manufacturers (10) ---
+MERGE (m1:Manufacturer {name: "Pfizer Inc."})
+MERGE (m2:Manufacturer {name: "AstraZeneca"})
+MERGE (m3:Manufacturer {name: "Johnson & Johnson"})
+MERGE (m4:Manufacturer {name: "Novartis AG"})
+MERGE (m5:Manufacturer {name: "Roche Holding AG"})
+MERGE (m6:Manufacturer {name: "GlaxoSmithKline plc"})
+MERGE (m7:Manufacturer {name: "Merck & Co."})
+MERGE (m8:Manufacturer {name: "Abbott Laboratories"})
+MERGE (m9:Manufacturer {name: "Bristol-Myers Squibb"})
+MERGE (m10:Manufacturer {name: "Sanofi S.A."});
+
+// --- Drugs (15) ---
+MERGE (d1:Drug {name: "Ibuprofen", activeIngredient: "Ibuprofen", isValidatedTradeNameUsed: false})
+MERGE (d2:Drug {name: "Aspirin", activeIngredient: "Acetylsalicylic acid", isValidatedTradeNameUsed: false})
+MERGE (d3:Drug {name: "Amoxicillin", activeIngredient: "Amoxicillin", isValidatedTradeNameUsed: false})
+MERGE (d4:Drug {name: "Glucophage", activeIngredient: "Metformin hydrochloride", isValidatedTradeNameUsed: true})
+MERGE (d5:Drug {name: "Zestril", activeIngredient: "Lisinopril", isValidatedTradeNameUsed: true})
+MERGE (d6:Drug {name: "Lipitor", activeIngredient: "Atorvastatin calcium", isValidatedTradeNameUsed: true})
+MERGE (d7:Drug {name: "Synthroid", activeIngredient: "Levothyroxine sodium", isValidatedTradeNameUsed: true})
+MERGE (d8:Drug {name: "Lopressor", activeIngredient: "Metoprolol tartrate", isValidatedTradeNameUsed: true})
+MERGE (d9:Drug {name: "Coumadin", activeIngredient: "Warfarin sodium", isValidatedTradeNameUsed: true})
+MERGE (d10:Drug {name: "Prilosec", activeIngredient: "Omeprazole", isValidatedTradeNameUsed: true})
+MERGE (d11:Drug {name: "Zoloft", activeIngredient: "Sertraline hydrochloride", isValidatedTradeNameUsed: true})
+MERGE (d12:Drug {name: "Prednisone", activeIngredient: "Prednisone", isValidatedTradeNameUsed: false})
+MERGE (d13:Drug {name: "Humira", activeIngredient: "Adalimumab", isValidatedTradeNameUsed: true})
+MERGE (d14:Drug {name: "Lantus", activeIngredient: "Insulin glargine", isValidatedTradeNameUsed: true})
+MERGE (d15:Drug {name: "Plavix", activeIngredient: "Clopidogrel bisulfate", isValidatedTradeNameUsed: true});
+
+// --- MedDra Terms (20) ---
+MERGE (m1:MedDraTerm {name: "Nausea"})
+MERGE (m2:MedDraTerm {name: "Vomiting"})
+MERGE (m3:MedDraTerm {name: "Headache"})
+MERGE (m4:MedDraTerm {name: "Dizziness"})
+MERGE (m5:MedDraTerm {name: "Rash"})
+MERGE (m6:MedDraTerm {name: "Anaphylaxis"})
+MERGE (m7:MedDraTerm {name: "Dyspnoea"})
+MERGE (m8:MedDraTerm {name: "Chest pain"})
+MERGE (m9:MedDraTerm {name: "Myalgia"})
+MERGE (m10:MedDraTerm {name: "Diarrhoea"})
+MERGE (m11:MedDraTerm {name: "Abdominal pain"})
+MERGE (m12:MedDraTerm {name: "Fatigue"})
+MERGE (m13:MedDraTerm {name: "Thrombocytopenia"})
+MERGE (m14:MedDraTerm {name: "Hepatotoxicity"})
+MERGE (m15:MedDraTerm {name: "Acute renal failure"})
+MERGE (m16:MedDraTerm {name: "Hypertension"})
+MERGE (m17:MedDraTerm {name: "Hypoglycaemia"})
+MERGE (m18:MedDraTerm {name: "Bradycardia"})
+MERGE (m19:MedDraTerm {name: "Stevens-Johnson syndrome"})
+MERGE (m20:MedDraTerm {name: "Drug interaction"});
+
+// --- Cases (30) with secondary labels ---
+CREATE (c1:Case:Adult:Female {id: 1, caseId: 10001, caseVersion: 1, sex: "F", ageInYears: 45, ageUnit: "YR", weight: 68.0, weightUnit: "KG", reportCode: "EXP", reporterOccupation: "Healthcare Professional", reporterCountry: "US", occurrenceCountry: "US", isEsubmission: false, isInitialReport: true, eventDate: "2024-01-15"});
+CREATE (c2:Case:Adult:Female {id: 2, caseId: 10002, caseVersion: 1, sex: "F", ageInYears: 52, ageUnit: "YR", weight: 72.5, weightUnit: "KG", reportCode: "EXP", reporterOccupation: "Healthcare Professional", reporterCountry: "US", occurrenceCountry: "US", isEsubmission: true, isInitialReport: true, eventDate: "2024-02-03"});
+CREATE (c3:Case:Adult:Female {id: 3, caseId: 10003, caseVersion: 1, sex: "F", ageInYears: 38, ageUnit: "YR", weight: 61.0, weightUnit: "KG", reportCode: "EXP", reporterOccupation: "Consumer", reporterCountry: "GB", occurrenceCountry: "GB", isEsubmission: true, isInitialReport: false, eventDate: "2024-02-18"});
+CREATE (c4:Case:Adult:Female {id: 4, caseId: 10004, caseVersion: 1, sex: "F", ageInYears: 60, ageUnit: "YR", weight: 78.0, weightUnit: "KG", reportCode: "EXP", reporterOccupation: "Healthcare Professional", reporterCountry: "DE", occurrenceCountry: "DE", isEsubmission: false, isInitialReport: true, eventDate: "2024-03-05"});
+CREATE (c5:Case:Adult:Female {id: 5, caseId: 10005, caseVersion: 1, sex: "F", ageInYears: 41, ageUnit: "YR", weight: 65.2, weightUnit: "KG", reportCode: "EXP", reporterOccupation: "Healthcare Professional", reporterCountry: "FR", occurrenceCountry: "FR", isEsubmission: true, isInitialReport: true, eventDate: "2024-03-22"});
+CREATE (c6:Case:Adult:Female {id: 6, caseId: 10006, caseVersion: 1, sex: "F", ageInYears: 55, ageUnit: "YR", weight: 80.0, weightUnit: "KG", reportCode: "EXP", reporterOccupation: "Healthcare Professional", reporterCountry: "US", occurrenceCountry: "US", isEsubmission: false, isInitialReport: true, eventDate: "2024-04-10"});
+CREATE (c7:Case:Adult:Female {id: 7, caseId: 10007, caseVersion: 1, sex: "F", ageInYears: 48, ageUnit: "YR", weight: 58.5, weightUnit: "KG", reportCode: "EXP", reporterOccupation: "Consumer", reporterCountry: "CA", occurrenceCountry: "CA", isEsubmission: true, isInitialReport: true, eventDate: "2024-04-28"});
+CREATE (c8:Case:Adult:Consumer:Female {id: 8, caseId: 10008, caseVersion: 1, sex: "F", ageInYears: 33, ageUnit: "YR", weight: 62.0, weightUnit: "KG", reportCode: "EXP", reporterOccupation: "Healthcare Professional", reporterCountry: "AU", occurrenceCountry: "AU", isEsubmission: false, isInitialReport: true, eventDate: "2024-05-14"});
+CREATE (c9:Case:Adult:Female {id: 9, caseId: 10009, caseVersion: 1, sex: "F", ageInYears: 57, ageUnit: "YR", weight: 75.0, weightUnit: "KG", reportCode: "EXP", reporterOccupation: "Healthcare Professional", reporterCountry: "IT", occurrenceCountry: "IT", isEsubmission: true, isInitialReport: true, eventDate: "2024-06-01"});
+CREATE (c10:Case:Adult:Female {id: 10, caseId: 10010, caseVersion: 1, sex: "F", ageInYears: 43, ageUnit: "YR", weight: 69.0, weightUnit: "KG", reportCode: "EXP", reporterOccupation: "Healthcare Professional", reporterCountry: "JP", occurrenceCountry: "JP", isEsubmission: false, isInitialReport: true, eventDate: "2024-06-17"});
+CREATE (c11:Case:Adult:Male {id: 11, caseId: 10011, caseVersion: 1, sex: "M", ageInYears: 50, ageUnit: "YR", weight: 85.0, weightUnit: "KG", reportCode: "EXP", reporterOccupation: "Healthcare Professional", reporterCountry: "US", occurrenceCountry: "US", isEsubmission: false, isInitialReport: true, eventDate: "2024-01-22"});
+CREATE (c12:Case:Adult:Male {id: 12, caseId: 10012, caseVersion: 1, sex: "M", ageInYears: 44, ageUnit: "YR", weight: 90.5, weightUnit: "KG", reportCode: "EXP", reporterOccupation: "Healthcare Professional", reporterCountry: "US", occurrenceCountry: "US", isEsubmission: true, isInitialReport: true, eventDate: "2024-02-10"});
+CREATE (c13:Case:Adult:Male {id: 13, caseId: 10013, caseVersion: 1, sex: "M", ageInYears: 62, ageUnit: "YR", weight: 78.0, weightUnit: "KG", reportCode: "EXP", reporterOccupation: "Consumer", reporterCountry: "GB", occurrenceCountry: "GB", isEsubmission: false, isInitialReport: true, eventDate: "2024-03-01"});
+CREATE (c14:Case:Adult:Consumer:Male {id: 14, caseId: 10014, caseVersion: 1, sex: "M", ageInYears: 35, ageUnit: "YR", weight: 82.0, weightUnit: "KG", reportCode: "EXP", reporterOccupation: "Healthcare Professional", reporterCountry: "DE", occurrenceCountry: "DE", isEsubmission: true, isInitialReport: true, eventDate: "2024-04-05"});
+CREATE (c15:Case:Adult:Male {id: 15, caseId: 10015, caseVersion: 1, sex: "M", ageInYears: 58, ageUnit: "YR", weight: 95.0, weightUnit: "KG", reportCode: "EXP", reporterOccupation: "Healthcare Professional", reporterCountry: "US", occurrenceCountry: "US", isEsubmission: false, isInitialReport: true, eventDate: "2024-05-20"});
+CREATE (c16:Case:Adult:Male {id: 16, caseId: 10016, caseVersion: 1, sex: "M", ageInYears: 47, ageUnit: "YR", weight: 88.0, weightUnit: "KG", reportCode: "EXP", reporterOccupation: "Healthcare Professional", reporterCountry: "FR", occurrenceCountry: "FR", isEsubmission: true, isInitialReport: true, eventDate: "2024-07-03"});
+CREATE (c17:Case:Adult:Male {id: 17, caseId: 10017, caseVersion: 1, sex: "M", ageInYears: 39, ageUnit: "YR", weight: 76.5, weightUnit: "KG", reportCode: "EXP", reporterOccupation: "Consumer", reporterCountry: "CA", occurrenceCountry: "CA", isEsubmission: false, isInitialReport: false, eventDate: "2024-07-19"});
+CREATE (c18:Case:Adult:Male {id: 18, caseId: 10018, caseVersion: 1, sex: "M", ageInYears: 53, ageUnit: "YR", weight: 91.0, weightUnit: "KG", reportCode: "EXP", reporterOccupation: "Healthcare Professional", reporterCountry: "AU", occurrenceCountry: "AU", isEsubmission: true, isInitialReport: true, eventDate: "2024-08-05"});
+CREATE (c19:Case:Elderly:Female {id: 19, caseId: 10019, caseVersion: 1, sex: "F", ageInYears: 72, ageUnit: "YR", weight: 60.0, weightUnit: "KG", reportCode: "EXP", reporterOccupation: "Healthcare Professional", reporterCountry: "US", occurrenceCountry: "US", isEsubmission: false, isInitialReport: true, eventDate: "2024-01-30"});
+CREATE (c20:Case:Elderly:Female {id: 20, caseId: 10020, caseVersion: 1, sex: "F", ageInYears: 80, ageUnit: "YR", weight: 55.0, weightUnit: "KG", reportCode: "EXP", reporterOccupation: "Healthcare Professional", reporterCountry: "US", occurrenceCountry: "US", isEsubmission: true, isInitialReport: true, eventDate: "2024-03-15"});
+CREATE (c21:Case:Elderly:Consumer:Female {id: 21, caseId: 10021, caseVersion: 1, sex: "F", ageInYears: 68, ageUnit: "YR", weight: 63.0, weightUnit: "KG", reportCode: "EXP", reporterOccupation: "Healthcare Professional", reporterCountry: "GB", occurrenceCountry: "GB", isEsubmission: false, isInitialReport: true, eventDate: "2024-05-09"});
+CREATE (c22:Case:Elderly:Male {id: 22, caseId: 10022, caseVersion: 1, sex: "M", ageInYears: 75, ageUnit: "YR", weight: 73.0, weightUnit: "KG", reportCode: "EXP", reporterOccupation: "Healthcare Professional", reporterCountry: "US", occurrenceCountry: "US", isEsubmission: false, isInitialReport: true, eventDate: "2024-04-22"});
+CREATE (c23:Case:Elderly:Male {id: 23, caseId: 10023, caseVersion: 1, sex: "M", ageInYears: 82, ageUnit: "YR", weight: 70.0, weightUnit: "KG", reportCode: "EXP", reporterOccupation: "Healthcare Professional", reporterCountry: "DE", occurrenceCountry: "DE", isEsubmission: true, isInitialReport: false, eventDate: "2024-06-28"});
+CREATE (c24:Case:Child:Consumer:Female {id: 24, caseId: 10024, caseVersion: 1, sex: "F", ageInYears: 7, ageUnit: "YR", weight: 22.0, weightUnit: "KG", reportCode: "EXP", reporterOccupation: "Healthcare Professional", reporterCountry: "US", occurrenceCountry: "US", isEsubmission: false, isInitialReport: true, eventDate: "2024-02-25"});
+CREATE (c25:Case:Child:Male {id: 25, caseId: 10025, caseVersion: 1, sex: "M", ageInYears: 9, ageUnit: "YR", weight: 28.5, weightUnit: "KG", reportCode: "EXP", reporterOccupation: "Healthcare Professional", reporterCountry: "US", occurrenceCountry: "US", isEsubmission: true, isInitialReport: true, eventDate: "2024-03-10"});
+CREATE (c26:Case:Adolescent:Female {id: 26, caseId: 10026, caseVersion: 1, sex: "F", ageInYears: 15, ageUnit: "YR", weight: 52.0, weightUnit: "KG", reportCode: "EXP", reporterOccupation: "Healthcare Professional", reporterCountry: "US", occurrenceCountry: "US", isEsubmission: false, isInitialReport: true, eventDate: "2024-05-02"});
+CREATE (c27:Case:Adolescent:Consumer:Male {id: 27, caseId: 10027, caseVersion: 1, sex: "M", ageInYears: 17, ageUnit: "YR", weight: 65.0, weightUnit: "KG", reportCode: "EXP", reporterOccupation: "Healthcare Professional", reporterCountry: "GB", occurrenceCountry: "GB", isEsubmission: true, isInitialReport: true, eventDate: "2024-06-14"});
+CREATE (c28:Case:Infant:Female {id: 28, caseId: 10028, caseVersion: 1, sex: "F", ageInYears: 1, ageUnit: "YR", weight: 9.5, weightUnit: "KG", reportCode: "EXP", reporterOccupation: "Healthcare Professional", reporterCountry: "US", occurrenceCountry: "US", isEsubmission: false, isInitialReport: true, eventDate: "2024-07-08"});
+CREATE (c29:Case:Infant:Male {id: 29, caseId: 10029, caseVersion: 1, sex: "M", ageInYears: 2, ageUnit: "YR", weight: 12.0, weightUnit: "KG", reportCode: "EXP", reporterOccupation: "Healthcare Professional", reporterCountry: "CA", occurrenceCountry: "CA", isEsubmission: true, isInitialReport: true, eventDate: "2024-08-12"});
+CREATE (c30:Case:Adult:Male:HealthProfessional {id: 30, caseId: 10030, caseVersion: 1, sex: "M", ageInYears: 42, ageUnit: "YR", weight: 83.0, weightUnit: "KG", reportCode: "EXP", reporterOccupation: "Healthcare Professional", reporterCountry: "US", occurrenceCountry: "US", isEsubmission: false, isInitialReport: true, eventDate: "2024-09-01"});
+
+// --- DrugCase nodes (70) ---
+CREATE (dc1:DrugCase {primaryId: 10001, drugSeq: 1, name: "Ibuprofen", routeOfAdministration: "Oral", doseAmount: "400", doseUnit: "mg", doseFrequency: "TID", doseForm: "Tablet"});
+CREATE (dc2:DrugCase {primaryId: 10002, drugSeq: 1, name: "Amoxicillin", routeOfAdministration: "Oral", doseAmount: "500", doseUnit: "mg", doseFrequency: "TID", doseForm: "Capsule"});
+CREATE (dc3:DrugCase {primaryId: 10003, drugSeq: 1, name: "Zoloft", routeOfAdministration: "Oral", doseAmount: "50", doseUnit: "mg", doseFrequency: "QD", doseForm: "Tablet"});
+CREATE (dc4:DrugCase {primaryId: 10004, drugSeq: 1, name: "Lipitor", routeOfAdministration: "Oral", doseAmount: "40", doseUnit: "mg", doseFrequency: "QD", doseForm: "Tablet"});
+CREATE (dc5:DrugCase {primaryId: 10005, drugSeq: 1, name: "Glucophage", routeOfAdministration: "Oral", doseAmount: "1000", doseUnit: "mg", doseFrequency: "BID", doseForm: "Tablet"});
+CREATE (dc6:DrugCase {primaryId: 10006, drugSeq: 1, name: "Coumadin", routeOfAdministration: "Oral", doseAmount: "5", doseUnit: "mg", doseFrequency: "QD", doseForm: "Tablet"});
+CREATE (dc7:DrugCase {primaryId: 10007, drugSeq: 1, name: "Humira", routeOfAdministration: "Subcutaneous", doseAmount: "40", doseUnit: "mg", doseFrequency: "Q2W", doseForm: "Injection"});
+CREATE (dc8:DrugCase {primaryId: 10008, drugSeq: 1, name: "Zestril", routeOfAdministration: "Oral", doseAmount: "10", doseUnit: "mg", doseFrequency: "QD", doseForm: "Tablet"});
+CREATE (dc9:DrugCase {primaryId: 10009, drugSeq: 1, name: "Prednisone", routeOfAdministration: "Oral", doseAmount: "20", doseUnit: "mg", doseFrequency: "QD", doseForm: "Tablet"});
+CREATE (dc10:DrugCase {primaryId: 10010, drugSeq: 1, name: "Synthroid", routeOfAdministration: "Oral", doseAmount: "100", doseUnit: "mcg", doseFrequency: "QD", doseForm: "Tablet"});
+CREATE (dc11:DrugCase {primaryId: 10011, drugSeq: 1, name: "Plavix", routeOfAdministration: "Oral", doseAmount: "75", doseUnit: "mg", doseFrequency: "QD", doseForm: "Tablet"});
+CREATE (dc12:DrugCase {primaryId: 10012, drugSeq: 1, name: "Lopressor", routeOfAdministration: "Oral", doseAmount: "50", doseUnit: "mg", doseFrequency: "BID", doseForm: "Tablet"});
+CREATE (dc13:DrugCase {primaryId: 10013, drugSeq: 1, name: "Lantus", routeOfAdministration: "Subcutaneous", doseAmount: "20", doseUnit: "IU", doseFrequency: "QD", doseForm: "Injection"});
+CREATE (dc14:DrugCase {primaryId: 10014, drugSeq: 1, name: "Ibuprofen", routeOfAdministration: "Oral", doseAmount: "600", doseUnit: "mg", doseFrequency: "QID", doseForm: "Tablet"});
+CREATE (dc15:DrugCase {primaryId: 10015, drugSeq: 1, name: "Aspirin", routeOfAdministration: "Oral", doseAmount: "325", doseUnit: "mg", doseFrequency: "QD", doseForm: "Tablet"});
+CREATE (dc16:DrugCase {primaryId: 10016, drugSeq: 1, name: "Amoxicillin", routeOfAdministration: "Oral", doseAmount: "875", doseUnit: "mg", doseFrequency: "BID", doseForm: "Tablet"});
+CREATE (dc17:DrugCase {primaryId: 10017, drugSeq: 1, name: "Lipitor", routeOfAdministration: "Oral", doseAmount: "20", doseUnit: "mg", doseFrequency: "QD", doseForm: "Tablet"});
+CREATE (dc18:DrugCase {primaryId: 10018, drugSeq: 1, name: "Coumadin", routeOfAdministration: "Oral", doseAmount: "7.5", doseUnit: "mg", doseFrequency: "QD", doseForm: "Tablet"});
+CREATE (dc19:DrugCase {primaryId: 10019, drugSeq: 1, name: "Glucophage", routeOfAdministration: "Oral", doseAmount: "500", doseUnit: "mg", doseFrequency: "TID", doseForm: "Tablet"});
+CREATE (dc20:DrugCase {primaryId: 10020, drugSeq: 1, name: "Zestril", routeOfAdministration: "Oral", doseAmount: "5", doseUnit: "mg", doseFrequency: "QD", doseForm: "Tablet"});
+CREATE (dc21:DrugCase {primaryId: 10021, drugSeq: 1, name: "Prednisone", routeOfAdministration: "Oral", doseAmount: "10", doseUnit: "mg", doseFrequency: "QD", doseForm: "Tablet"});
+CREATE (dc22:DrugCase {primaryId: 10022, drugSeq: 1, name: "Coumadin", routeOfAdministration: "Oral", doseAmount: "5", doseUnit: "mg", doseFrequency: "QD", doseForm: "Tablet"});
+CREATE (dc23:DrugCase {primaryId: 10023, drugSeq: 1, name: "Lantus", routeOfAdministration: "Subcutaneous", doseAmount: "30", doseUnit: "IU", doseFrequency: "QD", doseForm: "Injection"});
+CREATE (dc24:DrugCase {primaryId: 10024, drugSeq: 1, name: "Amoxicillin", routeOfAdministration: "Oral", doseAmount: "250", doseUnit: "mg", doseFrequency: "TID", doseForm: "Suspension"});
+CREATE (dc25:DrugCase {primaryId: 10025, drugSeq: 1, name: "Ibuprofen", routeOfAdministration: "Oral", doseAmount: "200", doseUnit: "mg", doseFrequency: "TID", doseForm: "Suspension"});
+CREATE (dc26:DrugCase {primaryId: 10026, drugSeq: 1, name: "Zoloft", routeOfAdministration: "Oral", doseAmount: "25", doseUnit: "mg", doseFrequency: "QD", doseForm: "Tablet"});
+CREATE (dc27:DrugCase {primaryId: 10027, drugSeq: 1, name: "Lopressor", routeOfAdministration: "Oral", doseAmount: "25", doseUnit: "mg", doseFrequency: "BID", doseForm: "Tablet"});
+CREATE (dc28:DrugCase {primaryId: 10028, drugSeq: 1, name: "Amoxicillin", routeOfAdministration: "Oral", doseAmount: "125", doseUnit: "mg", doseFrequency: "TID", doseForm: "Suspension"});
+CREATE (dc29:DrugCase {primaryId: 10029, drugSeq: 1, name: "Ibuprofen", routeOfAdministration: "Oral", doseAmount: "100", doseUnit: "mg", doseFrequency: "TID", doseForm: "Suspension"});
+CREATE (dc30:DrugCase {primaryId: 10030, drugSeq: 1, name: "Humira", routeOfAdministration: "Subcutaneous", doseAmount: "40", doseUnit: "mg", doseFrequency: "Q2W", doseForm: "Injection"});
+CREATE (dc31:DrugCase {primaryId: 10001, drugSeq: 2, name: "Aspirin", routeOfAdministration: "Oral", doseAmount: "81", doseUnit: "mg", doseFrequency: "QD", doseForm: "Tablet"});
+CREATE (dc32:DrugCase {primaryId: 10005, drugSeq: 2, name: "Zestril", routeOfAdministration: "Oral", doseAmount: "10", doseUnit: "mg", doseFrequency: "QD", doseForm: "Tablet"});
+CREATE (dc33:DrugCase {primaryId: 10006, drugSeq: 2, name: "Aspirin", routeOfAdministration: "Oral", doseAmount: "81", doseUnit: "mg", doseFrequency: "QD", doseForm: "Tablet"});
+CREATE (dc34:DrugCase {primaryId: 10011, drugSeq: 2, name: "Aspirin", routeOfAdministration: "Oral", doseAmount: "81", doseUnit: "mg", doseFrequency: "QD", doseForm: "Tablet"});
+CREATE (dc35:DrugCase {primaryId: 10013, drugSeq: 2, name: "Glucophage", routeOfAdministration: "Oral", doseAmount: "500", doseUnit: "mg", doseFrequency: "BID", doseForm: "Tablet"});
+CREATE (dc36:DrugCase {primaryId: 10015, drugSeq: 2, name: "Plavix", routeOfAdministration: "Oral", doseAmount: "75", doseUnit: "mg", doseFrequency: "QD", doseForm: "Tablet"});
+CREATE (dc37:DrugCase {primaryId: 10018, drugSeq: 2, name: "Aspirin", routeOfAdministration: "Oral", doseAmount: "81", doseUnit: "mg", doseFrequency: "QD", doseForm: "Tablet"});
+CREATE (dc38:DrugCase {primaryId: 10022, drugSeq: 2, name: "Aspirin", routeOfAdministration: "Oral", doseAmount: "81", doseUnit: "mg", doseFrequency: "QD", doseForm: "Tablet"});
+CREATE (dc39:DrugCase {primaryId: 10023, drugSeq: 2, name: "Glucophage", routeOfAdministration: "Oral", doseAmount: "500", doseUnit: "mg", doseFrequency: "BID", doseForm: "Tablet"});
+CREATE (dc40:DrugCase {primaryId: 10030, drugSeq: 2, name: "Prednisone", routeOfAdministration: "Oral", doseAmount: "10", doseUnit: "mg", doseFrequency: "QD", doseForm: "Tablet"});
+CREATE (dc41:DrugCase {primaryId: 10001, drugSeq: 3, name: "Prilosec", routeOfAdministration: "Oral", doseAmount: "20", doseUnit: "mg", doseFrequency: "QD", doseForm: "Capsule"});
+CREATE (dc42:DrugCase {primaryId: 10004, drugSeq: 2, name: "Prilosec", routeOfAdministration: "Oral", doseAmount: "20", doseUnit: "mg", doseFrequency: "QD", doseForm: "Capsule"});
+CREATE (dc43:DrugCase {primaryId: 10006, drugSeq: 3, name: "Lopressor", routeOfAdministration: "Oral", doseAmount: "50", doseUnit: "mg", doseFrequency: "BID", doseForm: "Tablet"});
+CREATE (dc44:DrugCase {primaryId: 10009, drugSeq: 2, name: "Synthroid", routeOfAdministration: "Oral", doseAmount: "50", doseUnit: "mcg", doseFrequency: "QD", doseForm: "Tablet"});
+CREATE (dc45:DrugCase {primaryId: 10011, drugSeq: 3, name: "Lopressor", routeOfAdministration: "Oral", doseAmount: "50", doseUnit: "mg", doseFrequency: "BID", doseForm: "Tablet"});
+CREATE (dc46:DrugCase {primaryId: 10012, drugSeq: 2, name: "Prilosec", routeOfAdministration: "Oral", doseAmount: "20", doseUnit: "mg", doseFrequency: "QD", doseForm: "Capsule"});
+CREATE (dc47:DrugCase {primaryId: 10015, drugSeq: 3, name: "Lopressor", routeOfAdministration: "Oral", doseAmount: "50", doseUnit: "mg", doseFrequency: "QD", doseForm: "Tablet"});
+CREATE (dc48:DrugCase {primaryId: 10019, drugSeq: 2, name: "Lipitor", routeOfAdministration: "Oral", doseAmount: "20", doseUnit: "mg", doseFrequency: "QD", doseForm: "Tablet"});
+CREATE (dc49:DrugCase {primaryId: 10020, drugSeq: 2, name: "Glucophage", routeOfAdministration: "Oral", doseAmount: "500", doseUnit: "mg", doseFrequency: "BID", doseForm: "Tablet"});
+CREATE (dc50:DrugCase {primaryId: 10021, drugSeq: 2, name: "Synthroid", routeOfAdministration: "Oral", doseAmount: "75", doseUnit: "mcg", doseFrequency: "QD", doseForm: "Tablet"});
+CREATE (dc51:DrugCase {primaryId: 10002, drugSeq: 2, name: "Prilosec", routeOfAdministration: "Oral", doseAmount: "20", doseUnit: "mg", doseFrequency: "QD", doseForm: "Capsule"});
+CREATE (dc52:DrugCase {primaryId: 10008, drugSeq: 2, name: "Aspirin", routeOfAdministration: "Oral", doseAmount: "81", doseUnit: "mg", doseFrequency: "QD", doseForm: "Tablet"});
+CREATE (dc53:DrugCase {primaryId: 10010, drugSeq: 2, name: "Glucophage", routeOfAdministration: "Oral", doseAmount: "500", doseUnit: "mg", doseFrequency: "BID", doseForm: "Tablet"});
+CREATE (dc54:DrugCase {primaryId: 10016, drugSeq: 2, name: "Prednisone", routeOfAdministration: "Oral", doseAmount: "20", doseUnit: "mg", doseFrequency: "QD", doseForm: "Tablet"});
+CREATE (dc55:DrugCase {primaryId: 10017, drugSeq: 2, name: "Zestril", routeOfAdministration: "Oral", doseAmount: "10", doseUnit: "mg", doseFrequency: "QD", doseForm: "Tablet"});
+CREATE (dc56:DrugCase {primaryId: 10003, drugSeq: 2, name: "Humira", routeOfAdministration: "Subcutaneous", doseAmount: "40", doseUnit: "mg", doseFrequency: "Q2W", doseForm: "Injection"});
+CREATE (dc57:DrugCase {primaryId: 10007, drugSeq: 2, name: "Prednisone", routeOfAdministration: "Oral", doseAmount: "10", doseUnit: "mg", doseFrequency: "QD", doseForm: "Tablet"});
+CREATE (dc58:DrugCase {primaryId: 10014, drugSeq: 2, name: "Prilosec", routeOfAdministration: "Oral", doseAmount: "20", doseUnit: "mg", doseFrequency: "QD", doseForm: "Capsule"});
+CREATE (dc59:DrugCase {primaryId: 10024, drugSeq: 2, name: "Ibuprofen", routeOfAdministration: "Oral", doseAmount: "200", doseUnit: "mg", doseFrequency: "PRN", doseForm: "Suspension"});
+CREATE (dc60:DrugCase {primaryId: 10025, drugSeq: 2, name: "Amoxicillin", routeOfAdministration: "Oral", doseAmount: "125", doseUnit: "mg", doseFrequency: "TID", doseForm: "Suspension"});
+CREATE (dc61:DrugCase {primaryId: 10026, drugSeq: 2, name: "Ibuprofen", routeOfAdministration: "Oral", doseAmount: "400", doseUnit: "mg", doseFrequency: "PRN", doseForm: "Tablet"});
+CREATE (dc62:DrugCase {primaryId: 10027, drugSeq: 2, name: "Aspirin", routeOfAdministration: "Oral", doseAmount: "81", doseUnit: "mg", doseFrequency: "QD", doseForm: "Tablet"});
+CREATE (dc63:DrugCase {primaryId: 10028, drugSeq: 2, name: "Ibuprofen", routeOfAdministration: "Oral", doseAmount: "100", doseUnit: "mg", doseFrequency: "PRN", doseForm: "Suspension"});
+CREATE (dc64:DrugCase {primaryId: 10029, drugSeq: 2, name: "Amoxicillin", routeOfAdministration: "Oral", doseAmount: "125", doseUnit: "mg", doseFrequency: "TID", doseForm: "Suspension"});
+CREATE (dc65:DrugCase {primaryId: 10030, drugSeq: 3, name: "Glucophage", routeOfAdministration: "Oral", doseAmount: "500", doseUnit: "mg", doseFrequency: "BID", doseForm: "Tablet"});
+CREATE (dc66:DrugCase {primaryId: 10013, drugSeq: 3, name: "Aspirin", routeOfAdministration: "Oral", doseAmount: "81", doseUnit: "mg", doseFrequency: "QD", doseForm: "Tablet"});
+CREATE (dc67:DrugCase {primaryId: 10019, drugSeq: 3, name: "Aspirin", routeOfAdministration: "Oral", doseAmount: "81", doseUnit: "mg", doseFrequency: "QD", doseForm: "Tablet"});
+CREATE (dc68:DrugCase {primaryId: 10022, drugSeq: 3, name: "Prilosec", routeOfAdministration: "Oral", doseAmount: "20", doseUnit: "mg", doseFrequency: "QD", doseForm: "Capsule"});
+CREATE (dc69:DrugCase {primaryId: 10003, drugSeq: 3, name: "Ibuprofen", routeOfAdministration: "Oral", doseAmount: "400", doseUnit: "mg", doseFrequency: "PRN", doseForm: "Tablet"});
+CREATE (dc70:DrugCase {primaryId: 10007, drugSeq: 3, name: "Aspirin", routeOfAdministration: "Oral", doseAmount: "81", doseUnit: "mg", doseFrequency: "QD", doseForm: "Tablet"});
+
+// ==============================================
+// Relationships
+// ==============================================
+
+// CONCERNS_DRUG: Each DrugCase links to its Drug
+MATCH (dc:DrugCase {primaryId: 10001, drugSeq: 1}), (d:Drug {name: "Ibuprofen"}) CREATE (dc)-[:CONCERNS_DRUG]->(d);
+MATCH (dc:DrugCase {primaryId: 10002, drugSeq: 1}), (d:Drug {name: "Amoxicillin"}) CREATE (dc)-[:CONCERNS_DRUG]->(d);
+MATCH (dc:DrugCase {primaryId: 10003, drugSeq: 1}), (d:Drug {name: "Zoloft"}) CREATE (dc)-[:CONCERNS_DRUG]->(d);
+MATCH (dc:DrugCase {primaryId: 10004, drugSeq: 1}), (d:Drug {name: "Lipitor"}) CREATE (dc)-[:CONCERNS_DRUG]->(d);
+MATCH (dc:DrugCase {primaryId: 10005, drugSeq: 1}), (d:Drug {name: "Glucophage"}) CREATE (dc)-[:CONCERNS_DRUG]->(d);
+MATCH (dc:DrugCase {primaryId: 10006, drugSeq: 1}), (d:Drug {name: "Coumadin"}) CREATE (dc)-[:CONCERNS_DRUG]->(d);
+MATCH (dc:DrugCase {primaryId: 10007, drugSeq: 1}), (d:Drug {name: "Humira"}) CREATE (dc)-[:CONCERNS_DRUG]->(d);
+MATCH (dc:DrugCase {primaryId: 10008, drugSeq: 1}), (d:Drug {name: "Zestril"}) CREATE (dc)-[:CONCERNS_DRUG]->(d);
+MATCH (dc:DrugCase {primaryId: 10009, drugSeq: 1}), (d:Drug {name: "Prednisone"}) CREATE (dc)-[:CONCERNS_DRUG]->(d);
+MATCH (dc:DrugCase {primaryId: 10010, drugSeq: 1}), (d:Drug {name: "Synthroid"}) CREATE (dc)-[:CONCERNS_DRUG]->(d);
+MATCH (dc:DrugCase {primaryId: 10011, drugSeq: 1}), (d:Drug {name: "Plavix"}) CREATE (dc)-[:CONCERNS_DRUG]->(d);
+MATCH (dc:DrugCase {primaryId: 10012, drugSeq: 1}), (d:Drug {name: "Lopressor"}) CREATE (dc)-[:CONCERNS_DRUG]->(d);
+MATCH (dc:DrugCase {primaryId: 10013, drugSeq: 1}), (d:Drug {name: "Lantus"}) CREATE (dc)-[:CONCERNS_DRUG]->(d);
+MATCH (dc:DrugCase {primaryId: 10014, drugSeq: 1}), (d:Drug {name: "Ibuprofen"}) CREATE (dc)-[:CONCERNS_DRUG]->(d);
+MATCH (dc:DrugCase {primaryId: 10015, drugSeq: 1}), (d:Drug {name: "Aspirin"}) CREATE (dc)-[:CONCERNS_DRUG]->(d);
+MATCH (dc:DrugCase {primaryId: 10016, drugSeq: 1}), (d:Drug {name: "Amoxicillin"}) CREATE (dc)-[:CONCERNS_DRUG]->(d);
+MATCH (dc:DrugCase {primaryId: 10017, drugSeq: 1}), (d:Drug {name: "Lipitor"}) CREATE (dc)-[:CONCERNS_DRUG]->(d);
+MATCH (dc:DrugCase {primaryId: 10018, drugSeq: 1}), (d:Drug {name: "Coumadin"}) CREATE (dc)-[:CONCERNS_DRUG]->(d);
+MATCH (dc:DrugCase {primaryId: 10019, drugSeq: 1}), (d:Drug {name: "Glucophage"}) CREATE (dc)-[:CONCERNS_DRUG]->(d);
+MATCH (dc:DrugCase {primaryId: 10020, drugSeq: 1}), (d:Drug {name: "Zestril"}) CREATE (dc)-[:CONCERNS_DRUG]->(d);
+MATCH (dc:DrugCase {primaryId: 10021, drugSeq: 1}), (d:Drug {name: "Prednisone"}) CREATE (dc)-[:CONCERNS_DRUG]->(d);
+MATCH (dc:DrugCase {primaryId: 10022, drugSeq: 1}), (d:Drug {name: "Coumadin"}) CREATE (dc)-[:CONCERNS_DRUG]->(d);
+MATCH (dc:DrugCase {primaryId: 10023, drugSeq: 1}), (d:Drug {name: "Lantus"}) CREATE (dc)-[:CONCERNS_DRUG]->(d);
+MATCH (dc:DrugCase {primaryId: 10024, drugSeq: 1}), (d:Drug {name: "Amoxicillin"}) CREATE (dc)-[:CONCERNS_DRUG]->(d);
+MATCH (dc:DrugCase {primaryId: 10025, drugSeq: 1}), (d:Drug {name: "Ibuprofen"}) CREATE (dc)-[:CONCERNS_DRUG]->(d);
+MATCH (dc:DrugCase {primaryId: 10026, drugSeq: 1}), (d:Drug {name: "Zoloft"}) CREATE (dc)-[:CONCERNS_DRUG]->(d);
+MATCH (dc:DrugCase {primaryId: 10027, drugSeq: 1}), (d:Drug {name: "Lopressor"}) CREATE (dc)-[:CONCERNS_DRUG]->(d);
+MATCH (dc:DrugCase {primaryId: 10028, drugSeq: 1}), (d:Drug {name: "Amoxicillin"}) CREATE (dc)-[:CONCERNS_DRUG]->(d);
+MATCH (dc:DrugCase {primaryId: 10029, drugSeq: 1}), (d:Drug {name: "Ibuprofen"}) CREATE (dc)-[:CONCERNS_DRUG]->(d);
+MATCH (dc:DrugCase {primaryId: 10030, drugSeq: 1}), (d:Drug {name: "Humira"}) CREATE (dc)-[:CONCERNS_DRUG]->(d);
+MATCH (dc:DrugCase {primaryId: 10001, drugSeq: 2}), (d:Drug {name: "Aspirin"}) CREATE (dc)-[:CONCERNS_DRUG]->(d);
+MATCH (dc:DrugCase {primaryId: 10005, drugSeq: 2}), (d:Drug {name: "Zestril"}) CREATE (dc)-[:CONCERNS_DRUG]->(d);
+MATCH (dc:DrugCase {primaryId: 10006, drugSeq: 2}), (d:Drug {name: "Aspirin"}) CREATE (dc)-[:CONCERNS_DRUG]->(d);
+MATCH (dc:DrugCase {primaryId: 10011, drugSeq: 2}), (d:Drug {name: "Aspirin"}) CREATE (dc)-[:CONCERNS_DRUG]->(d);
+MATCH (dc:DrugCase {primaryId: 10013, drugSeq: 2}), (d:Drug {name: "Glucophage"}) CREATE (dc)-[:CONCERNS_DRUG]->(d);
+MATCH (dc:DrugCase {primaryId: 10015, drugSeq: 2}), (d:Drug {name: "Plavix"}) CREATE (dc)-[:CONCERNS_DRUG]->(d);
+MATCH (dc:DrugCase {primaryId: 10018, drugSeq: 2}), (d:Drug {name: "Aspirin"}) CREATE (dc)-[:CONCERNS_DRUG]->(d);
+MATCH (dc:DrugCase {primaryId: 10022, drugSeq: 2}), (d:Drug {name: "Aspirin"}) CREATE (dc)-[:CONCERNS_DRUG]->(d);
+MATCH (dc:DrugCase {primaryId: 10023, drugSeq: 2}), (d:Drug {name: "Glucophage"}) CREATE (dc)-[:CONCERNS_DRUG]->(d);
+MATCH (dc:DrugCase {primaryId: 10030, drugSeq: 2}), (d:Drug {name: "Prednisone"}) CREATE (dc)-[:CONCERNS_DRUG]->(d);
+MATCH (dc:DrugCase {primaryId: 10001, drugSeq: 3}), (d:Drug {name: "Prilosec"}) CREATE (dc)-[:CONCERNS_DRUG]->(d);
+MATCH (dc:DrugCase {primaryId: 10004, drugSeq: 2}), (d:Drug {name: "Prilosec"}) CREATE (dc)-[:CONCERNS_DRUG]->(d);
+MATCH (dc:DrugCase {primaryId: 10006, drugSeq: 3}), (d:Drug {name: "Lopressor"}) CREATE (dc)-[:CONCERNS_DRUG]->(d);
+MATCH (dc:DrugCase {primaryId: 10009, drugSeq: 2}), (d:Drug {name: "Synthroid"}) CREATE (dc)-[:CONCERNS_DRUG]->(d);
+MATCH (dc:DrugCase {primaryId: 10011, drugSeq: 3}), (d:Drug {name: "Lopressor"}) CREATE (dc)-[:CONCERNS_DRUG]->(d);
+MATCH (dc:DrugCase {primaryId: 10012, drugSeq: 2}), (d:Drug {name: "Prilosec"}) CREATE (dc)-[:CONCERNS_DRUG]->(d);
+MATCH (dc:DrugCase {primaryId: 10015, drugSeq: 3}), (d:Drug {name: "Lopressor"}) CREATE (dc)-[:CONCERNS_DRUG]->(d);
+MATCH (dc:DrugCase {primaryId: 10019, drugSeq: 2}), (d:Drug {name: "Lipitor"}) CREATE (dc)-[:CONCERNS_DRUG]->(d);
+MATCH (dc:DrugCase {primaryId: 10020, drugSeq: 2}), (d:Drug {name: "Glucophage"}) CREATE (dc)-[:CONCERNS_DRUG]->(d);
+MATCH (dc:DrugCase {primaryId: 10021, drugSeq: 2}), (d:Drug {name: "Synthroid"}) CREATE (dc)-[:CONCERNS_DRUG]->(d);
+MATCH (dc:DrugCase {primaryId: 10002, drugSeq: 2}), (d:Drug {name: "Prilosec"}) CREATE (dc)-[:CONCERNS_DRUG]->(d);
+MATCH (dc:DrugCase {primaryId: 10008, drugSeq: 2}), (d:Drug {name: "Aspirin"}) CREATE (dc)-[:CONCERNS_DRUG]->(d);
+MATCH (dc:DrugCase {primaryId: 10010, drugSeq: 2}), (d:Drug {name: "Glucophage"}) CREATE (dc)-[:CONCERNS_DRUG]->(d);
+MATCH (dc:DrugCase {primaryId: 10016, drugSeq: 2}), (d:Drug {name: "Prednisone"}) CREATE (dc)-[:CONCERNS_DRUG]->(d);
+MATCH (dc:DrugCase {primaryId: 10017, drugSeq: 2}), (d:Drug {name: "Zestril"}) CREATE (dc)-[:CONCERNS_DRUG]->(d);
+MATCH (dc:DrugCase {primaryId: 10003, drugSeq: 2}), (d:Drug {name: "Humira"}) CREATE (dc)-[:CONCERNS_DRUG]->(d);
+MATCH (dc:DrugCase {primaryId: 10007, drugSeq: 2}), (d:Drug {name: "Prednisone"}) CREATE (dc)-[:CONCERNS_DRUG]->(d);
+MATCH (dc:DrugCase {primaryId: 10014, drugSeq: 2}), (d:Drug {name: "Prilosec"}) CREATE (dc)-[:CONCERNS_DRUG]->(d);
+MATCH (dc:DrugCase {primaryId: 10024, drugSeq: 2}), (d:Drug {name: "Ibuprofen"}) CREATE (dc)-[:CONCERNS_DRUG]->(d);
+MATCH (dc:DrugCase {primaryId: 10025, drugSeq: 2}), (d:Drug {name: "Amoxicillin"}) CREATE (dc)-[:CONCERNS_DRUG]->(d);
+MATCH (dc:DrugCase {primaryId: 10026, drugSeq: 2}), (d:Drug {name: "Ibuprofen"}) CREATE (dc)-[:CONCERNS_DRUG]->(d);
+MATCH (dc:DrugCase {primaryId: 10027, drugSeq: 2}), (d:Drug {name: "Aspirin"}) CREATE (dc)-[:CONCERNS_DRUG]->(d);
+MATCH (dc:DrugCase {primaryId: 10028, drugSeq: 2}), (d:Drug {name: "Ibuprofen"}) CREATE (dc)-[:CONCERNS_DRUG]->(d);
+MATCH (dc:DrugCase {primaryId: 10029, drugSeq: 2}), (d:Drug {name: "Amoxicillin"}) CREATE (dc)-[:CONCERNS_DRUG]->(d);
+MATCH (dc:DrugCase {primaryId: 10030, drugSeq: 3}), (d:Drug {name: "Glucophage"}) CREATE (dc)-[:CONCERNS_DRUG]->(d);
+MATCH (dc:DrugCase {primaryId: 10013, drugSeq: 3}), (d:Drug {name: "Aspirin"}) CREATE (dc)-[:CONCERNS_DRUG]->(d);
+MATCH (dc:DrugCase {primaryId: 10019, drugSeq: 3}), (d:Drug {name: "Aspirin"}) CREATE (dc)-[:CONCERNS_DRUG]->(d);
+MATCH (dc:DrugCase {primaryId: 10022, drugSeq: 3}), (d:Drug {name: "Prilosec"}) CREATE (dc)-[:CONCERNS_DRUG]->(d);
+MATCH (dc:DrugCase {primaryId: 10003, drugSeq: 3}), (d:Drug {name: "Ibuprofen"}) CREATE (dc)-[:CONCERNS_DRUG]->(d);
+MATCH (dc:DrugCase {primaryId: 10007, drugSeq: 3}), (d:Drug {name: "Aspirin"}) CREATE (dc)-[:CONCERNS_DRUG]->(d);
+
+// PRIMARY_SUSPECT_DRUG: Cases 1-30 -> dc1-dc30
+MATCH (c:Case {caseId: 10001}), (dc:DrugCase {primaryId: 10001, drugSeq: 1}) CREATE (c)-[:PRIMARY_SUSPECT_DRUG]->(dc);
+MATCH (c:Case {caseId: 10002}), (dc:DrugCase {primaryId: 10002, drugSeq: 1}) CREATE (c)-[:PRIMARY_SUSPECT_DRUG]->(dc);
+MATCH (c:Case {caseId: 10003}), (dc:DrugCase {primaryId: 10003, drugSeq: 1}) CREATE (c)-[:PRIMARY_SUSPECT_DRUG]->(dc);
+MATCH (c:Case {caseId: 10004}), (dc:DrugCase {primaryId: 10004, drugSeq: 1}) CREATE (c)-[:PRIMARY_SUSPECT_DRUG]->(dc);
+MATCH (c:Case {caseId: 10005}), (dc:DrugCase {primaryId: 10005, drugSeq: 1}) CREATE (c)-[:PRIMARY_SUSPECT_DRUG]->(dc);
+MATCH (c:Case {caseId: 10006}), (dc:DrugCase {primaryId: 10006, drugSeq: 1}) CREATE (c)-[:PRIMARY_SUSPECT_DRUG]->(dc);
+MATCH (c:Case {caseId: 10007}), (dc:DrugCase {primaryId: 10007, drugSeq: 1}) CREATE (c)-[:PRIMARY_SUSPECT_DRUG]->(dc);
+MATCH (c:Case {caseId: 10008}), (dc:DrugCase {primaryId: 10008, drugSeq: 1}) CREATE (c)-[:PRIMARY_SUSPECT_DRUG]->(dc);
+MATCH (c:Case {caseId: 10009}), (dc:DrugCase {primaryId: 10009, drugSeq: 1}) CREATE (c)-[:PRIMARY_SUSPECT_DRUG]->(dc);
+MATCH (c:Case {caseId: 10010}), (dc:DrugCase {primaryId: 10010, drugSeq: 1}) CREATE (c)-[:PRIMARY_SUSPECT_DRUG]->(dc);
+MATCH (c:Case {caseId: 10011}), (dc:DrugCase {primaryId: 10011, drugSeq: 1}) CREATE (c)-[:PRIMARY_SUSPECT_DRUG]->(dc);
+MATCH (c:Case {caseId: 10012}), (dc:DrugCase {primaryId: 10012, drugSeq: 1}) CREATE (c)-[:PRIMARY_SUSPECT_DRUG]->(dc);
+MATCH (c:Case {caseId: 10013}), (dc:DrugCase {primaryId: 10013, drugSeq: 1}) CREATE (c)-[:PRIMARY_SUSPECT_DRUG]->(dc);
+MATCH (c:Case {caseId: 10014}), (dc:DrugCase {primaryId: 10014, drugSeq: 1}) CREATE (c)-[:PRIMARY_SUSPECT_DRUG]->(dc);
+MATCH (c:Case {caseId: 10015}), (dc:DrugCase {primaryId: 10015, drugSeq: 1}) CREATE (c)-[:PRIMARY_SUSPECT_DRUG]->(dc);
+MATCH (c:Case {caseId: 10016}), (dc:DrugCase {primaryId: 10016, drugSeq: 1}) CREATE (c)-[:PRIMARY_SUSPECT_DRUG]->(dc);
+MATCH (c:Case {caseId: 10017}), (dc:DrugCase {primaryId: 10017, drugSeq: 1}) CREATE (c)-[:PRIMARY_SUSPECT_DRUG]->(dc);
+MATCH (c:Case {caseId: 10018}), (dc:DrugCase {primaryId: 10018, drugSeq: 1}) CREATE (c)-[:PRIMARY_SUSPECT_DRUG]->(dc);
+MATCH (c:Case {caseId: 10019}), (dc:DrugCase {primaryId: 10019, drugSeq: 1}) CREATE (c)-[:PRIMARY_SUSPECT_DRUG]->(dc);
+MATCH (c:Case {caseId: 10020}), (dc:DrugCase {primaryId: 10020, drugSeq: 1}) CREATE (c)-[:PRIMARY_SUSPECT_DRUG]->(dc);
+MATCH (c:Case {caseId: 10021}), (dc:DrugCase {primaryId: 10021, drugSeq: 1}) CREATE (c)-[:PRIMARY_SUSPECT_DRUG]->(dc);
+MATCH (c:Case {caseId: 10022}), (dc:DrugCase {primaryId: 10022, drugSeq: 1}) CREATE (c)-[:PRIMARY_SUSPECT_DRUG]->(dc);
+MATCH (c:Case {caseId: 10023}), (dc:DrugCase {primaryId: 10023, drugSeq: 1}) CREATE (c)-[:PRIMARY_SUSPECT_DRUG]->(dc);
+MATCH (c:Case {caseId: 10024}), (dc:DrugCase {primaryId: 10024, drugSeq: 1}) CREATE (c)-[:PRIMARY_SUSPECT_DRUG]->(dc);
+MATCH (c:Case {caseId: 10025}), (dc:DrugCase {primaryId: 10025, drugSeq: 1}) CREATE (c)-[:PRIMARY_SUSPECT_DRUG]->(dc);
+MATCH (c:Case {caseId: 10026}), (dc:DrugCase {primaryId: 10026, drugSeq: 1}) CREATE (c)-[:PRIMARY_SUSPECT_DRUG]->(dc);
+MATCH (c:Case {caseId: 10027}), (dc:DrugCase {primaryId: 10027, drugSeq: 1}) CREATE (c)-[:PRIMARY_SUSPECT_DRUG]->(dc);
+MATCH (c:Case {caseId: 10028}), (dc:DrugCase {primaryId: 10028, drugSeq: 1}) CREATE (c)-[:PRIMARY_SUSPECT_DRUG]->(dc);
+MATCH (c:Case {caseId: 10029}), (dc:DrugCase {primaryId: 10029, drugSeq: 1}) CREATE (c)-[:PRIMARY_SUSPECT_DRUG]->(dc);
+MATCH (c:Case {caseId: 10030}), (dc:DrugCase {primaryId: 10030, drugSeq: 1}) CREATE (c)-[:PRIMARY_SUSPECT_DRUG]->(dc);
+
+// SECONDARY_SUSPECT_DRUG
+MATCH (c:Case {caseId: 10001}), (dc:DrugCase {primaryId: 10001, drugSeq: 2}) CREATE (c)-[:SECONDARY_SUSPECT_DRUG]->(dc);
+MATCH (c:Case {caseId: 10005}), (dc:DrugCase {primaryId: 10005, drugSeq: 2}) CREATE (c)-[:SECONDARY_SUSPECT_DRUG]->(dc);
+MATCH (c:Case {caseId: 10006}), (dc:DrugCase {primaryId: 10006, drugSeq: 2}) CREATE (c)-[:SECONDARY_SUSPECT_DRUG]->(dc);
+MATCH (c:Case {caseId: 10011}), (dc:DrugCase {primaryId: 10011, drugSeq: 2}) CREATE (c)-[:SECONDARY_SUSPECT_DRUG]->(dc);
+MATCH (c:Case {caseId: 10013}), (dc:DrugCase {primaryId: 10013, drugSeq: 2}) CREATE (c)-[:SECONDARY_SUSPECT_DRUG]->(dc);
+MATCH (c:Case {caseId: 10015}), (dc:DrugCase {primaryId: 10015, drugSeq: 2}) CREATE (c)-[:SECONDARY_SUSPECT_DRUG]->(dc);
+MATCH (c:Case {caseId: 10018}), (dc:DrugCase {primaryId: 10018, drugSeq: 2}) CREATE (c)-[:SECONDARY_SUSPECT_DRUG]->(dc);
+MATCH (c:Case {caseId: 10022}), (dc:DrugCase {primaryId: 10022, drugSeq: 2}) CREATE (c)-[:SECONDARY_SUSPECT_DRUG]->(dc);
+MATCH (c:Case {caseId: 10023}), (dc:DrugCase {primaryId: 10023, drugSeq: 2}) CREATE (c)-[:SECONDARY_SUSPECT_DRUG]->(dc);
+MATCH (c:Case {caseId: 10030}), (dc:DrugCase {primaryId: 10030, drugSeq: 2}) CREATE (c)-[:SECONDARY_SUSPECT_DRUG]->(dc);
+
+// CONCOMITANT_DRUG
+MATCH (c:Case {caseId: 10001}), (dc:DrugCase {primaryId: 10001, drugSeq: 3}) CREATE (c)-[:CONCOMITANT_DRUG]->(dc);
+MATCH (c:Case {caseId: 10004}), (dc:DrugCase {primaryId: 10004, drugSeq: 2}) CREATE (c)-[:CONCOMITANT_DRUG]->(dc);
+MATCH (c:Case {caseId: 10006}), (dc:DrugCase {primaryId: 10006, drugSeq: 3}) CREATE (c)-[:CONCOMITANT_DRUG]->(dc);
+MATCH (c:Case {caseId: 10009}), (dc:DrugCase {primaryId: 10009, drugSeq: 2}) CREATE (c)-[:CONCOMITANT_DRUG]->(dc);
+MATCH (c:Case {caseId: 10011}), (dc:DrugCase {primaryId: 10011, drugSeq: 3}) CREATE (c)-[:CONCOMITANT_DRUG]->(dc);
+MATCH (c:Case {caseId: 10012}), (dc:DrugCase {primaryId: 10012, drugSeq: 2}) CREATE (c)-[:CONCOMITANT_DRUG]->(dc);
+MATCH (c:Case {caseId: 10015}), (dc:DrugCase {primaryId: 10015, drugSeq: 3}) CREATE (c)-[:CONCOMITANT_DRUG]->(dc);
+MATCH (c:Case {caseId: 10019}), (dc:DrugCase {primaryId: 10019, drugSeq: 2}) CREATE (c)-[:CONCOMITANT_DRUG]->(dc);
+MATCH (c:Case {caseId: 10020}), (dc:DrugCase {primaryId: 10020, drugSeq: 2}) CREATE (c)-[:CONCOMITANT_DRUG]->(dc);
+MATCH (c:Case {caseId: 10021}), (dc:DrugCase {primaryId: 10021, drugSeq: 2}) CREATE (c)-[:CONCOMITANT_DRUG]->(dc);
+MATCH (c:Case {caseId: 10002}), (dc:DrugCase {primaryId: 10002, drugSeq: 2}) CREATE (c)-[:CONCOMITANT_DRUG]->(dc);
+MATCH (c:Case {caseId: 10008}), (dc:DrugCase {primaryId: 10008, drugSeq: 2}) CREATE (c)-[:CONCOMITANT_DRUG]->(dc);
+MATCH (c:Case {caseId: 10010}), (dc:DrugCase {primaryId: 10010, drugSeq: 2}) CREATE (c)-[:CONCOMITANT_DRUG]->(dc);
+MATCH (c:Case {caseId: 10016}), (dc:DrugCase {primaryId: 10016, drugSeq: 2}) CREATE (c)-[:CONCOMITANT_DRUG]->(dc);
+MATCH (c:Case {caseId: 10017}), (dc:DrugCase {primaryId: 10017, drugSeq: 2}) CREATE (c)-[:CONCOMITANT_DRUG]->(dc);
+MATCH (c:Case {caseId: 10024}), (dc:DrugCase {primaryId: 10024, drugSeq: 2}) CREATE (c)-[:CONCOMITANT_DRUG]->(dc);
+MATCH (c:Case {caseId: 10025}), (dc:DrugCase {primaryId: 10025, drugSeq: 2}) CREATE (c)-[:CONCOMITANT_DRUG]->(dc);
+MATCH (c:Case {caseId: 10026}), (dc:DrugCase {primaryId: 10026, drugSeq: 2}) CREATE (c)-[:CONCOMITANT_DRUG]->(dc);
+MATCH (c:Case {caseId: 10027}), (dc:DrugCase {primaryId: 10027, drugSeq: 2}) CREATE (c)-[:CONCOMITANT_DRUG]->(dc);
+MATCH (c:Case {caseId: 10028}), (dc:DrugCase {primaryId: 10028, drugSeq: 2}) CREATE (c)-[:CONCOMITANT_DRUG]->(dc);
+MATCH (c:Case {caseId: 10029}), (dc:DrugCase {primaryId: 10029, drugSeq: 2}) CREATE (c)-[:CONCOMITANT_DRUG]->(dc);
+MATCH (c:Case {caseId: 10030}), (dc:DrugCase {primaryId: 10030, drugSeq: 3}) CREATE (c)-[:CONCOMITANT_DRUG]->(dc);
+MATCH (c:Case {caseId: 10013}), (dc:DrugCase {primaryId: 10013, drugSeq: 3}) CREATE (c)-[:CONCOMITANT_DRUG]->(dc);
+MATCH (c:Case {caseId: 10019}), (dc:DrugCase {primaryId: 10019, drugSeq: 3}) CREATE (c)-[:CONCOMITANT_DRUG]->(dc);
+MATCH (c:Case {caseId: 10022}), (dc:DrugCase {primaryId: 10022, drugSeq: 3}) CREATE (c)-[:CONCOMITANT_DRUG]->(dc);
+MATCH (c:Case {caseId: 10003}), (dc:DrugCase {primaryId: 10003, drugSeq: 3}) CREATE (c)-[:CONCOMITANT_DRUG]->(dc);
+MATCH (c:Case {caseId: 10007}), (dc:DrugCase {primaryId: 10007, drugSeq: 3}) CREATE (c)-[:CONCOMITANT_DRUG]->(dc);
+
+// DRUG_NOT_ADMINISTERED
+MATCH (c:Case {caseId: 10003}), (dc:DrugCase {primaryId: 10003, drugSeq: 2}) CREATE (c)-[:DRUG_NOT_ADMINISTERED]->(dc);
+MATCH (c:Case {caseId: 10007}), (dc:DrugCase {primaryId: 10007, drugSeq: 2}) CREATE (c)-[:DRUG_NOT_ADMINISTERED]->(dc);
+MATCH (c:Case {caseId: 10014}), (dc:DrugCase {primaryId: 10014, drugSeq: 2}) CREATE (c)-[:DRUG_NOT_ADMINISTERED]->(dc);
+
+// HAS_OUTCOME
+MATCH (c:Case {caseId: 10001}), (o:Outcome {code: "HO"}) CREATE (c)-[:HAS_OUTCOME]->(o);
+MATCH (c:Case {caseId: 10002}), (o:Outcome {code: "HO"}) CREATE (c)-[:HAS_OUTCOME]->(o);
+MATCH (c:Case {caseId: 10003}), (o:Outcome {code: "DS"}) CREATE (c)-[:HAS_OUTCOME]->(o);
+MATCH (c:Case {caseId: 10004}), (o:Outcome {code: "HO"}) CREATE (c)-[:HAS_OUTCOME]->(o);
+MATCH (c:Case {caseId: 10005}), (o:Outcome {code: "OT"}) CREATE (c)-[:HAS_OUTCOME]->(o);
+MATCH (c:Case {caseId: 10006}), (o:Outcome {code: "LT"}) CREATE (c)-[:HAS_OUTCOME]->(o);
+MATCH (c:Case {caseId: 10007}), (o:Outcome {code: "HO"}) CREATE (c)-[:HAS_OUTCOME]->(o);
+MATCH (c:Case {caseId: 10008}), (o:Outcome {code: "OT"}) CREATE (c)-[:HAS_OUTCOME]->(o);
+MATCH (c:Case {caseId: 10009}), (o:Outcome {code: "HO"}) CREATE (c)-[:HAS_OUTCOME]->(o);
+MATCH (c:Case {caseId: 10010}), (o:Outcome {code: "DS"}) CREATE (c)-[:HAS_OUTCOME]->(o);
+MATCH (c:Case {caseId: 10011}), (o:Outcome {code: "LT"}) CREATE (c)-[:HAS_OUTCOME]->(o);
+MATCH (c:Case {caseId: 10012}), (o:Outcome {code: "HO"}) CREATE (c)-[:HAS_OUTCOME]->(o);
+MATCH (c:Case {caseId: 10013}), (o:Outcome {code: "DE"}) CREATE (c)-[:HAS_OUTCOME]->(o);
+MATCH (c:Case {caseId: 10014}), (o:Outcome {code: "HO"}) CREATE (c)-[:HAS_OUTCOME]->(o);
+MATCH (c:Case {caseId: 10015}), (o:Outcome {code: "LT"}) CREATE (c)-[:HAS_OUTCOME]->(o);
+MATCH (c:Case {caseId: 10016}), (o:Outcome {code: "HO"}) CREATE (c)-[:HAS_OUTCOME]->(o);
+MATCH (c:Case {caseId: 10017}), (o:Outcome {code: "OT"}) CREATE (c)-[:HAS_OUTCOME]->(o);
+MATCH (c:Case {caseId: 10018}), (o:Outcome {code: "LT"}) CREATE (c)-[:HAS_OUTCOME]->(o);
+MATCH (c:Case {caseId: 10019}), (o:Outcome {code: "HO"}) CREATE (c)-[:HAS_OUTCOME]->(o);
+MATCH (c:Case {caseId: 10020}), (o:Outcome {code: "DE"}) CREATE (c)-[:HAS_OUTCOME]->(o);
+MATCH (c:Case {caseId: 10021}), (o:Outcome {code: "HO"}) CREATE (c)-[:HAS_OUTCOME]->(o);
+MATCH (c:Case {caseId: 10022}), (o:Outcome {code: "LT"}) CREATE (c)-[:HAS_OUTCOME]->(o);
+MATCH (c:Case {caseId: 10023}), (o:Outcome {code: "DE"}) CREATE (c)-[:HAS_OUTCOME]->(o);
+MATCH (c:Case {caseId: 10024}), (o:Outcome {code: "HO"}) CREATE (c)-[:HAS_OUTCOME]->(o);
+MATCH (c:Case {caseId: 10025}), (o:Outcome {code: "HO"}) CREATE (c)-[:HAS_OUTCOME]->(o);
+MATCH (c:Case {caseId: 10026}), (o:Outcome {code: "DS"}) CREATE (c)-[:HAS_OUTCOME]->(o);
+MATCH (c:Case {caseId: 10027}), (o:Outcome {code: "HO"}) CREATE (c)-[:HAS_OUTCOME]->(o);
+MATCH (c:Case {caseId: 10028}), (o:Outcome {code: "HO"}) CREATE (c)-[:HAS_OUTCOME]->(o);
+MATCH (c:Case {caseId: 10029}), (o:Outcome {code: "HO"}) CREATE (c)-[:HAS_OUTCOME]->(o);
+MATCH (c:Case {caseId: 10030}), (o:Outcome {code: "OT"}) CREATE (c)-[:HAS_OUTCOME]->(o);
+
+// HAS_REACTION (1-2 reactions per case)
+MATCH (c:Case {caseId: 10001}), (m:MedDraTerm {name: "Nausea"}) CREATE (c)-[:HAS_REACTION]->(m);
+MATCH (c:Case {caseId: 10001}), (m:MedDraTerm {name: "Abdominal pain"}) CREATE (c)-[:HAS_REACTION]->(m);
+MATCH (c:Case {caseId: 10002}), (m:MedDraTerm {name: "Rash"}) CREATE (c)-[:HAS_REACTION]->(m);
+MATCH (c:Case {caseId: 10002}), (m:MedDraTerm {name: "Anaphylaxis"}) CREATE (c)-[:HAS_REACTION]->(m);
+MATCH (c:Case {caseId: 10003}), (m:MedDraTerm {name: "Headache"}) CREATE (c)-[:HAS_REACTION]->(m);
+MATCH (c:Case {caseId: 10003}), (m:MedDraTerm {name: "Dizziness"}) CREATE (c)-[:HAS_REACTION]->(m);
+MATCH (c:Case {caseId: 10004}), (m:MedDraTerm {name: "Myalgia"}) CREATE (c)-[:HAS_REACTION]->(m);
+MATCH (c:Case {caseId: 10004}), (m:MedDraTerm {name: "Fatigue"}) CREATE (c)-[:HAS_REACTION]->(m);
+MATCH (c:Case {caseId: 10005}), (m:MedDraTerm {name: "Nausea"}) CREATE (c)-[:HAS_REACTION]->(m);
+MATCH (c:Case {caseId: 10005}), (m:MedDraTerm {name: "Diarrhoea"}) CREATE (c)-[:HAS_REACTION]->(m);
+MATCH (c:Case {caseId: 10006}), (m:MedDraTerm {name: "Thrombocytopenia"}) CREATE (c)-[:HAS_REACTION]->(m);
+MATCH (c:Case {caseId: 10007}), (m:MedDraTerm {name: "Rash"}) CREATE (c)-[:HAS_REACTION]->(m);
+MATCH (c:Case {caseId: 10007}), (m:MedDraTerm {name: "Stevens-Johnson syndrome"}) CREATE (c)-[:HAS_REACTION]->(m);
+MATCH (c:Case {caseId: 10008}), (m:MedDraTerm {name: "Headache"}) CREATE (c)-[:HAS_REACTION]->(m);
+MATCH (c:Case {caseId: 10009}), (m:MedDraTerm {name: "Fatigue"}) CREATE (c)-[:HAS_REACTION]->(m);
+MATCH (c:Case {caseId: 10009}), (m:MedDraTerm {name: "Myalgia"}) CREATE (c)-[:HAS_REACTION]->(m);
+MATCH (c:Case {caseId: 10010}), (m:MedDraTerm {name: "Dizziness"}) CREATE (c)-[:HAS_REACTION]->(m);
+MATCH (c:Case {caseId: 10011}), (m:MedDraTerm {name: "Chest pain"}) CREATE (c)-[:HAS_REACTION]->(m);
+MATCH (c:Case {caseId: 10011}), (m:MedDraTerm {name: "Dyspnoea"}) CREATE (c)-[:HAS_REACTION]->(m);
+MATCH (c:Case {caseId: 10012}), (m:MedDraTerm {name: "Nausea"}) CREATE (c)-[:HAS_REACTION]->(m);
+MATCH (c:Case {caseId: 10012}), (m:MedDraTerm {name: "Vomiting"}) CREATE (c)-[:HAS_REACTION]->(m);
+MATCH (c:Case {caseId: 10013}), (m:MedDraTerm {name: "Acute renal failure"}) CREATE (c)-[:HAS_REACTION]->(m);
+MATCH (c:Case {caseId: 10013}), (m:MedDraTerm {name: "Hepatotoxicity"}) CREATE (c)-[:HAS_REACTION]->(m);
+MATCH (c:Case {caseId: 10014}), (m:MedDraTerm {name: "Abdominal pain"}) CREATE (c)-[:HAS_REACTION]->(m);
+MATCH (c:Case {caseId: 10014}), (m:MedDraTerm {name: "Nausea"}) CREATE (c)-[:HAS_REACTION]->(m);
+MATCH (c:Case {caseId: 10015}), (m:MedDraTerm {name: "Chest pain"}) CREATE (c)-[:HAS_REACTION]->(m);
+MATCH (c:Case {caseId: 10015}), (m:MedDraTerm {name: "Bradycardia"}) CREATE (c)-[:HAS_REACTION]->(m);
+MATCH (c:Case {caseId: 10016}), (m:MedDraTerm {name: "Rash"}) CREATE (c)-[:HAS_REACTION]->(m);
+MATCH (c:Case {caseId: 10017}), (m:MedDraTerm {name: "Myalgia"}) CREATE (c)-[:HAS_REACTION]->(m);
+MATCH (c:Case {caseId: 10017}), (m:MedDraTerm {name: "Fatigue"}) CREATE (c)-[:HAS_REACTION]->(m);
+MATCH (c:Case {caseId: 10018}), (m:MedDraTerm {name: "Drug interaction"}) CREATE (c)-[:HAS_REACTION]->(m);
+MATCH (c:Case {caseId: 10018}), (m:MedDraTerm {name: "Thrombocytopenia"}) CREATE (c)-[:HAS_REACTION]->(m);
+MATCH (c:Case {caseId: 10019}), (m:MedDraTerm {name: "Nausea"}) CREATE (c)-[:HAS_REACTION]->(m);
+MATCH (c:Case {caseId: 10019}), (m:MedDraTerm {name: "Hypoglycaemia"}) CREATE (c)-[:HAS_REACTION]->(m);
+MATCH (c:Case {caseId: 10020}), (m:MedDraTerm {name: "Acute renal failure"}) CREATE (c)-[:HAS_REACTION]->(m);
+MATCH (c:Case {caseId: 10021}), (m:MedDraTerm {name: "Fatigue"}) CREATE (c)-[:HAS_REACTION]->(m);
+MATCH (c:Case {caseId: 10021}), (m:MedDraTerm {name: "Dyspnoea"}) CREATE (c)-[:HAS_REACTION]->(m);
+MATCH (c:Case {caseId: 10022}), (m:MedDraTerm {name: "Bradycardia"}) CREATE (c)-[:HAS_REACTION]->(m);
+MATCH (c:Case {caseId: 10022}), (m:MedDraTerm {name: "Chest pain"}) CREATE (c)-[:HAS_REACTION]->(m);
+MATCH (c:Case {caseId: 10023}), (m:MedDraTerm {name: "Hypoglycaemia"}) CREATE (c)-[:HAS_REACTION]->(m);
+MATCH (c:Case {caseId: 10023}), (m:MedDraTerm {name: "Dizziness"}) CREATE (c)-[:HAS_REACTION]->(m);
+MATCH (c:Case {caseId: 10024}), (m:MedDraTerm {name: "Rash"}) CREATE (c)-[:HAS_REACTION]->(m);
+MATCH (c:Case {caseId: 10024}), (m:MedDraTerm {name: "Vomiting"}) CREATE (c)-[:HAS_REACTION]->(m);
+MATCH (c:Case {caseId: 10025}), (m:MedDraTerm {name: "Nausea"}) CREATE (c)-[:HAS_REACTION]->(m);
+MATCH (c:Case {caseId: 10025}), (m:MedDraTerm {name: "Abdominal pain"}) CREATE (c)-[:HAS_REACTION]->(m);
+MATCH (c:Case {caseId: 10026}), (m:MedDraTerm {name: "Headache"}) CREATE (c)-[:HAS_REACTION]->(m);
+MATCH (c:Case {caseId: 10026}), (m:MedDraTerm {name: "Dizziness"}) CREATE (c)-[:HAS_REACTION]->(m);
+MATCH (c:Case {caseId: 10027}), (m:MedDraTerm {name: "Myalgia"}) CREATE (c)-[:HAS_REACTION]->(m);
+MATCH (c:Case {caseId: 10028}), (m:MedDraTerm {name: "Rash"}) CREATE (c)-[:HAS_REACTION]->(m);
+MATCH (c:Case {caseId: 10028}), (m:MedDraTerm {name: "Vomiting"}) CREATE (c)-[:HAS_REACTION]->(m);
+MATCH (c:Case {caseId: 10029}), (m:MedDraTerm {name: "Nausea"}) CREATE (c)-[:HAS_REACTION]->(m);
+MATCH (c:Case {caseId: 10029}), (m:MedDraTerm {name: "Diarrhoea"}) CREATE (c)-[:HAS_REACTION]->(m);
+MATCH (c:Case {caseId: 10030}), (m:MedDraTerm {name: "Fatigue"}) CREATE (c)-[:HAS_REACTION]->(m);
+MATCH (c:Case {caseId: 10030}), (m:MedDraTerm {name: "Headache"}) CREATE (c)-[:HAS_REACTION]->(m);
+
+// INDICATION_FOR_USE (DrugCase -> MedDraTerm)
+MATCH (dc:DrugCase {primaryId: 10001, drugSeq: 1}), (m:MedDraTerm {name: "Abdominal pain"}) CREATE (dc)-[:INDICATION_FOR_USE]->(m);
+MATCH (dc:DrugCase {primaryId: 10002, drugSeq: 1}), (m:MedDraTerm {name: "Rash"}) CREATE (dc)-[:INDICATION_FOR_USE]->(m);
+MATCH (dc:DrugCase {primaryId: 10003, drugSeq: 1}), (m:MedDraTerm {name: "Headache"}) CREATE (dc)-[:INDICATION_FOR_USE]->(m);
+MATCH (dc:DrugCase {primaryId: 10004, drugSeq: 1}), (m:MedDraTerm {name: "Myalgia"}) CREATE (dc)-[:INDICATION_FOR_USE]->(m);
+MATCH (dc:DrugCase {primaryId: 10005, drugSeq: 1}), (m:MedDraTerm {name: "Fatigue"}) CREATE (dc)-[:INDICATION_FOR_USE]->(m);
+MATCH (dc:DrugCase {primaryId: 10006, drugSeq: 1}), (m:MedDraTerm {name: "Thrombocytopenia"}) CREATE (dc)-[:INDICATION_FOR_USE]->(m);
+MATCH (dc:DrugCase {primaryId: 10007, drugSeq: 1}), (m:MedDraTerm {name: "Fatigue"}) CREATE (dc)-[:INDICATION_FOR_USE]->(m);
+MATCH (dc:DrugCase {primaryId: 10008, drugSeq: 1}), (m:MedDraTerm {name: "Hypertension"}) CREATE (dc)-[:INDICATION_FOR_USE]->(m);
+MATCH (dc:DrugCase {primaryId: 10009, drugSeq: 1}), (m:MedDraTerm {name: "Fatigue"}) CREATE (dc)-[:INDICATION_FOR_USE]->(m);
+MATCH (dc:DrugCase {primaryId: 10010, drugSeq: 1}), (m:MedDraTerm {name: "Fatigue"}) CREATE (dc)-[:INDICATION_FOR_USE]->(m);
+MATCH (dc:DrugCase {primaryId: 10011, drugSeq: 1}), (m:MedDraTerm {name: "Chest pain"}) CREATE (dc)-[:INDICATION_FOR_USE]->(m);
+MATCH (dc:DrugCase {primaryId: 10012, drugSeq: 1}), (m:MedDraTerm {name: "Bradycardia"}) CREATE (dc)-[:INDICATION_FOR_USE]->(m);
+MATCH (dc:DrugCase {primaryId: 10013, drugSeq: 1}), (m:MedDraTerm {name: "Fatigue"}) CREATE (dc)-[:INDICATION_FOR_USE]->(m);
+MATCH (dc:DrugCase {primaryId: 10014, drugSeq: 1}), (m:MedDraTerm {name: "Abdominal pain"}) CREATE (dc)-[:INDICATION_FOR_USE]->(m);
+MATCH (dc:DrugCase {primaryId: 10015, drugSeq: 1}), (m:MedDraTerm {name: "Chest pain"}) CREATE (dc)-[:INDICATION_FOR_USE]->(m);
+MATCH (dc:DrugCase {primaryId: 10016, drugSeq: 1}), (m:MedDraTerm {name: "Rash"}) CREATE (dc)-[:INDICATION_FOR_USE]->(m);
+MATCH (dc:DrugCase {primaryId: 10017, drugSeq: 1}), (m:MedDraTerm {name: "Myalgia"}) CREATE (dc)-[:INDICATION_FOR_USE]->(m);
+MATCH (dc:DrugCase {primaryId: 10018, drugSeq: 1}), (m:MedDraTerm {name: "Thrombocytopenia"}) CREATE (dc)-[:INDICATION_FOR_USE]->(m);
+MATCH (dc:DrugCase {primaryId: 10019, drugSeq: 1}), (m:MedDraTerm {name: "Fatigue"}) CREATE (dc)-[:INDICATION_FOR_USE]->(m);
+MATCH (dc:DrugCase {primaryId: 10020, drugSeq: 1}), (m:MedDraTerm {name: "Hypertension"}) CREATE (dc)-[:INDICATION_FOR_USE]->(m);
+MATCH (dc:DrugCase {primaryId: 10021, drugSeq: 1}), (m:MedDraTerm {name: "Fatigue"}) CREATE (dc)-[:INDICATION_FOR_USE]->(m);
+MATCH (dc:DrugCase {primaryId: 10022, drugSeq: 1}), (m:MedDraTerm {name: "Thrombocytopenia"}) CREATE (dc)-[:INDICATION_FOR_USE]->(m);
+MATCH (dc:DrugCase {primaryId: 10023, drugSeq: 1}), (m:MedDraTerm {name: "Hypoglycaemia"}) CREATE (dc)-[:INDICATION_FOR_USE]->(m);
+MATCH (dc:DrugCase {primaryId: 10024, drugSeq: 1}), (m:MedDraTerm {name: "Rash"}) CREATE (dc)-[:INDICATION_FOR_USE]->(m);
+MATCH (dc:DrugCase {primaryId: 10025, drugSeq: 1}), (m:MedDraTerm {name: "Abdominal pain"}) CREATE (dc)-[:INDICATION_FOR_USE]->(m);
+MATCH (dc:DrugCase {primaryId: 10026, drugSeq: 1}), (m:MedDraTerm {name: "Headache"}) CREATE (dc)-[:INDICATION_FOR_USE]->(m);
+MATCH (dc:DrugCase {primaryId: 10027, drugSeq: 1}), (m:MedDraTerm {name: "Bradycardia"}) CREATE (dc)-[:INDICATION_FOR_USE]->(m);
+MATCH (dc:DrugCase {primaryId: 10028, drugSeq: 1}), (m:MedDraTerm {name: "Rash"}) CREATE (dc)-[:INDICATION_FOR_USE]->(m);
+MATCH (dc:DrugCase {primaryId: 10029, drugSeq: 1}), (m:MedDraTerm {name: "Nausea"}) CREATE (dc)-[:INDICATION_FOR_USE]->(m);
+MATCH (dc:DrugCase {primaryId: 10030, drugSeq: 1}), (m:MedDraTerm {name: "Fatigue"}) CREATE (dc)-[:INDICATION_FOR_USE]->(m);
+
+// REPORTED_BY (Case -> Manufacturer)
+MATCH (c:Case {caseId: 10001}), (m:Manufacturer {name: "Pfizer Inc."}) CREATE (c)-[:REPORTED_BY {manufacturerDate: "2024-01-15", notificationSendToManufacturer: true, manufacturerUniqueReportIdentifier: "MFR-10001"}]->(m);
+MATCH (c:Case {caseId: 10002}), (m:Manufacturer {name: "AstraZeneca"}) CREATE (c)-[:REPORTED_BY {manufacturerDate: "2024-02-03", notificationSendToManufacturer: true, manufacturerUniqueReportIdentifier: "MFR-10002"}]->(m);
+MATCH (c:Case {caseId: 10003}), (m:Manufacturer {name: "Johnson & Johnson"}) CREATE (c)-[:REPORTED_BY {manufacturerDate: "2024-02-18", notificationSendToManufacturer: true, manufacturerUniqueReportIdentifier: "MFR-10003"}]->(m);
+MATCH (c:Case {caseId: 10004}), (m:Manufacturer {name: "Novartis AG"}) CREATE (c)-[:REPORTED_BY {manufacturerDate: "2024-03-05", notificationSendToManufacturer: true, manufacturerUniqueReportIdentifier: "MFR-10004"}]->(m);
+MATCH (c:Case {caseId: 10005}), (m:Manufacturer {name: "Roche Holding AG"}) CREATE (c)-[:REPORTED_BY {manufacturerDate: "2024-03-22", notificationSendToManufacturer: true, manufacturerUniqueReportIdentifier: "MFR-10005"}]->(m);
+MATCH (c:Case {caseId: 10006}), (m:Manufacturer {name: "GlaxoSmithKline plc"}) CREATE (c)-[:REPORTED_BY {manufacturerDate: "2024-04-10", notificationSendToManufacturer: true, manufacturerUniqueReportIdentifier: "MFR-10006"}]->(m);
+MATCH (c:Case {caseId: 10007}), (m:Manufacturer {name: "Merck & Co."}) CREATE (c)-[:REPORTED_BY {manufacturerDate: "2024-04-28", notificationSendToManufacturer: true, manufacturerUniqueReportIdentifier: "MFR-10007"}]->(m);
+MATCH (c:Case {caseId: 10008}), (m:Manufacturer {name: "Abbott Laboratories"}) CREATE (c)-[:REPORTED_BY {manufacturerDate: "2024-05-14", notificationSendToManufacturer: true, manufacturerUniqueReportIdentifier: "MFR-10008"}]->(m);
+MATCH (c:Case {caseId: 10009}), (m:Manufacturer {name: "Bristol-Myers Squibb"}) CREATE (c)-[:REPORTED_BY {manufacturerDate: "2024-06-01", notificationSendToManufacturer: true, manufacturerUniqueReportIdentifier: "MFR-10009"}]->(m);
+MATCH (c:Case {caseId: 10010}), (m:Manufacturer {name: "Sanofi S.A."}) CREATE (c)-[:REPORTED_BY {manufacturerDate: "2024-06-17", notificationSendToManufacturer: true, manufacturerUniqueReportIdentifier: "MFR-10010"}]->(m);
+MATCH (c:Case {caseId: 10011}), (m:Manufacturer {name: "Pfizer Inc."}) CREATE (c)-[:REPORTED_BY {manufacturerDate: "2024-01-22", notificationSendToManufacturer: true, manufacturerUniqueReportIdentifier: "MFR-10011"}]->(m);
+MATCH (c:Case {caseId: 10012}), (m:Manufacturer {name: "AstraZeneca"}) CREATE (c)-[:REPORTED_BY {manufacturerDate: "2024-02-10", notificationSendToManufacturer: true, manufacturerUniqueReportIdentifier: "MFR-10012"}]->(m);
+MATCH (c:Case {caseId: 10013}), (m:Manufacturer {name: "Johnson & Johnson"}) CREATE (c)-[:REPORTED_BY {manufacturerDate: "2024-03-01", notificationSendToManufacturer: true, manufacturerUniqueReportIdentifier: "MFR-10013"}]->(m);
+MATCH (c:Case {caseId: 10014}), (m:Manufacturer {name: "Novartis AG"}) CREATE (c)-[:REPORTED_BY {manufacturerDate: "2024-04-05", notificationSendToManufacturer: true, manufacturerUniqueReportIdentifier: "MFR-10014"}]->(m);
+MATCH (c:Case {caseId: 10015}), (m:Manufacturer {name: "Roche Holding AG"}) CREATE (c)-[:REPORTED_BY {manufacturerDate: "2024-05-20", notificationSendToManufacturer: true, manufacturerUniqueReportIdentifier: "MFR-10015"}]->(m);
+MATCH (c:Case {caseId: 10016}), (m:Manufacturer {name: "Merck & Co."}) CREATE (c)-[:REPORTED_BY {manufacturerDate: "2024-07-03", notificationSendToManufacturer: true, manufacturerUniqueReportIdentifier: "MFR-10016"}]->(m);
+MATCH (c:Case {caseId: 10017}), (m:Manufacturer {name: "GlaxoSmithKline plc"}) CREATE (c)-[:REPORTED_BY {manufacturerDate: "2024-07-19", notificationSendToManufacturer: true, manufacturerUniqueReportIdentifier: "MFR-10017"}]->(m);
+MATCH (c:Case {caseId: 10018}), (m:Manufacturer {name: "Abbott Laboratories"}) CREATE (c)-[:REPORTED_BY {manufacturerDate: "2024-08-05", notificationSendToManufacturer: true, manufacturerUniqueReportIdentifier: "MFR-10018"}]->(m);
+MATCH (c:Case {caseId: 10019}), (m:Manufacturer {name: "Bristol-Myers Squibb"}) CREATE (c)-[:REPORTED_BY {manufacturerDate: "2024-01-30", notificationSendToManufacturer: true, manufacturerUniqueReportIdentifier: "MFR-10019"}]->(m);
+MATCH (c:Case {caseId: 10020}), (m:Manufacturer {name: "Sanofi S.A."}) CREATE (c)-[:REPORTED_BY {manufacturerDate: "2024-03-15", notificationSendToManufacturer: true, manufacturerUniqueReportIdentifier: "MFR-10020"}]->(m);
+MATCH (c:Case {caseId: 10021}), (m:Manufacturer {name: "Pfizer Inc."}) CREATE (c)-[:REPORTED_BY {manufacturerDate: "2024-05-09", notificationSendToManufacturer: true, manufacturerUniqueReportIdentifier: "MFR-10021"}]->(m);
+MATCH (c:Case {caseId: 10022}), (m:Manufacturer {name: "AstraZeneca"}) CREATE (c)-[:REPORTED_BY {manufacturerDate: "2024-04-22", notificationSendToManufacturer: true, manufacturerUniqueReportIdentifier: "MFR-10022"}]->(m);
+MATCH (c:Case {caseId: 10023}), (m:Manufacturer {name: "Novartis AG"}) CREATE (c)-[:REPORTED_BY {manufacturerDate: "2024-06-28", notificationSendToManufacturer: true, manufacturerUniqueReportIdentifier: "MFR-10023"}]->(m);
+MATCH (c:Case {caseId: 10024}), (m:Manufacturer {name: "Johnson & Johnson"}) CREATE (c)-[:REPORTED_BY {manufacturerDate: "2024-02-25", notificationSendToManufacturer: true, manufacturerUniqueReportIdentifier: "MFR-10024"}]->(m);
+MATCH (c:Case {caseId: 10025}), (m:Manufacturer {name: "Roche Holding AG"}) CREATE (c)-[:REPORTED_BY {manufacturerDate: "2024-03-10", notificationSendToManufacturer: true, manufacturerUniqueReportIdentifier: "MFR-10025"}]->(m);
+MATCH (c:Case {caseId: 10026}), (m:Manufacturer {name: "Merck & Co."}) CREATE (c)-[:REPORTED_BY {manufacturerDate: "2024-05-02", notificationSendToManufacturer: true, manufacturerUniqueReportIdentifier: "MFR-10026"}]->(m);
+MATCH (c:Case {caseId: 10027}), (m:Manufacturer {name: "GlaxoSmithKline plc"}) CREATE (c)-[:REPORTED_BY {manufacturerDate: "2024-06-14", notificationSendToManufacturer: true, manufacturerUniqueReportIdentifier: "MFR-10027"}]->(m);
+MATCH (c:Case {caseId: 10028}), (m:Manufacturer {name: "Abbott Laboratories"}) CREATE (c)-[:REPORTED_BY {manufacturerDate: "2024-07-08", notificationSendToManufacturer: true, manufacturerUniqueReportIdentifier: "MFR-10028"}]->(m);
+MATCH (c:Case {caseId: 10029}), (m:Manufacturer {name: "Bristol-Myers Squibb"}) CREATE (c)-[:REPORTED_BY {manufacturerDate: "2024-08-12", notificationSendToManufacturer: true, manufacturerUniqueReportIdentifier: "MFR-10029"}]->(m);
+MATCH (c:Case {caseId: 10030}), (m:Manufacturer {name: "Sanofi S.A."}) CREATE (c)-[:REPORTED_BY {manufacturerDate: "2024-09-01", notificationSendToManufacturer: true, manufacturerUniqueReportIdentifier: "MFR-10030"}]->(m);
+
+// INTERACTING_DRUG (Drug -> Drug) - known interactions
+MATCH (a:Drug {name: "Coumadin"}), (b:Drug {name: "Aspirin"}) CREATE (a)-[:INTERACTING_DRUG]->(b);
+MATCH (a:Drug {name: "Coumadin"}), (b:Drug {name: "Ibuprofen"}) CREATE (a)-[:INTERACTING_DRUG]->(b);
+MATCH (a:Drug {name: "Coumadin"}), (b:Drug {name: "Plavix"}) CREATE (a)-[:INTERACTING_DRUG]->(b);
+MATCH (a:Drug {name: "Plavix"}), (b:Drug {name: "Aspirin"}) CREATE (a)-[:INTERACTING_DRUG]->(b);
+MATCH (a:Drug {name: "Lopressor"}), (b:Drug {name: "Glucophage"}) CREATE (a)-[:INTERACTING_DRUG]->(b);
+MATCH (a:Drug {name: "Zestril"}), (b:Drug {name: "Glucophage"}) CREATE (a)-[:INTERACTING_DRUG]->(b);
+MATCH (a:Drug {name: "Humira"}), (b:Drug {name: "Prednisone"}) CREATE (a)-[:INTERACTING_DRUG]->(b);
+MATCH (a:Drug {name: "Lantus"}), (b:Drug {name: "Glucophage"}) CREATE (a)-[:INTERACTING_DRUG]->(b);
+----
+
+== Cypher Statements
+
+This section provides a set of example Cypher queries that can be used to explore the patient journey graph from different perspectives.
+
+=== Drug focused
+
+Starting from a `Drug` point of view, what are the adverse events?
+
+==== Which `Drug`pass:[s] are reported the most by consumers?
+
+This query gets you all the drugs reported by consumers and the number of times they were reported. This is useful to see what the drugs with the highest number of adverse effects are.
+
+[source, cypher, role=noheader]
+----
+// Get all the drugs reported by a consumer (excluding the drugs that weren't administered) and return the names,
+// active ingredients and the number of times they were reported.
+MATCH (:Case {reporterOccupation:'Consumer'})-[:!DRUG_NOT_ADMINISTERED]->(:DrugCase)-[:CONCERNS_DRUG]->(d:Drug)
+RETURN d.name AS Name, d.activeIngredient AS `Active Ingredient`, count(d) AS `Num times Reported`
+ORDER BY `Num times Reported` DESC;
+----
+
+==== What `Drug`pass:[s] have the most side effects (`MedDraTerm`)?
+
+This query starts with the `Drug`s in the database, and pulls all the reactions (`MedDraTerm`) that are connected to it via `Case` nodes. 
+It then collects those reactions together and returns the name of the drug, the active ingredients and the reactions. 
+
+[source, cypher, role=noheader]
+----
+MATCH (d:Drug)<--(:DrugCase)<-[:PRIMARY_SUSPECT_DRUG]-(:Case)-[:HAS_REACTION]->(m:MedDraTerm)
+WITH d.name AS drugName, d.activeIngredient AS activeIngredient, COLLECT(DISTINCT m.name) AS Reactions
+RETURN drugName, activeIngredient, size(Reactions) AS numReactions, Reactions
+ORDER BY numReactions DESC
+----
+
+Extending this to find out which drugs which are not only primary suspects, but also secondary suspects:
+
+[source, cypher, role=noheader]
+----
+MATCH 
+    (d:Drug)<--(:DrugCase)<-[:PRIMARY_SUSPECT_DRUG|SECONDARY_SUSPECT_DRUG]-(:Case)-[:HAS_REACTION]->(m:MedDraTerm)
+WITH d.name AS drugName, d.activeIngredient AS activeIngredient, COLLECT(DISTINCT m.name) AS Reactions
+RETURN drugName, activeIngredient, size(Reactions) AS numReactions, Reactions
+ORDER BY numReactions DESC
+----
+
+And of course, you can get both primary and secondary effects together.
+
+[source, cypher, role=noheader]
+----
+OPTIONAL MATCH (d:Drug)<--(:DrugCase)<-[:PRIMARY_SUSPECT_DRUG]-(:Case)-[:HAS_REACTION]->(m:MedDraTerm)
+WITH 
+    d,
+    COLLECT(DISTINCT m.name) AS primaryReactions,
+    d.name AS drugName, 
+    d.activeIngredient AS activeIngredient
+OPTIONAL MATCH (d)<--(:DrugCase)<-[:SECONDARY_SUSPECT_DRUG]-(:Case)-[:HAS_REACTION]->(m:MedDraTerm)
+WITH 
+    d, primaryReactions,
+    COLLECT(DISTINCT m.name) AS secondaryReactions,
+    drugName, 
+    activeIngredient
+RETURN 
+    drugName,
+    activeIngredient, 
+    size(primaryReactions) + size(secondaryReactions) AS numReactions, 
+    primaryReactions, 
+    secondaryReactions
+ORDER BY numReactions DESC
+----
+
+==== How many adverse events are there for a given drug?
+
+We take a given drug (`'Aspirin'`) and look for the primary and secondary reactions associated with it.
+
+[source, cypher, role=noheader]
+----
+WITH "Aspirin" AS searchTerm
+OPTIONAL MATCH 
+    (d:Drug {name:searchTerm})<--(:DrugCase)<-[:PRIMARY_SUSPECT_DRUG]-(:Case)-[:HAS_REACTION]->(m:MedDraTerm)
+WITH 
+    d,
+    COLLECT(DISTINCT m.name) AS primaryReactions,
+    d.name AS drugName, 
+    d.activeIngredient AS activeIngredient
+OPTIONAL MATCH 
+    (d)<--(:DrugCase)<-[:SECONDARY_SUSPECT_DRUG]-(:Case)-[:HAS_REACTION]->(m:MedDraTerm)
+WITH 
+    d, primaryReactions,
+    COLLECT(DISTINCT m.name) AS secondaryReactions,
+    drugName, 
+    activeIngredient
+RETURN 
+    drugName, 
+    activeIngredient, 
+    size(primaryReactions) AS numPrimaryReactions, 
+    primaryReactions, size(secondaryReactions) AS numSecondaryReactions, 
+    secondaryReactions
+ORDER BY numReactions DESC
+----
+
+==== What are the most common adverse events associated with a given drug?
+
+Taking a particular drug (`'Ibuprofen'`) what are the most common side effects associated with it? 
+
+[source, cypher, role=noheader]
+----
+WITH "Ibuprofen" AS searchTerm
+MATCH 
+    (d:Drug {name:searchTerm})<--(:DrugCase)<-[:PRIMARY_SUSPECT_DRUG]-(:Case)-[:HAS_REACTION]->(m:MedDraTerm)
+RETURN m.name AS reaction, count(m) AS numberOfTimes
+ORDER BY numberOfTimes DESC
+----
+
+We can also see that across all the drugs:
+
+[source, cypher, role=noheader]
+----
+MATCH (d:Drug)<--(:DrugCase)<-[:PRIMARY_SUSPECT_DRUG]-(:Case)-[:HAS_REACTION]->(m:MedDraTerm)
+RETURN d.name, m.name AS reaction, count(m) AS numberOfTimes
+ORDER BY numberOfTimes DESC
+----
+
+==== What top ten `Drug` combinations have the most reactions (`MedDraTerm`) when administered together?
+
+What pairings of `Drug`pass:[s] have the most reactions? This could indicate a possible interaction between those drugs that warrants more investigation.
+
+[source, cypher, role=noheader]
+----
+MATCH 
+    (ssd:DrugCase)<-[:CONCOMITANT_DRUG|SECONDARY_SUSPECT_DRUG]-(c:Case)-[:PRIMARY_SUSPECT_DRUG]->(psd:DrugCase),
+    (c)-[:HAS_REACTION]->(r:MedDraTerm)
+RETURN ssd.name, psd.name, COLLECT(DISTINCT r.name) AS reactions, count(DISTINCT r.name) AS numberOfReactions
+ORDER BY numberOfReactions DESC LIMIT 10
+----
+
+=== Adverse event focus
+
+Querying from the point of view of the Adverse events
+
+==== What age group reported the highest side effects (`MedDraTerm`), and what are those side effects?
+
+This query will give the count by age group of numbers of adverse effects.
+This is the _total_ number of reactions, for example, if two `Adult`s had the same reaction (e.g. Headache) that would be counted twice.
+
+[source, cypher, role=noheader]
+----
+UNWIND ['Adult', 'Elderly', 'Child', 'Adolescent', 'Neonate', 'Infant'] AS ageGroup
+MATCH (c:Case)-[:HAS_REACTION]->(r:MedDraTerm)
+WHERE ageGroup IN labels(c)
+RETURN DISTINCT ageGroup, count(r)
+ORDER BY count(r) desc
+----
+
+We can also break up those groups up by sex
+
+[source, cypher, role=noheader]
+----
+UNWIND ['Male', 'Female'] AS sex
+UNWIND ['Adult', 'Elderly', 'Child', 'Adolescent', 'Neonate', 'Infant'] AS ageGroup
+MATCH (c:Case)-[:HAS_REACTION]->(r:MedDraTerm)
+WHERE ageGroup IN labels(c) AND sex IN labels(c)
+RETURN DISTINCT sex, ageGroup, count(r)
+ORDER BY count(r) desc
+----
+
+==== What are the `Drug`pass:[s] associated with an adverse event?
+
+If we're seeing an adverse event, we might want to see what drugs have been associated with that event:
+
+[source, cypher, role=noheader]
+----
+WITH "Nausea" AS adverseEffect
+MATCH 
+    (d:Drug)<--(:DrugCase)<-[:PRIMARY_SUSPECT_DRUG]-(:Case)-[:HAS_REACTION]->(m:MedDraTerm {name: adverseEffect})
+WITH m.name AS reaction, d.name AS drugName, count(d) AS numberOfTimes
+RETURN reaction, drugName, numberOfTimes
+ORDER BY numberOfTimes DESC
+----
+
+We can also look globally and see which drugs are associated with the reactions:
+
+[source, cypher, role=noheader]
+----
+MATCH (d:Drug)<--(:DrugCase)<-[:PRIMARY_SUSPECT_DRUG]-(:Case)-[:HAS_REACTION]->(m:MedDraTerm)
+WITH m.name AS reaction, COLLECT(DISTINCT d.name) AS drugsAssociated
+RETURN reaction, size(drugsAssociated) AS numberOfDrugs, drugsAssociated
+ORDER BY numberOfDrugs DESC
+----
+
+==== What are the most common adverse events for a given reporter type?
+
+Adverse reactions are reported by a variety of different groups, including manufacturers, healthcare professsionals and consumers. 
+By filtering on the reporter type, we can see whether specific reactions are associated with specific reporters, and therefore 
+where those reactions are seen.
+
+[source, cypher, role=noheader]
+----
+WITH "Healthcare Professional" AS reporterType
+MATCH (c:Case {reporterOccupation: reporterType})-[:HAS_REACTION]->(m:MedDraTerm)
+RETURN m.name AS reaction, count(m) AS numberOfTimes
+----
+
+==== What are the most common adverse events for a given `Outcome`pass:[?]
+
+The `Outcome` is the result of the reactions and patient interactions. We can use the outcomes see what reactions are associated with particular outcomes. 
+
+[source, cypher, role=noheader]
+----
+WITH "HO" AS outcomeCode //"Hospitalization - Initial or Prolonged"
+MATCH (o:Outcome {code:outcomeCode})<-[:HAS_OUTCOME]-(:Case)-[:HAS_REACTION]->(m:MedDraTerm)
+RETURN m.name AS reaction, count(m) AS numberOfTimes
+----
+
+=== Manufactuer focus
+
+Queries from the perspective of the manufacturer.
+
+==== What are the most common reactions reported by a manufacturer?
+
+What reactions are commonly reported by a particular manufacturer?
+
+[source, cypher, role=noheader]
+----
+WITH "Sanofi S.A." AS manufacturer
+MATCH (m:Manufacturer {name: manufacturer})<-[:REPORTED_BY]-(:Case)-[:HAS_REACTION]->(reaction:MedDraTerm)
+RETURN reaction.name AS reaction, count(reaction) AS numberOfTimes
+----
+
+==== What are the most common `Drug`pass:[s] reported by a manufacturer?
+
+What are the drugs being reported by a particular manufacturer?
+
+[source, cypher, role=noheader]
+----
+WITH "Sanofi S.A." AS manufacturer
+MATCH 
+    (m:Manufacturer {name: manufacturer})<-[:REPORTED_BY]-(:Case)-[:PRIMARY_SUSPECT_DRUG]->(:DrugCase)-[:CONCERNS_DRUG]->(drug:Drug)
+RETURN drug.name AS drug, drug.activeIngredient AS activeIngredient, count(drug) AS numberOfTimes
+----
+

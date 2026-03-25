@@ -30,6 +30,7 @@
 *** xref:life-sciences/competitive-intelligence/publication-intelligence.adoc[]
 *** xref:life-sciences/competitive-intelligence/patent-intelligence.adoc[]
 ** xref:life-sciences/medical-care/index.adoc[]
+*** xref:life-sciences/medical-care/drug-safety.adoc[]
 *** xref:life-sciences/medical-care/patient-journey.adoc[]
 ** xref:life-sciences/research-development/index.adoc[]
 *** xref:life-sciences/research-development/single-omics.adoc[]
