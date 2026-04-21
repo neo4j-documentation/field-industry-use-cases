@@ -1,0 +1,376 @@
+= Process Monitoring and Critical Path Analysis
+
+== 1. Introduction
+
+Process orchestration systems -- batch pipelines, financial clearing chains, manufacturing workflows, risk computation engines -- are naturally modelled as Directed Acyclic Graphs (DAGs). Tasks depend on other tasks; some can run in parallel, others must wait. At any point during execution, some tasks are already completed and some are still pending.
+
+The operational question that matters is: *given the current state of execution, what is the longest path still remaining?* This is Critical Path Analysis (CPA), and the answer directly drives SLA prediction, incident response, and resource prioritisation -- regardless of industry.
+
+== 2. Scenario
+
+Any organisation running multi-step processes faces three recurring challenges:
+
+1. *Dependency visibility:* Complex workflows involve hundreds or thousands of interdependent tasks. Without a connected view, a single delay cascades invisibly through downstream work, and the impact is only discovered when it is too late to act.
+
+2. *Real-time status tracking:* Task completion is continuous and asynchronous. A snapshot taken at the start of the day is stale within minutes. Operational teams need to query the current critical path on demand, not re-run a batch job.
+
+3. *Scale:* In production environments, process graphs can span tens or hundreds of millions of edges. Naive approaches to CPA -- projecting the full graph into memory, or enumerating all paths with Cypher variable-length patterns -- break down at this scale, either through prohibitive memory cost or exponential query time.
+
+These challenges appear across industries: financial institutions monitoring end-of-day clearing chains, manufacturers tracking assembly line execution, and data engineering teams managing pipeline SLAs all face the same underlying problem.
+
+== 3. Solution
+
+Neo4j models process DAGs naturally: tasks as nodes, dependencies as relationships. The graph structure makes dependency traversal efficient and the connected model means the current execution state is always queryable without joins or denormalisation.
+
+For CPA at scale, Neo4j Graph Data Science provides `gds.dag.longestPath` -- an O(V+E) algorithm using dynamic programming on the topological order of the DAG. However, making this work in a live production environment on a large, continuously-changing graph requires three additional techniques:
+
+1. *Ancestor scoping* -- project only the subgraph relevant to the query, not the full graph
+2. *Virtual node splitting* -- encode node durations as edge weights at projection time, without modifying the data model
+3. *Scoped GDS projection* -- combine both above into a single pass that stays fast even as the graph grows
+
+These are covered in detail in the <<gds-real-time-cpa>> section below.
+
+== 4. Modelling
+
+=== 4.1. Data Model
+
+The minimal model for process monitoring uses two elements:
+
+* A `Task` node representing a unit of work
+* A `[:PRECEDES]` relationship pointing from upstream to downstream tasks
+
+A `Done` label (or equivalent completion state) marks tasks that have already finished and can be excluded from CPA computation.
+
+.Process Monitoring — Data Model
+image::agnostic/process-monitoring-data-model.png[]
+
+==== 4.1.1. Required Fields
+
+`Task` node:
+
+* `uid`: Unique integer identifier -- required for GDS projection (GDS expects `NODE \| INTEGER` types; `elementId()` returns a string and cannot be used)
+* `name`: Human-readable task name
+* `duration`: Expected or remaining execution time (in any consistent unit)
+
+`Done` label: applied to completed tasks. Pending tasks carry only `Task`.
+
+`[:PRECEDES]` relationship: directed from prerequisite to dependent (`upstream -[:PRECEDES]-> downstream`).
+
+==== 4.1.2. Richer Production Models
+
+In real deployments the graph is typically richer. For example, a process monitoring system might use:
+
+* Multiple node labels: `Task`, `Dependency`, `SubService`, `Service`
+* Multiple relationship types: `GENERATES`, `ENABLES`, `FEEDS`, `BELONGS_TO`
+* Completion state via instances: a `TaskInstance` node with `statusCode = "COMPLETED"` linked via `IS_INSTANCE_OF`, rather than a simple label
+
+The three CPA techniques described below apply identically to richer models -- the scoping, node splitting, and projection logic are parameterised over whatever labels and relationship types your graph uses.
+
+=== 4.2. Demo Data
+
+The following dataset uses two chained diamonds to illustrate the fan-out problem, plus a sibling branch, a cousin branch, and an unrelated component. T_G is the scoping node -- the task whose remaining critical path we want to compute.
+
+[source, cypher, role=noheader]
+----
+// Two chained diamonds, a sibling, a cousin branch, and an unrelated branch.
+// Diamonds illustrate exponential fan-out (Trap 2).
+// Sibling, cousin, and unrelated branch illustrate scoping (Trap 1).
+
+CREATE
+  (tA:Task:Done {uid: 1,  name: "T_A", duration: 2.0}),
+  (tB:Task      {uid: 2,  name: "T_B", duration: 1.0}),
+  (tC:Task      {uid: 3,  name: "T_C", duration: 3.0}),
+  (tD:Task      {uid: 4,  name: "T_D", duration: 1.0}),
+  (tE:Task      {uid: 5,  name: "T_E", duration: 0.5}),
+  (tF:Task      {uid: 6,  name: "T_F", duration: 2.0}),
+  (tG:Task      {uid: 7,  name: "T_G", duration: 0.5}),  // scoping node
+
+  // Diamond 1: T_A → T_B and T_C → T_D
+  (tA)-[:PRECEDES]->(tB),
+  (tA)-[:PRECEDES]->(tC),
+  (tB)-[:PRECEDES]->(tD),
+  (tC)-[:PRECEDES]->(tD),
+
+  // Diamond 2: T_D → T_E and T_F → T_G
+  (tD)-[:PRECEDES]->(tE),
+  (tD)-[:PRECEDES]->(tF),
+  (tE)-[:PRECEDES]->(tG),
+  (tF)-[:PRECEDES]->(tG),
+
+  // Sibling: T_F → T_H (same parent as T_G, not an ancestor of T_G)
+  (tH:Task {uid: 8,  name: "T_H", duration: 1.5}),
+  (tF)-[:PRECEDES]->(tH),
+
+  // Cousin branch: T_D → T_I → T_J (common ancestor, not ancestor of T_G)
+  (tI:Task {uid: 9,  name: "T_I", duration: 1.0}),
+  (tJ:Task {uid: 10, name: "T_J", duration: 0.5}),
+  (tD)-[:PRECEDES]->(tI),
+  (tI)-[:PRECEDES]->(tJ),
+
+  // Unrelated branch — separate WCC
+  (tX:Task {uid: 11, name: "T_X", duration: 1.0}),
+  (tY:Task {uid: 12, name: "T_Y", duration: 1.0}),
+  (tX)-[:PRECEDES]->(tY)
+----
+
+.Demo Dataset — Process DAG
+image::agnostic/process-monitoring-demo-graph.png[]
+
+Expected CPA from T_G (skipping completed T_A): `T_C (3h) + T_D (1h) + T_F (2h) + T_G (0.5h) = 6.5h`
+
+== 5. Cypher Queries
+
+[NOTE]
+====
+These queries require Neo4j 5.13+ (for the `FILTER` keyword syntax) and the APOC plugin.
+====
+
+=== 5.1. Visualise the Graph Schema
+
+[source, cypher, role=noheader]
+----
+CALL db.schema.visualization()
+----
+
+=== 5.2. Show All Tasks for a Process
+
+Retrieve all tasks in dependency order for a given entry-point task:
+
+[source, cypher, role=noheader]
+----
+MATCH path = (root:Task {name: "T_G"})<-[:PRECEDES*]-()
+RETURN path
+----
+
+=== 5.3. Show Remaining Work
+
+Filter to only pending tasks (those without the `Done` label):
+
+[source, cypher, role=noheader]
+----
+MATCH (root:Task {name: "T_G"})
+CALL apoc.path.subgraphNodes(root, {
+  relationshipFilter: "<PRECEDES",
+  minLevel: 0
+})
+YIELD node AS n
+WHERE NOT n:Done
+RETURN n.name AS pendingTask, n.duration AS duration
+ORDER BY n.name
+----
+
+=== 5.4. Simple Critical Path (Small Graphs)
+
+For small graphs, a Cypher path query is sufficient. This accumulates duration along all paths and returns the longest one:
+
+[source, cypher, role=noheader]
+----
+MATCH (root:Task {name: "T_G"})
+MATCH path = (root)(()<-[:PRECEDES]-(t:!Done))*
+WITH path, reduce(total = 0.0, t IN nodes(path) | total + t.duration) AS totalDuration
+ORDER BY totalDuration DESC LIMIT 1
+RETURN
+  [n IN nodes(path) | n.name] AS criticalPath,
+  totalDuration
+----
+
+[WARNING]
+====
+This query enumerates all paths. On a DAG with diamond shapes (fan-out and fan-in), the number of paths grows exponentially with depth. Do not use this on production-scale graphs -- use the GDS approach below instead.
+====
+
+[[gds-real-time-cpa]]
+== 6. GDS: Real-Time CPA at Scale
+
+=== 6.1. The Two Traps
+
+Making CPA work in real time on a large, dynamic process graph requires avoiding two traps that make natural approaches fail at scale.
+
+==== Trap 1 -- Projecting the Full Graph
+
+GDS graphs live in memory. Projecting the full graph is O(m) in the number of edges. On a 100M-edge production graph, that projection takes tens of seconds. More critically, *you cannot cache it*: task completions arrive continuously, and a projection taken at 09:00 is stale by 09:01. Projecting the full graph at query time means no sub-second response.
+
+*Fix:* scope the projection to the ancestor subgraph of the scoping node. In a large process graph, any individual task's ancestor set is typically orders of magnitude smaller than the full graph.
+
+==== Trap 2 -- Enumerating Ancestors with Cypher Variable-Length Paths
+
+The natural Cypher pattern `(scopingNode)<-[:PRECEDES*]-(n)` to collect ancestors has an exponential problem. Both Cypher path match modes (`DIFFERENT RELATIONSHIPS` and `REPEATABLE ELEMENTS`) are *per-path constraints* -- they have no awareness of nodes already returned via other paths. On a diamond, the shared convergence node is reached via two distinct paths and returned twice. With `m` parallel branches at each level and `d` levels deep, there are m^d paths to enumerate -- exponential in depth.
+
+*Fix:* use `apoc.path.subgraphNodes`, which provides `NODE_GLOBAL` uniqueness -- once a node is visited it is never revisited, regardless of which branch led there. This collapses traversal from exponential to O(V_sub + E_sub).
+
+=== 6.2. Virtual Node Splitting
+
+`gds.dag.longestPath` operates on *edge weights*, but durations live on *nodes*. The standard fix is to split each node into an entry point and exit point connected by a weighted edge -- but doing this physically (creating actual `:Start`/`:End` nodes) pollutes the data model with algorithmic concerns.
+
+The approach here performs the split *virtually, at projection time*. Each task `n` with `n.uid = k` becomes two integer IDs:
+
+----
+n_in  = 2 * k        (entry point)
+n_out = 2 * k + 1    (exit point)
+
+n_in  ──[ weight = n.duration ]──▶  n_out
+upstream_out  ──[ weight = 0 ]──▶  n_in
+----
+
+The data model is unchanged. The splitting lives entirely inside the projection query.
+
+=== 6.3. Step-by-Step
+
+==== Step 1 -- Scope Ancestor Nodes
+
+Collect the ancestor subgraph using `apoc.path.subgraphNodes` with `NODE_GLOBAL` uniqueness:
+
+[source, cypher, role=noheader]
+----
+MATCH (scopingNode:Task {name: "T_G"})
+CALL apoc.path.subgraphNodes(scopingNode, {
+  relationshipFilter: "<PRECEDES",
+  minLevel: 0
+})
+YIELD node AS n
+RETURN n.name AS ancestor
+----
+
+This returns exactly: T_G, T_F, T_E, T_D, T_C, T_B, T_A -- excluding the sibling (T_H), cousin branch (T_I, T_J), and unrelated component (T_X, T_Y).
+
+==== Step 2 -- Project the Scoped Subgraph into GDS
+
+This query combines scoping, completion filtering, virtual node splitting, and GDS projection in a single pass. The graph is projected in *reverse* so that the scoping node becomes the source for `gds.dag.longestPath`, making results directly filterable.
+
+[source, cypher, role=noheader]
+----
+MATCH (scopingNode:Task {name: "T_G"})
+
+// 1. Collect ancestor nodes (NODE_GLOBAL uniqueness — linear, not exponential)
+CALL apoc.path.subgraphNodes(scopingNode, {
+  relationshipFilter: "<PRECEDES",
+  minLevel: 0
+})
+YIELD node AS n
+
+// 2. Filter out completed tasks
+FILTER NOT n:Done
+
+// 3. Find upstream edges — OPTIONAL MATCH keeps frontier nodes
+//    even when all their predecessors are Done
+OPTIONAL MATCH (n)<-[:PRECEDES]-(upstream:!Done)
+
+// 4. Virtual node splitting (n.uid integer required — elementId() is a string)
+WITH
+  n, upstream,
+  2 * n.uid              AS n_in,
+  2 * n.uid + 1          AS n_out,
+  2 * upstream.uid + 1   AS upstream_out,
+  n.duration             AS weight
+
+// 5. Emit virtual edges
+CALL (*) {
+  RETURN n_in  AS source, n_out AS target, weight AS w       // duration edge
+  UNION
+  WITH upstream_out WHERE upstream_out IS NOT NULL
+  RETURN upstream_out AS source, n_in AS target, 0.0 AS w    // connectivity edge
+}
+WITH DISTINCT source, target, w
+
+// 6. Project reversed into GDS (scoping node becomes source)
+WITH gds.graph.project(
+  'cpa_graph',
+  target,
+  source,
+  { relationshipProperties: { duration: w } }
+) AS g
+RETURN g.graphName AS graph, g.nodeCount AS nodes, g.relationshipCount AS rels
+----
+
+==== Step 3 -- Compute the Critical Path
+
+[source, cypher, role=noheader]
+----
+CALL gds.dag.longestPath.stream('cpa_graph', {
+  relationshipWeightProperty: "duration"
+})
+YIELD sourceNode, targetNode, totalCost, nodeIds
+
+// Map virtual IDs back to real Task nodes
+MATCH (source:Task {uid: sourceNode / 2})
+MATCH (frontier:Task {uid: targetNode / 2})
+WITH
+  targetNode,
+  source, frontier, totalCost,
+  [id IN nodeIds WHERE id % 2 = 0 |
+    head(collect { MATCH (n:Task {uid: id / 2}) RETURN n.name })
+  ] AS path
+
+// Keep only frontier sinks reachable from the scoping node
+FILTER targetNode % 2 = 0
+AND source.name = "T_G"
+AND NOT EXISTS { (frontier)<-[:PRECEDES]-(upstream:!Done) }
+
+RETURN
+  source.name    AS scopingNode,
+  frontier.name  AS criticalFrontier,
+  totalCost      AS criticalPathDuration,
+  path           AS criticalPath
+ORDER BY totalCost DESC
+----
+
+Expected result:
+
+|===
+| scopingNode | criticalFrontier | criticalPathDuration | criticalPath
+
+| T_G | T_C | 6.5 | [T_G, T_F, T_D, T_C]
+| T_G | T_B | 4.5 | [T_G, T_F, T_D, T_B]
+|===
+
+==== Step 4 -- Clean Up
+
+[source, cypher, role=noheader]
+----
+CALL gds.graph.drop('cpa_graph')
+----
+
+[NOTE]
+====
+The in-memory projection must be dropped after each CPA computation -- this is not optional cleanup. Because the graph is dynamic, the next query needs a fresh projection. In production, wrap Steps 2-4 in an APOC procedure so the drop is guaranteed even on failure.
+====
+
+=== 6.4. Complexity Summary
+
+|===
+| Problem | Naive approach | Cost | Fix | Cost
+
+| Collect ancestor nodes
+| Cypher `*` path enumeration
+| O(m^d) -- exponential
+| `apoc.path.subgraphNodes` (`NODE_GLOBAL`)
+| O(V_sub + E_sub)
+
+| Project graph into GDS
+| Project full graph each time
+| O(m) -- too slow at 100M+ edges
+| Project ancestor subgraph only
+| O(V_sub + E_sub)
+
+| Find longest path
+| --
+| --
+| `gds.dag.longestPath` on scoped subgraph
+| O(V_sub + E_sub)
+|===
+
+Virtual node splitting doubles the virtual node count -- a constant factor, not a change in complexity class.
+
+=== 6.5. Prerequisites
+
+* Neo4j 5.13+ (for `FILTER` keyword syntax)
+* GDS 2.5+ (`gds.dag.longestPath`)
+* APOC 5.x (`apoc.path.subgraphNodes`)
+
+== 7. Interactive Demo
+
+An interactive CPA Explorer application demonstrating these techniques on a 60-task risk computation pipeline is available at:
+
+https://github.com/halftermeyer/neo4j-gds-compute-process-cpa[halftermeyer/neo4j-gds-compute-process-cpa^]
+
+The app launches with a single `docker compose up` and connects to any Neo4j instance with GDS and APOC. It auto-loads the demo dataset on first connect, and allows clicking any node to compute its critical path on demand.

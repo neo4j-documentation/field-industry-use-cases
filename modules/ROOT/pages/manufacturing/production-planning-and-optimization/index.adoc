@@ -1,5 +1,0 @@
-= Production Planning and Optimization
-
-== Process Monitoring
-
-* xref:manufacturing/production-planning-and-optimization/process-monitoring-and-cpa.adoc[]

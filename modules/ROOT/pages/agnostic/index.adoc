@@ -5,3 +5,4 @@
 * xref:agnostic/entity-resolution.adoc[Entity Resolution]
 * xref:agnostic/it-service-graph/it-service-graph.adoc[]
 * xref:agnostic/iam/iam.adoc[]
+* xref:agnostic/process-monitoring/process-monitoring-and-cpa.adoc[Process Monitoring and CPA]
