@@ -11,5 +11,3 @@ Thanks to its scalable and flexible design, Neo4j manages large datasets effecti
 * xref:manufacturing/product-design-and-engineering/configurable-bom.adoc[]
 * xref:manufacturing/product-design-and-engineering/engineering-traceability.adoc[]
 
-== Production Planning and Optimization
-* xref:manufacturing/production-planning-and-optimization/process-monitoring-and-cpa.adoc[]
