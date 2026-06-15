@@ -69,8 +69,9 @@ The following Cypher statement will create the example graph in the Neo4j databa
 
 [source, cypher, role=noheader]
 ----
-CREATE (:Face {faceId: "FACE001", embedding:[0.153, 0.254, 0.255, 0.0, 0.0, 0.253, 0.200, 0.252, 0.254, 0.100, 0.253]})
-CREATE (:Face {faceId: "FACE002", embedding:[0.253, 0.254, 0.252, 0.005, 0.252, 0.253, 0.253, 0.253, 0.255, 0.253, 0.252]})
+CYPHER 25
+CREATE (:Face {faceId: "FACE001", embedding: vector([0.153, 0.254, 0.255, 0.0, 0.0, 0.253, 0.200, 0.252, 0.254, 0.100, 0.253], 11, FLOAT32)})
+CREATE (:Face {faceId: "FACE002", embedding: vector([0.253, 0.254, 0.252, 0.005, 0.252, 0.253, 0.253, 0.253, 0.255, 0.253, 0.252], 11, FLOAT32)})
 ----
 
 === 4.3. Neo4j Schema
@@ -97,13 +98,29 @@ By computing the cosine similarity between two vectors, we can ascertain their l
 
 [source, cypher, role=noheader]
 ----
-MATCH (f1:Face), (f2:Face)
-WHERE id(f1) > id(f2)
-RETURN f1.faceId AS face1, f2.faceId AS face2,
-       vector.similarity.cosine(f1.embedding, f2.embedding) as similarity
-ORDER BY similarity DESC
+// Create vector index
+CREATE VECTOR INDEX face_embeddings IF NOT EXISTS
+FOR (f:Face) ON (f.embedding)
+OPTIONS {indexConfig: {
+ `vector.dimensions`: 11,
+ `vector.similarity_function`: 'cosine'
+}};
 ----
 
+[source, cypher, role=noheader]
+----
+// Find top 10 matches
+CYPHER 25
+MATCH (f:Face)
+MATCH (f_match:Face)
+  SEARCH movie IN (
+    VECTOR INDEX face_embeddings
+    FOR m.embedding
+    LIMIT 11
+  ) SCORE AS score
+WHERE f <> f_match
+RETURN f, f_match, score
+----
 
 == Appendix
 
