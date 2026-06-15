@@ -56,7 +56,7 @@ because different experiments and databases use different naming conventions, ye
 The schema's flexibility truly shines when solving biological questions. Need to find all differentially expressed genes across 
 multiple liver disease experiments? Simply traverse from Disease → Gene ← Experiment ← Sample ← Tissue. Want to identify genes 
 consistently dysregulated in a specific phenotype regardless of tissue type? The graph makes this natural. Looking for functional 
-enrichment? Follow Gene → Protein → GO paths. The graph's property model also allows each node type to carry experiment-specific 
+enrichment? Follow Gene → Protein → https://www.geneontology.org/[GO] paths. The graph's property model also allows each node type to carry experiment-specific 
 attributes—fold-changes, p-values, expression levels—without forcing every experiment to share identical properties.
 
 This adaptable structure means researchers can integrate new RNA-seq datasets incrementally, add novel annotation layers as 
