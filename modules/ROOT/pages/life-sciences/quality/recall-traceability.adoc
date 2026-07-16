@@ -1,0 +1,198 @@
+= Recall Scoping & Traceability
+
+When a material is implicated, the manufacturer's job is to reach exactly the batches and products that actually used it - no more, no less - so a recall can be scoped precisely instead of over-broadly. This use case is based on work by Transparency-One.
+
+== Introduction
+
+A recall is expensive, and an over-broad recall is more expensive still. When a raw material, Active Pharmaceutical Ingredient (API), or supplier lot is found to be defective, the manufacturer must trace the full lifecycle - supplier, to raw material, to API, to drug product, to distributor - and identify only the batches and products that the implicated material actually reached.
+
+Getting this wrong in either direction is costly: too broad and you recall good product and erode trust; too narrow and you leave affected product in the field. The traceability data almost always exists, scattered across an Enterprise Resource Planning (ERP) system, supplier records, and shipping logs - but reconstructing the chain by hand, batch by batch, is exactly what makes a recall slow.
+
+== Scenario
+
+A manufacturer buys raw materials and APIs from suppliers, combines them into batches at its sites, produces finished products, and ships those batches to distributors. Materials have genealogy: raw materials are components of APIs, and an API may be used across several batches and products.
+
+A supplier reports an impurity in one API. The team needs to know, within minutes, every batch that used it, every product those batches became, and every distributor that received them.
+
+== Solution
+
+Neo4j models the supply chain as it physically exists: a `Supplier` `SUPPLIES` a `Material`, a `Material` is `USED_IN` a `Batch`, a `Batch` `PRODUCES` a `Product` and is `SHIPPED_TO` a `Distributor`. Material genealogy is captured with `COMPONENT_OF`, so a raw material that is a component of an API can be traced downstream at any depth.
+
+Recall scoping is then a directed traversal from the implicated material outward - reaching only the batches that actually used it. Because the graph is navigable in both directions, the same model answers the reverse question just as easily: a distributor reports a problem, and you trace _upstream_ to the suppliers and materials behind what they received.
+
+== Modelling
+
+=== Data Model
+
+.Recall scoping & traceability model
+image::life-sciences/quality/recall-traceability-model.svg[Recall scoping and traceability data model,width=800]
+
+==== Nodes
+
+* `Supplier` - an external vendor that supplies raw materials or APIs.
+* `Material` - a raw material, API, or excipient. The `type` property distinguishes them.
+* `Batch` - a specific manufactured lot, with a `madeDate` and release `status`.
+* `Product` - a finished drug product.
+* `Site` - a manufacturing facility where a batch is made.
+* `Distributor` - a downstream customer a batch is shipped to.
+
+==== Relationships
+
+* `SUPPLIES` - connects a `Supplier` to the `Material` it provides.
+* `COMPONENT_OF` - connects a `Material` to another `Material` it is a component of, enabling multi-level genealogy.
+* `USED_IN` - connects a `Material` to the `Batch` it was used in.
+* `PRODUCES` - connects a `Batch` to the `Product` it produces.
+* `MADE_AT` - connects a `Batch` to the `Site` where it was manufactured.
+* `SHIPPED_TO` - connects a `Batch` to the `Distributor` it was shipped to.
+
+==== Demo Data
+
+[source, cypher, role=noheader]
+----
+// Suppliers
+MERGE (sup1:Supplier {id: 'SUP-01', name: 'Nordic Fine Chemicals'})
+MERGE (sup2:Supplier {id: 'SUP-02', name: 'BayState Excipients'})
+
+// Materials
+MERGE (mRaw1:Material {id: 'MAT-RAW-01', name: 'Salicylic Acid',      type: 'Raw'})
+MERGE (mRaw2:Material {id: 'MAT-RAW-02', name: 'Acetic Anhydride',    type: 'Raw'})
+MERGE (mRaw3:Material {id: 'MAT-RAW-03', name: 'Isobutylbenzene',     type: 'Raw'})
+MERGE (mApi1:Material {id: 'MAT-API-01', name: 'Acetylsalicylic Acid', type: 'API'})
+MERGE (mApi2:Material {id: 'MAT-API-02', name: 'Ibuprofen',            type: 'API'})
+MERGE (mExc1:Material {id: 'MAT-EXC-01', name: 'Microcrystalline Cellulose', type: 'Excipient'})
+
+// Genealogy: raw materials are components of the APIs
+MERGE (mRaw1)-[:COMPONENT_OF]->(mApi1)
+MERGE (mRaw2)-[:COMPONENT_OF]->(mApi1)
+MERGE (mRaw3)-[:COMPONENT_OF]->(mApi2)
+
+// Supplier -> Material
+MERGE (sup1)-[:SUPPLIES]->(mRaw1)
+MERGE (sup1)-[:SUPPLIES]->(mRaw2)
+MERGE (sup1)-[:SUPPLIES]->(mRaw3)
+MERGE (sup2)-[:SUPPLIES]->(mExc1)
+
+// Sites
+MERGE (site1:Site {id: 'SITE-01', name: 'Cork Plant',   location: 'Cork, Ireland'})
+MERGE (site2:Site {id: 'SITE-02', name: 'Boston Plant', location: 'Boston, USA'})
+
+// Products
+MERGE (prodA:Product {id: 'PROD-A', name: 'CardioAspirin 100mg'})
+MERGE (prodB:Product {id: 'PROD-B', name: 'PainRelief 500mg'})
+
+// Distributors
+MERGE (dist1:Distributor {id: 'DIST-01', name: 'EuroPharma Distribution'})
+MERGE (dist2:Distributor {id: 'DIST-02', name: 'MedSupply US'})
+
+// Batches
+MERGE (b1:Batch {id: 'BATCH-2001', madeDate: date('2026-03-01'), status: 'Released'})
+MERGE (b2:Batch {id: 'BATCH-2002', madeDate: date('2026-05-12'), status: 'Released'})
+MERGE (b3:Batch {id: 'BATCH-2003', madeDate: date('2026-05-28'), status: 'Released'})
+
+// Material -> Batch
+MERGE (mApi1)-[:USED_IN]->(b1)
+MERGE (mExc1)-[:USED_IN]->(b1)
+MERGE (mApi1)-[:USED_IN]->(b2)
+MERGE (mExc1)-[:USED_IN]->(b2)
+MERGE (mApi2)-[:USED_IN]->(b3)
+MERGE (mExc1)-[:USED_IN]->(b3)
+
+// Batch -> Product / Site / Distributor
+MERGE (b1)-[:PRODUCES]->(prodA)
+MERGE (b2)-[:PRODUCES]->(prodA)
+MERGE (b3)-[:PRODUCES]->(prodB)
+MERGE (b1)-[:MADE_AT]->(site1)
+MERGE (b2)-[:MADE_AT]->(site1)
+MERGE (b3)-[:MADE_AT]->(site2)
+MERGE (b1)-[:SHIPPED_TO]->(dist1)
+MERGE (b2)-[:SHIPPED_TO]->(dist1)
+MERGE (b2)-[:SHIPPED_TO]->(dist2)
+MERGE (b3)-[:SHIPPED_TO]->(dist2)
+----
+
+== Example Queries
+
+Each query below has been run against the demo data above.
+
+=== Recall scope for an implicated `Material`
+
+Reach only the batches that actually used the material, and the products and distributors downstream - so the recall can be scoped precisely.
+
+[source, cypher, role=noheader]
+----
+// Recall scope for an implicated material
+WITH 'MAT-API-01' AS materialId
+MATCH (m:Material {id: materialId})-[:USED_IN]->(b:Batch)
+OPTIONAL MATCH (b)-[:PRODUCES]->(p:Product)
+OPTIONAL MATCH (b)-[:SHIPPED_TO]->(dist:Distributor)
+RETURN 
+      b.id AS Batch,
+      collect(DISTINCT p.name) AS Products,
+      collect(DISTINCT dist.name) AS Distributors
+ORDER BY Batch;
+----
+
+=== Which `Product`pass:[s] does a raw `Material` reach, at any depth?
+
+A raw material may be several steps removed from the finished product, nested inside an API. A single variable-length traversal (`COMPONENT_OF*0..`) follows the genealogy to every product it reaches.
+
+[source, cypher, role=noheader]
+----
+// Every product a raw material reaches, at any depth in the genealogy
+WITH 'MAT-RAW-01' AS rawMaterialId
+MATCH 
+      (raw:Material {id: rawMaterialId})-[:COMPONENT_OF*0..]->(m:Material),
+      (m)-[:USED_IN]->(:Batch)-[:PRODUCES]->(p:Product)
+RETURN 
+      raw.name AS RawMaterial, 
+      collect(DISTINCT p.name) AS ProductsReached;
+----
+
+=== Full lifecycle genealogy for a `Product`
+
+Trace the full lifecycle behind a product - the suppliers and materials that fed each batch, and the distributors each batch shipped to.
+
+[source, cypher, role=noheader]
+----
+// Suppliers, materials and distributors behind every batch of a product
+WITH 'PROD-A' AS productId
+MATCH (p:Product {id: productId})<-[:PRODUCES]-(b:Batch)<-[:USED_IN]-(m:Material)
+OPTIONAL MATCH (s:Supplier)-[:SUPPLIES]->()-[:COMPONENT_OF*0..]->(m)
+OPTIONAL MATCH (b)-[:SHIPPED_TO]->(dist:Distributor)
+RETURN 
+    p.name AS Product, b.id AS Batch,
+    collect(DISTINCT m.name) AS Materials,
+    collect(DISTINCT s.name) AS Suppliers,
+    collect(DISTINCT dist.name) AS Distributors
+ORDER BY Batch;
+----
+
+=== Upstream trace from a `Distributor`
+
+The graph runs both ways. If a distributor reports a problem, trace upstream to the batches they received and the suppliers and materials behind them.
+
+[source, cypher, role=noheader]
+----
+// A distributor reports a problem - trace upstream to suppliers and materials
+WITH 'DIST-02' AS distributorId
+MATCH (dist:Distributor {id: distributorId})<-[:SHIPPED_TO]-(b:Batch)<-[:USED_IN]-(m:Material)
+OPTIONAL MATCH (s:Supplier)-[:SUPPLIES]->()-[:COMPONENT_OF*0..]->(m)
+RETURN 
+    dist.name AS Distributor, b.id AS Batch,
+    collect(DISTINCT m.name) AS Materials,
+    collect(DISTINCT s.name) AS Suppliers
+ORDER BY Batch;
+----
+
+== Real World Example
+
+=== Transparency-One
+
+Transparency-One built a supply-chain platform on Neo4j that traces every ingredient, supplier, and facility, so a manufacturer can instantly see how one impacted component affects its entire product portfolio and act precisely.
+
+Read the https://neo4j.com/case-studies/transparency-one/[Transparency-One case study].
+
+== References and Resources
+
+* https://neo4j.com/developer/industry-use-cases/manufacturing/product-design-and-engineering/engineering-traceability/[Traceability in manufacturing]
+* https://neo4j.com/developer/demos/supply_chain-demo/[Pharma supply-chain demo]

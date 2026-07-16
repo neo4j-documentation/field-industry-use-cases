@@ -1,0 +1,192 @@
+= Finding Chemicals of Concern
+
+When a regulator bans or restricts a substance, a manufacturer must find every product that contains it - across a supply chain where chemicals enter at many stages, often under different names.
+
+== Introduction
+
+Regulations change. A substance that was acceptable last year can be restricted this year, and when that happens the manufacturer has to answer a deceptively simple question: _which of our products contain it?_ The difficulty is twofold. First, a chemical rarely sits directly in the finished product - it is contained in a material, which is a component of another material, which is used in the product, sometimes several layers deep. Second, the _same_ substance appears under different naming conventions across systems: "Red Dye No. 3" in the formulation system, "Erythrosine" in a regulatory notice, "FD&C Red 3" on a supplier's Certificate of Analysis (CoA).
+
+A keyword search for one spelling silently misses the others, so a hazardous ingredient can go unnoticed. The problem is not that the data is missing - it is that the connections between names, materials, and products are not modelled.
+
+== Scenario
+
+A manufacturer holds a catalogue of chemicals, the materials that contain them, and the products those materials end up in. Materials can be nested: a colorant premix is a component of a coating solution, which is used across several products. Each chemical is known by several synonyms.
+
+A regulator restricts https://en.wikipedia.org/wiki/Erythrosine[erythrosine,window=_blank]. The quality team needs every product that contains it - regardless of which name the substance was recorded under, and regardless of how deeply the material is nested in the product's formulation.
+
+== Solution
+
+Neo4j models each chemical as a single `Chemical` node, and every alternative name as a `Synonym` node linked by an `ALIAS_OF` relationship. You search the entity, not the string: resolve any one name to the canonical chemical and you immediately have all of its names.
+
+From that chemical, a single variable-length traversal follows `CONTAINED_IN` and `COMPONENT_OF` relationships through nested formulations to every finished product - at any depth, with no manual joins.
+
+For synonyms that were never explicitly recorded, a biomedical language model (such as BioBERT) can turn each chemical name into a vector embedding stored as a property on the node. Searching by cosine similarity then finds names with the same _meaning_, not just similar spelling - "Erythrosine" and "Red Dye No. 3" share no characters yet mean the same thing, so fuzzy string matching would miss them. This is described in more detail below; the graph traversals themselves are shown as runnable Cypher.
+
+== Modelling
+
+=== Data Model
+
+.Chemicals of concern model
+image::life-sciences/quality/chemicals-of-concern-model.svg[Chemicals of concern data model,width=800]
+
+==== Nodes
+
+* `Synonym` - an alternative name for a chemical, as recorded in some system.
+* `Chemical` - a single, canonical substance.
+* `Material` - a raw material, premix, or formulation that contains chemicals or other materials. The `type` property describes it.
+* `Product` - a finished product.
+* `Site` - a manufacturing facility where a product is made.
+
+==== Relationships
+
+* `ALIAS_OF` - connects a `Synonym` to the `Chemical` it names.
+* `CONTAINED_IN` - connects a `Chemical` to the `Material` that contains it.
+* `COMPONENT_OF` - connects a `Material` to another `Material` it is a component of, enabling nested formulations of any depth.
+* `USED_IN` - connects a `Material` to the `Product` it is used in.
+* `MADE_AT` - connects a `Product` to the `Site` where it is made.
+
+==== Demo Data
+
+[source, cypher, role=noheader]
+----
+// Chemicals
+MERGE (ery:Chemical {id: 'CHEM-01', name: 'Erythrosine'})
+MERGE (nacl:Chemical {id: 'CHEM-02', name: 'Sodium Chloride'})
+
+// Synonyms
+MERGE (s1:Synonym {name: 'Red Dye No. 3'})
+MERGE (s2:Synonym {name: 'FD&C Red 3'})
+MERGE (s3:Synonym {name: 'E127'})
+MERGE (s4:Synonym {name: 'Salt'})
+MERGE (s1)-[:ALIAS_OF]->(ery)
+MERGE (s2)-[:ALIAS_OF]->(ery)
+MERGE (s3)-[:ALIAS_OF]->(ery)
+MERGE (s4)-[:ALIAS_OF]->(nacl)
+
+// Materials
+MERGE (mColor:Material {id: 'MAT-COLOR', name: 'Red Colorant Premix', type: 'Colorant'})
+MERGE (mCoat:Material  {id: 'MAT-COAT',  name: 'Tablet Coating Solution', type: 'Coating'})
+MERGE (mSaline:Material {id: 'MAT-SALINE', name: 'Saline Buffer', type: 'Buffer'})
+
+// Chemical contained in material
+MERGE (ery)-[:CONTAINED_IN]->(mColor)
+MERGE (nacl)-[:CONTAINED_IN]->(mSaline)
+
+// Material genealogy (nesting)
+MERGE (mColor)-[:COMPONENT_OF]->(mCoat)
+
+// Products
+MERGE (pA:Product {id: 'PROD-A', name: 'CardioAspirin 100mg'})
+MERGE (pB:Product {id: 'PROD-B', name: 'PainRelief 500mg'})
+MERGE (pC:Product {id: 'PROD-C', name: 'Rehydration Solution'})
+
+// Material used in product
+MERGE (mCoat)-[:USED_IN]->(pA)
+MERGE (mCoat)-[:USED_IN]->(pB)
+MERGE (mSaline)-[:USED_IN]->(pC)
+
+// Sites
+MERGE (site1:Site {id: 'SITE-01', name: 'Cork Plant',   location: 'Cork, Ireland'})
+MERGE (site2:Site {id: 'SITE-02', name: 'Boston Plant', location: 'Boston, USA'})
+MERGE (pA)-[:MADE_AT]->(site1)
+MERGE (pB)-[:MADE_AT]->(site2)
+MERGE (pC)-[:MADE_AT]->(site2)
+----
+
+== Example Queries
+
+Each query below has been run against the demo data above.
+
+=== Same chemical, many names
+
+Resolve any one recorded name to the canonical `Chemical` and return every name it is known by - so a search for one spelling surfaces the rest.
+
+[source, cypher, role=noheader]
+----
+// Every name a chemical is known by, starting from any one synonym
+WITH 'Red Dye No. 3' AS aliasName
+MATCH 
+      (:Synonym {name: aliasName})-[:ALIAS_OF]->(c:Chemical)
+MATCH 
+      (c)<-[:ALIAS_OF]-(alias:Synonym)
+RETURN 
+      c.name AS Chemical, 
+      collect(alias.name) AS `All Known Names`;
+----
+
+=== One query, any depth
+
+From a chemical, follow the genealogy through nested materials to every finished product that contains it. The `COMPONENT_OF*0..` traversal handles direct use and any depth of nesting in a single query.
+
+[source, cypher, role=noheader]
+----
+// Every product a chemical reaches, at any depth in the formulation
+WITH 'Erythrosine' AS chemicalName
+MATCH 
+      (c:Chemical {name: chemicalName})-[:CONTAINED_IN]->(m:Material),
+      (m)-[:COMPONENT_OF*0..]->(:Material)-[:USED_IN]->(p:Product)
+RETURN 
+      c.name AS Chemical, 
+      collect(DISTINCT p.name) AS `Products Containing Chemical`;
+----
+
+=== Search the entity, not the string
+
+Start from _any_ synonym - even the one on a supplier's CoA - and reach every affected product. Because the search resolves to the chemical entity first, it does not matter which name the user typed.
+
+[source, cypher, role=noheader]
+----
+// Search by any synonym and reach every affected product
+WITH 'FD&C Red 3' AS aliasName
+MATCH 
+      (:Synonym {name: aliasName})-[:ALIAS_OF]->(c:Chemical)-[:CONTAINED_IN]->(m:Material),
+      (m)-[:COMPONENT_OF*0..]->(:Material)-[:USED_IN]->(p:Product)
+RETURN 
+      c.name AS Chemical, 
+      collect(DISTINCT p.name) AS `Affected Products`;
+----
+
+=== Which sites are involved?
+
+A grounded, GraphRAG-style question: which sites produce products containing this chemical. The returned path can be handed to a Large Language Model (LLM) to answer natural-language questions while citing the exact genealogy it came from, reducing hallucinations.
+
+[source, cypher, role=noheader]
+----
+// Which sites produce products containing this chemical
+WITH 'Erythrosine' AS chemicalName
+MATCH 
+      (c:Chemical {name: chemicalName})-[:CONTAINED_IN]->(m:Material),
+      (m)-[:COMPONENT_OF*0..]->(:Material)-[:USED_IN]->(p:Product)-[:MADE_AT]->(s:Site)
+RETURN 
+      s.name AS Site, 
+      collect(DISTINCT p.name) AS Products
+ORDER BY Site;
+----
+
+== Matching synonyms with AI
+
+The `ALIAS_OF` relationships above assume the synonyms are already known. In practice, new or unrecorded names appear all the time. A biomedical language model (BioBERT) can turn each chemical name into a vector embedding stored as a property on the `Chemical` (or `Synonym`) node. A search term is embedded the same way, and cosine similarity finds the names that mean the same thing:
+
+[cols="1,1", options="header"]
+|===
+| Name (vs. "Red Dye No. 3") | Cosine similarity
+| Erythrosine | 0.98
+| FD&C Red 3 | 0.95
+| E127 | 0.93
+| Sodium Chloride | 0.11
+|===
+
+Synonyms cluster together while unrelated chemicals fall away - completeness without manual mapping, and a real advantage over fuzzy string matching, which only catches names that _look_ alike.
+
+NOTE: Due to the constraints of the demo environment, the embeddings and similarity search are not shown here. In a production system, they would be stored as properties on the nodes and searched with a vector similarity index.
+
+== Real World Example
+
+Consolidating chemical data into a Neo4j knowledge graph, combined with AI embeddings for synonym matching and GraphRAG for grounded answers is not just a theoretical exercise.
+
+=== Pfizer
+
+Pfizer used a Neo4j knowledge graph to consolidate chemical data from multiple systems, enabling them to find every product containing a restricted substance - even when the same chemical appeared under many different names. The graph model allowed them to traverse nested materials and formulations, ensuring that no affected product was missed.
+
+.Finding chemicals of concern at Pfizer
+video::vDlYHBREpzQ[youtube]

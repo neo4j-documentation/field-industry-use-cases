@@ -71,3 +71,31 @@ Single-omics data integration focuses on combining datasets within a single omic
 Multi-omics data integration evolves the single-omics implementation into a more comprehensive view of biological systems.
 
 * xref:life-sciences/research-development/multi-omics.adoc[]
+
+== Quality
+
+xref:life-sciences/quality/index.adoc[Quality] turns fragmented quality data - complaints, deviations, and CAPAs spread across QMS, MES, LIMS, ERP, and supplier systems - into a single knowledge graph. Root-cause investigations, recall scoping, and CAPA effectiveness checks become graph traversals that run in minutes rather than weeks.
+
+=== Finding Chemicals of Concern
+
+Find every product that contains a banned substance, even when the same chemical appears under many different names.
+
+* xref:life-sciences/quality/chemicals-of-concern.adoc[Finding Chemicals of Concern]
+
+=== Deviation Root Cause & CAPA
+
+Connect deviations to batches, equipment, root causes, and corrective actions to spot recurrences and verify that a CAPA actually worked.
+
+* xref:life-sciences/quality/deviation-root-cause.adoc[Deviation Root Cause & CAPA]
+
+=== Recall Scoping & Traceability
+
+Trace the full lifecycle from supplier to distributor and scope a precise recall when a material is implicated.
+
+* xref:life-sciences/quality/recall-traceability.adoc[Recall Scoping & Traceability]
+
+=== The Unified Quality Graph
+
+All three examples combined into one connected quality model.
+
+* xref:life-sciences/quality/unified-quality-graph.adoc[The Unified Quality Graph]
