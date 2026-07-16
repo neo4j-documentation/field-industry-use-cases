@@ -1,0 +1,286 @@
+= The Unified Quality Graph
+
+The three preceding use cases each solve one problem with a focused model. In reality they are the same graph, seen from different starting points. This page combines them into a single unified quality knowledge graph, where a complaint, a deviation, a chemical of concern, and a recall all traverse the same connected data.
+
+== Introduction
+
+Finding chemicals of concern, investigating deviations, and scoping recalls are usually treated as separate exercises in separate systems. But they share almost all of their data. A batch is the anchor: a complaint is _about_ a batch, a deviation _affects_ a batch, a batch is made from _materials_ that contain _chemicals_ and come from _suppliers_, and a batch is _shipped to_ distributors. Model all of it once and every one of those investigations becomes a traversal of the same graph.
+
+This unified model is a superset of the xref:life-sciences/quality/chemicals-of-concern.adoc[chemicals-of-concern], xref:life-sciences/quality/deviation-root-cause.adoc[deviation root cause], and xref:life-sciences/quality/recall-traceability.adoc[recall traceability] models. It adds the `Complaint` entity that ties the field back to the plant, and connects the chemical layer to the supply-chain spine so a banned substance can be traced all the way to the distributors that received it.
+
+== Scenario
+
+A regulated manufacturer runs the whole operation on one graph. Suppliers provide raw materials and Active Pharmaceutical Ingredients (APIs); materials (some of which contain tracked chemicals) are combined into batches at sites; batches produce products and ship to distributors. Deviations are raised against batches and materials, linked to equipment, root causes, and Corrective and Preventive Actions (CAPAs); and complaints arrive from the field and are linked to deviations.
+
+Now every quality question - "what does this complaint touch?", "where did this banned chemical go?", "did this recurring fault reach customers?" - is answerable from the same model, in one query.
+
+== Solution
+
+The unified graph keeps every relationship from the three focused models and lets them meet at the shared `Batch`, `Material`, and `Product` nodes. Because the connections already exist, cross-cutting questions that would otherwise span the Quality Management System (QMS), the Manufacturing Execution System (MES), the Enterprise Resource Planning (ERP) system, and supplier records collapse into single traversals - which is where the "weeks to minutes" saving comes from.
+
+== Modelling
+
+=== Data Model
+
+.The unified quality knowledge graph
+image::life-sciences/quality/quality-model-overview.svg[Unified quality knowledge graph data model,width=850]
+
+==== Nodes
+
+* `Supplier` - an external vendor that supplies raw materials or APIs.
+* `Material` - a raw material, API, excipient, or colorant. The `type` property distinguishes them.
+* `Chemical` - a single, canonical substance tracked within a material.
+* `Synonym` - an alternative name for a chemical, as recorded in some system.
+* `Batch` - a specific manufactured lot, with a `madeDate` and release `status`.
+* `Product` - a finished drug product.
+* `Site` - a manufacturing facility where a batch is made.
+* `Distributor` - a downstream customer a batch is shipped to.
+* `Equipment` - a piece of manufacturing equipment involved in a deviation.
+* `Deviation` - a recorded departure from the expected process or specification.
+* `RootCause` - the underlying cause identified for one or more deviations.
+* `CAPA` - a Corrective and Preventive Action. The `effective` property records whether it worked; `status` whether it is open or closed.
+* `Complaint` - a quality complaint raised from the field.
+
+==== Relationships
+
+* `SUPPLIES` - `Supplier` to `Material`.
+* `ALIAS_OF` - `Synonym` to `Chemical`.
+* `CONTAINED_IN` - `Chemical` to the `Material` that contains it.
+* `COMPONENT_OF` - `Material` to another `Material` it is a component of (multi-level genealogy).
+* `USED_IN` - `Material` to `Batch`.
+* `PRODUCES` - `Batch` to `Product`.
+* `MADE_AT` - `Batch` to `Site`.
+* `SHIPPED_TO` - `Batch` to `Distributor`.
+* `AFFECTS` - `Deviation` to the `Batch` or `Material` it affects.
+* `ON` - `Deviation` to `Equipment`.
+* `CAUSED_BY` - `Deviation` to `RootCause`.
+* `RESOLVED_BY` - `Deviation` to `CAPA`.
+* `ABOUT` - `Complaint` to `Batch`.
+* `LINKED_TO` - `Complaint` to `Deviation`.
+
+==== Demo Data
+
+This single Cypher statement creates the entire unified graph:
+
+[source, cypher, role=noheader]
+----
+// ================= SUPPLY CHAIN =================
+MERGE (sup1:Supplier {id: 'SUP-01', name: 'Nordic Fine Chemicals'})
+MERGE (sup2:Supplier {id: 'SUP-02', name: 'BayState Excipients'})
+
+MERGE (mRaw1:Material {id: 'MAT-RAW-01', name: 'Salicylic Acid',      type: 'Raw'})
+MERGE (mRaw2:Material {id: 'MAT-RAW-02', name: 'Acetic Anhydride',    type: 'Raw'})
+MERGE (mRaw3:Material {id: 'MAT-RAW-03', name: 'Isobutylbenzene',     type: 'Raw'})
+MERGE (mApi1:Material {id: 'MAT-API-01', name: 'Acetylsalicylic Acid', type: 'API'})
+MERGE (mApi2:Material {id: 'MAT-API-02', name: 'Ibuprofen',            type: 'API'})
+MERGE (mExc1:Material {id: 'MAT-EXC-01', name: 'Microcrystalline Cellulose', type: 'Excipient'})
+MERGE (mCoat:Material {id: 'MAT-EXC-02', name: 'Red Coating',          type: 'Colorant'})
+
+MERGE (mRaw1)-[:COMPONENT_OF]->(mApi1)
+MERGE (mRaw2)-[:COMPONENT_OF]->(mApi1)
+MERGE (mRaw3)-[:COMPONENT_OF]->(mApi2)
+
+MERGE (sup1)-[:SUPPLIES]->(mRaw1)
+MERGE (sup1)-[:SUPPLIES]->(mRaw2)
+MERGE (sup1)-[:SUPPLIES]->(mRaw3)
+MERGE (sup2)-[:SUPPLIES]->(mExc1)
+MERGE (sup2)-[:SUPPLIES]->(mCoat)
+
+MERGE (site1:Site {id: 'SITE-01', name: 'Cork Plant',   location: 'Cork, Ireland'})
+MERGE (site2:Site {id: 'SITE-02', name: 'Boston Plant', location: 'Boston, USA'})
+
+MERGE (prodA:Product {id: 'PROD-A', name: 'CardioAspirin 100mg'})
+MERGE (prodB:Product {id: 'PROD-B', name: 'PainRelief 500mg'})
+
+MERGE (dist1:Distributor {id: 'DIST-01', name: 'EuroPharma Distribution'})
+MERGE (dist2:Distributor {id: 'DIST-02', name: 'MedSupply US'})
+
+MERGE (b1:Batch {id: 'BATCH-2001', madeDate: date('2026-03-01'), status: 'Released'})
+MERGE (b2:Batch {id: 'BATCH-2002', madeDate: date('2026-05-12'), status: 'Released'})
+MERGE (b3:Batch {id: 'BATCH-2003', madeDate: date('2026-05-28'), status: 'Released'})
+
+MERGE (mApi1)-[:USED_IN]->(b1)
+MERGE (mExc1)-[:USED_IN]->(b1)
+MERGE (mCoat)-[:USED_IN]->(b1)
+MERGE (mApi1)-[:USED_IN]->(b2)
+MERGE (mExc1)-[:USED_IN]->(b2)
+MERGE (mCoat)-[:USED_IN]->(b2)
+MERGE (mApi2)-[:USED_IN]->(b3)
+MERGE (mExc1)-[:USED_IN]->(b3)
+
+MERGE (b1)-[:PRODUCES]->(prodA)
+MERGE (b2)-[:PRODUCES]->(prodA)
+MERGE (b3)-[:PRODUCES]->(prodB)
+MERGE (b1)-[:MADE_AT]->(site1)
+MERGE (b2)-[:MADE_AT]->(site1)
+MERGE (b3)-[:MADE_AT]->(site2)
+MERGE (b1)-[:SHIPPED_TO]->(dist1)
+MERGE (b2)-[:SHIPPED_TO]->(dist1)
+MERGE (b2)-[:SHIPPED_TO]->(dist2)
+MERGE (b3)-[:SHIPPED_TO]->(dist2)
+
+// ================= CHEMICAL LAYER =================
+MERGE (ery:Chemical {id: 'CHEM-01', name: 'Erythrosine'})
+MERGE (syn1:Synonym {name: 'Red Dye No. 3'})
+MERGE (syn2:Synonym {name: 'FD&C Red 3'})
+MERGE (syn3:Synonym {name: 'E127'})
+MERGE (syn1)-[:ALIAS_OF]->(ery)
+MERGE (syn2)-[:ALIAS_OF]->(ery)
+MERGE (syn3)-[:ALIAS_OF]->(ery)
+MERGE (ery)-[:CONTAINED_IN]->(mCoat)
+
+// ================= DEVIATIONS / CAPA =================
+MERGE (eq1:Equipment {id: 'EQ-01', name: 'Granulator G-200'})
+MERGE (eq2:Equipment {id: 'EQ-02', name: 'Tablet Press TP-5'})
+
+MERGE (rc1:RootCause {id: 'RC-01', description: 'Granulator temperature control drift'})
+MERGE (rc2:RootCause {id: 'RC-02', description: 'Tablet press tooling wear'})
+MERGE (rc3:RootCause {id: 'RC-03', description: 'Supplier raw material impurity'})
+
+MERGE (capa1:CAPA {id: 'CAPA-01', description: 'Recalibrate granulator temperature sensor', status: 'Closed', effective: false})
+MERGE (capa2:CAPA {id: 'CAPA-02', description: 'Replace granulator heating element and add continuous monitoring', status: 'Closed', effective: true})
+MERGE (capa3:CAPA {id: 'CAPA-03', description: 'Replace worn tablet press tooling', status: 'Closed', effective: true})
+MERGE (capa4:CAPA {id: 'CAPA-04', description: 'Add incoming impurity test and supplier audit', status: 'Open'})
+
+MERGE (d1:Deviation {id: 'DEV-01', date: date('2026-03-10'), description: 'Out-of-spec dissolution result', severity: 'Major'})
+MERGE (d2:Deviation {id: 'DEV-02', date: date('2026-05-22'), description: 'Out-of-spec dissolution result (recurrence)', severity: 'Major'})
+MERGE (d3:Deviation {id: 'DEV-03', date: date('2026-06-01'), description: 'Tablet weight variation', severity: 'Minor'})
+MERGE (d4:Deviation {id: 'DEV-04', date: date('2026-06-15'), description: 'Incoming API impurity above limit', severity: 'Major'})
+
+MERGE (d1)-[:AFFECTS]->(b1)
+MERGE (d1)-[:ON]->(eq1)
+MERGE (d1)-[:CAUSED_BY]->(rc1)
+MERGE (d1)-[:RESOLVED_BY]->(capa1)
+MERGE (d2)-[:AFFECTS]->(b2)
+MERGE (d2)-[:ON]->(eq1)
+MERGE (d2)-[:CAUSED_BY]->(rc1)
+MERGE (d2)-[:RESOLVED_BY]->(capa2)
+MERGE (d3)-[:AFFECTS]->(b3)
+MERGE (d3)-[:ON]->(eq2)
+MERGE (d3)-[:CAUSED_BY]->(rc2)
+MERGE (d3)-[:RESOLVED_BY]->(capa3)
+MERGE (d4)-[:AFFECTS]->(mApi1)
+MERGE (d4)-[:CAUSED_BY]->(rc3)
+MERGE (d4)-[:RESOLVED_BY]->(capa4)
+
+// ================= COMPLAINTS =================
+MERGE (cmp1:Complaint {id: 'CMP-01', date: date('2026-04-02'), description: 'Tablets not dissolving properly'})
+MERGE (cmp2:Complaint {id: 'CMP-02', date: date('2026-06-05'), description: 'Inconsistent tablet size'})
+MERGE (cmp1)-[:ABOUT]->(b1)
+MERGE (cmp1)-[:LINKED_TO]->(d1)
+MERGE (cmp2)-[:ABOUT]->(b3)
+MERGE (cmp2)-[:LINKED_TO]->(d3)
+----
+
+=== Schema
+
+[source, cypher, role=noheader]
+----
+// Show neo4j schema
+CALL db.schema.visualization()
+----
+
+== Example Queries
+
+These queries each cross the boundaries of the three focused models, which is exactly what the unified graph makes possible. Each has been run against the demo data above.
+
+==== What else does this `Complaint` touch?
+
+The central question of quality, in one traversal: from a field complaint, out to the batch, the linked deviation and its root cause, whether the CAPA was effective, the materials and suppliers involved, and the distributors that received the batch.
+
+[source, cypher, role=noheader]
+----
+// Full blast radius of a complaint
+WITH 'CMP-01' AS complaintId
+MATCH (cmp:Complaint {id: complaintId})-[:ABOUT]->(b:Batch)
+OPTIONAL MATCH (cmp)-[:LINKED_TO]->(d:Deviation)-[:CAUSED_BY]->(rc:RootCause)
+OPTIONAL MATCH (d)-[:RESOLVED_BY]->(c:CAPA)
+OPTIONAL MATCH (m:Material)-[:USED_IN]->(b)
+OPTIONAL MATCH (s:Supplier)-[:SUPPLIES]->()-[:COMPONENT_OF*0..]->(m)
+OPTIONAL MATCH (b)-[:SHIPPED_TO]->(dist:Distributor)
+RETURN 
+      cmp.description AS Complaint, b.id AS Batch, d.id AS Deviation,
+      rc.description AS RootCause, c.id AS CAPA, c.effective AS CAPAEffective,
+      collect(DISTINCT m.name) AS Materials,
+      collect(DISTINCT s.name) AS Suppliers,
+      collect(DISTINCT dist.name) AS Distributors;
+----
+
+==== Where did a banned `Chemical` go?
+
+Resolve any synonym of a banned chemical to the entity, then trace it through the materials and batches to the released products and the distributors that received them - joining the chemical layer to the supply-chain spine.
+
+[source, cypher, role=noheader]
+----
+// From a banned chemical (by any name) to the distributors that received it
+WITH 'Red Dye No. 3' AS synonym
+MATCH 
+      (:Synonym {name: synonym})-[:ALIAS_OF]->(c:Chemical)-[:CONTAINED_IN]->(m:Material),
+      (m)-[:COMPONENT_OF*0..]->(:Material)-[:USED_IN]->(b:Batch)-[:PRODUCES]->(p:Product)
+OPTIONAL 
+      MATCH (b)-[:SHIPPED_TO]->(dist:Distributor)
+RETURN 
+      c.name AS Chemical,
+      collect(DISTINCT b.id) AS Batches,
+      collect(DISTINCT p.name) AS Products,
+      collect(DISTINCT dist.name) AS Distributors;
+----
+
+==== What does a material `Deviation` touch?
+
+From a deviation raised against a material, reach the suppliers behind it and the batches, products, and distributors downstream - a full impact assessment in one query.
+
+[source, cypher, role=noheader]
+----
+// Everything a material deviation touches
+WITH 'DEV-04' AS deviationId
+MATCH (d:Deviation {id: deviationId})-[:AFFECTS]->(m:Material)
+MATCH (s:Supplier)-[:SUPPLIES]->()-[:COMPONENT_OF*0..]->(m)
+MATCH (m)-[:USED_IN]->(b:Batch)-[:PRODUCES]->(p:Product)
+OPTIONAL MATCH (b)-[:SHIPPED_TO]->(dist:Distributor)
+RETURN 
+      d.description AS Deviation, m.name AS Material,
+      collect(DISTINCT s.name) AS Suppliers,
+      collect(DISTINCT b.id) AS Batches,
+      collect(DISTINCT p.name) AS Products,
+      collect(DISTINCT dist.name) AS Distributors;
+----
+
+==== Did an ineffective fix reach customers?
+
+Combine CAPA effectiveness with distribution: find ineffective CAPAs whose affected batches were still shipped to distributors - the highest-priority follow-ups.
+
+[source, cypher, role=noheader]
+----
+// Ineffective CAPAs whose affected batches reached distributors
+WITH false AS effectiveness
+MATCH (c:CAPA {effective: effectiveness})<-[:RESOLVED_BY]-(d:Deviation)-[:AFFECTS]->(b:Batch)-[:SHIPPED_TO]->(dist:Distributor)
+RETURN 
+      c.id AS IneffectiveCAPA, 
+      d.id AS Deviation, 
+      b.id AS Batch,
+      collect(DISTINCT dist.name) AS ShippedTo;
+----
+
+== A practical path to a quality graph
+
+You do not have to model everything at once. A practical path is:
+
+. *Start with one question* - pick a single high-value problem, usually root cause or recall scope, and make it concrete.
+. *Connect what answers it* - wire in only the systems that question depends on, and model the relationships; leave the systems of record in place.
+. *Expand from the win* - each connected question makes the next one easier, so grow the graph as the value proves itself.
+
+Your quality data is already a graph - it is just stored as if it weren't. The three focused use cases in this section are each a good place to start; this unified model is where they lead.
+
+== Real World Examples
+
+* xref:life-sciences/quality/chemicals-of-concern.adoc[Finding chemicals of concern]
+* xref:life-sciences/quality/deviation-root-cause.adoc[Deviation root cause & CAPA] 
+* xref:life-sciences/quality/recall-traceability.adoc[Recall scoping & traceability]
+
+== References and Resources
+
+* https://neo4j.com/blog/graph-data-science/how-boston-scientific-improves-manufacturing-quality-using-graph-analytics/[Boston Scientific - manufacturing quality & root-cause analytics]
+* https://neo4j.com/case-studies/transparency-one/[Transparency-One - supply-chain traceability on Neo4j]
+* https://neo4j.com/developer/industry-use-cases/manufacturing/[Manufacturing - Neo4j industry use cases]
+* https://europeanpharmaceuticalreview.com/article/263330/breaking-down-silos-how-digital-tools-can-transform-pharma-manufacturing/[Breaking down silos: how digital tools can transform pharma manufacturing (European Pharmaceutical Review, 2025)]

@@ -1,0 +1,53 @@
+= Quality in Life Sciences
+
+Quality is the discipline of making sure a product is safe, effective, and consistent - every batch, every time. In life sciences it is not a back-office function but a regulated, patient-facing obligation: a single out-of-spec batch, contaminated material, or unnoticed banned substance can trigger a recall, a regulatory finding, or patient harm.
+
+== Quality lives in the connections
+
+The defining feature of quality data is that it is meaningful only in context. A complaint is never just a complaint - it belongs to a batch, made at a site, from a supplier's material, and it may trace to a deviation and a Corrective and Preventive Action (CAPA). The meaning of a quality event is not held in any single record; it lives in the relationships _between_ records.
+
+Most manufacturers already capture this data, but they capture it in separate systems that each answer their own question well:
+
+* a Quality Management System (QMS) for complaints, deviations, and CAPAs;
+* a Manufacturing Execution System (MES) for what happened on the line;
+* a Laboratory Information Management System (LIMS) for test and release results;
+* an Enterprise Resource Planning (ERP) system for materials and lot genealogy;
+* and supplier records for inbound quality and Certificates of Analysis (CoAs).
+
+Each system answers its own question well. None of them answers the one that crosses all five: _what else does this touch?_ That question - the blast radius of a quality event - is a graph traversal.
+
+== Why graphs
+
+The cost of this fragmentation is measurable. In one 2025 survey, 68% of pharmaceutical manufacturers said data fragmentation is hindering their decision-making, meaning investigators spend their time gathering and reconciling data rather than analysing it. footnote:[European Pharmaceutical Review, https://www.europeanpharmaceuticalreview.com/breaking-down-silos-how-digital-tools-can-transform-pharma-manufacturing/263330.article["Breaking down silos: how digital tools can transform pharma manufacturing"], 2025.]
+
+Neo4j's labelled property graph model represents each quality entity as a node and each real-world connection as a relationship. Because the connections are stored as first-class relationships rather than reconstructed with joins at query time, questions that would otherwise mean stitching together five systems become single traversals - and root-cause and impact investigations collapse from weeks to minutes.
+
+A quality knowledge graph is a connective layer over your systems of record. They stay where they are; the graph models the relationships between them. You do not have to boil the ocean: start by connecting the few systems that answer one high-value question, then grow.
+
+== Use Cases
+
+The following pages each take one real-world quality problem and show a focused data model, sample data, and Cypher queries that solve it. The final page combines them into a single unified quality graph.
+
+=== Finding Chemicals of Concern
+
+When a regulator bans a substance, a manufacturer must find every product that contains it - even when the same chemical appears under many different names.
+
+* xref:life-sciences/quality/chemicals-of-concern.adoc[Finding Chemicals of Concern]
+
+=== Deviation Root Cause & CAPA
+
+Connect each deviation to its batch, equipment, root cause, and corrective action to find recurrences and check whether a CAPA actually worked. 
+
+* xref:life-sciences/quality/deviation-root-cause.adoc[Deviation Root Cause & CAPA]
+
+=== Recall Scoping & Traceability
+
+Trace the full lifecycle from supplier to distributor so that, when a material is implicated, you can scope a precise recall instead of an expensive, over-broad one. 
+
+* xref:life-sciences/quality/recall-traceability.adoc[Recall Scoping & Traceability]
+
+=== The Unified Quality Graph
+
+All three examples combined into a single connected model, showing how complaints, deviations, CAPAs, materials, chemicals, and the supply chain link into one graph.
+
+* xref:life-sciences/quality/unified-quality-graph.adoc[The Unified Quality Graph]

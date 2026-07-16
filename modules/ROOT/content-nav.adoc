@@ -35,6 +35,11 @@
 ** xref:life-sciences/research-development/index.adoc[]
 *** xref:life-sciences/research-development/single-omics.adoc[]
 *** xref:life-sciences/research-development/multi-omics.adoc[]
+** xref:life-sciences/quality/index.adoc[Quality]
+*** xref:life-sciences/quality/chemicals-of-concern.adoc[Finding Chemicals of Concern]
+*** xref:life-sciences/quality/deviation-root-cause.adoc[Deviation Root Cause & CAPA]
+*** xref:life-sciences/quality/recall-traceability.adoc[Recall Scoping & Traceability]
+*** xref:life-sciences/quality/unified-quality-graph.adoc[The Unified Quality Graph]
 
 
 * xref:manufacturing/index.adoc[]
