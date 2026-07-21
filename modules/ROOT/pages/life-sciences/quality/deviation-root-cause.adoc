@@ -1,0 +1,173 @@
+= Deviation Root Cause & CAPA
+
+A deviation is a departure from the expected process or specification. Investigating one - finding its root cause, checking whether it has happened before, and confirming the fix actually worked - is one of the most time-consuming activities in a regulated plant. This use case is based on work by Boston Scientific.
+
+== Introduction
+
+Every deviation raises the same questions: what caused it, has it happened before, and did we really fix it last time? Answering them means connecting the deviation to the batch it affected, the equipment it happened on, the root cause identified, the people involved, and the Corrective and Preventive Action (CAPA) opened to resolve it. In siloed systems, an investigator reconstructs that picture by hand for each case - which is slow, and makes patterns across cases almost invisible.
+
+The most important pattern is recurrence. If the same root cause keeps producing deviations on the same equipment, a "closed" CAPA did not actually work - it just closed a ticket. Spotting that requires looking across deviations, not at one in isolation.
+
+== Scenario
+
+A plant records deviations against its batches. Each deviation is linked to the equipment involved, an identified root cause, and a CAPA. Over a few months, the granulator produces two out-of-spec dissolution results with the same root cause - a temperature control problem - even though a CAPA was raised and closed after the first one. Separately, the tablet press produces a weight-variation deviation from a different root cause.
+
+The quality team needs to see the recurrence, understand that the first CAPA was ineffective, and confirm which fix finally held.
+
+== Solution
+
+Neo4j models the deviation as the hub of a small, dense subgraph: it `AFFECTS` a batch, sits `ON` a piece of equipment, is `CAUSED_BY` a root cause, and is `RESOLVED_BY` a CAPA. Because these are first-class relationships, recurrence detection is a single query - group deviations by shared equipment or shared root cause and count them.
+
+CAPA effectiveness follows naturally: if a root cause recurs _after_ a CAPA was closed, the CAPA did not hold. Ordering the deviations for a root cause by date shows exactly which fix finally stopped the recurrence. The `effective` property on each CAPA records the verdict.
+
+== Modelling
+
+=== Data Model
+
+.Deviation root cause & CAPA model
+image::life-sciences/quality/deviation-root-cause-model.svg[Deviation root cause and CAPA data model,width=800]
+
+==== Nodes
+
+* `Deviation` - a recorded departure from the expected process or specification, with a `date` and `severity`.
+* `Batch` - the manufactured lot the deviation affected.
+* `Equipment` - the piece of manufacturing equipment involved.
+* `RootCause` - the underlying cause identified for one or more deviations.
+* `CAPA` - a Corrective and Preventive Action. The `effective` property records whether it actually worked; `status` records whether it is open or closed.
+
+==== Relationships
+
+* `AFFECTS` - connects a `Deviation` to the `Batch` it affected.
+* `ON` - connects a `Deviation` to the `Equipment` involved.
+* `CAUSED_BY` - connects a `Deviation` to its `RootCause`.
+* `RESOLVED_BY` - connects a `Deviation` to the `CAPA` opened to resolve it.
+
+==== Demo Data
+
+[source, cypher, role=noheader]
+----
+// Batches
+MERGE (b1:Batch {id: 'BATCH-2001', madeDate: date('2026-03-01'), status: 'Released'})
+MERGE (b2:Batch {id: 'BATCH-2002', madeDate: date('2026-05-12'), status: 'Released'})
+MERGE (b3:Batch {id: 'BATCH-2003', madeDate: date('2026-05-28'), status: 'Released'})
+
+// Equipment
+MERGE (eq1:Equipment {id: 'EQ-01', name: 'Granulator G-200'})
+MERGE (eq2:Equipment {id: 'EQ-02', name: 'Tablet Press TP-5'})
+
+// Root causes
+MERGE (rc1:RootCause {id: 'RC-01', description: 'Granulator temperature control drift'})
+MERGE (rc2:RootCause {id: 'RC-02', description: 'Tablet press tooling wear'})
+
+// CAPAs
+MERGE (capa1:CAPA {id: 'CAPA-01', description: 'Recalibrate granulator temperature sensor', status: 'Closed', effective: false})
+MERGE (capa2:CAPA {id: 'CAPA-02', description: 'Replace granulator heating element and add continuous monitoring', status: 'Closed', effective: true})
+MERGE (capa3:CAPA {id: 'CAPA-03', description: 'Replace worn tablet press tooling', status: 'Closed', effective: true})
+
+// Deviations
+MERGE (d1:Deviation {id: 'DEV-01', date: date('2026-03-10'), description: 'Out-of-spec dissolution result', severity: 'Major'})
+MERGE (d2:Deviation {id: 'DEV-02', date: date('2026-05-22'), description: 'Out-of-spec dissolution result (recurrence)', severity: 'Major'})
+MERGE (d3:Deviation {id: 'DEV-03', date: date('2026-06-01'), description: 'Tablet weight variation', severity: 'Minor'})
+
+MERGE (d1)-[:AFFECTS]->(b1)
+MERGE (d1)-[:ON]->(eq1)
+MERGE (d1)-[:CAUSED_BY]->(rc1)
+MERGE (d1)-[:RESOLVED_BY]->(capa1)
+
+MERGE (d2)-[:AFFECTS]->(b2)
+MERGE (d2)-[:ON]->(eq1)
+MERGE (d2)-[:CAUSED_BY]->(rc1)
+MERGE (d2)-[:RESOLVED_BY]->(capa2)
+
+MERGE (d3)-[:AFFECTS]->(b3)
+MERGE (d3)-[:ON]->(eq2)
+MERGE (d3)-[:CAUSED_BY]->(rc2)
+MERGE (d3)-[:RESOLVED_BY]->(capa3)
+----
+
+== Example Queries
+
+Each query below has been run against the demo data above.
+
+=== Recurrence detection by `Equipment`
+
+Recurring deviations on the same equipment are an early signal of an unresolved problem. This query surfaces every piece of equipment linked to more than one deviation.
+
+[source, cypher, role=noheader]
+----
+// Equipment with recurring deviations
+MATCH (d:Deviation)-[:ON]->(e:Equipment)
+WITH e, collect(d) AS devs
+WHERE size(devs) > 1
+UNWIND devs AS d
+RETURN 
+    e.name AS Equipment, 
+    d.id AS Deviation, 
+    d.date AS Date, 
+    d.description AS Description
+ORDER BY Equipment, Date;
+----
+
+=== Recurrence detection by `RootCause`
+
+Grouping by root cause shows which underlying problems keep coming back, regardless of which equipment or batch they surfaced on.
+
+[source, cypher, role=noheader]
+----
+// How many deviations share each root cause
+MATCH (rc:RootCause)<-[:CAUSED_BY]-(d:Deviation)
+RETURN 
+    rc.description AS RootCause, 
+    count(d) AS DeviationCount, 
+    collect(d.id) AS Deviations
+ORDER BY DeviationCount DESC;
+----
+
+=== Did the `CAPA` work?
+
+Ordering the deviations for a root cause by date, alongside the CAPAs raised and their effectiveness, shows exactly where a "closed" ticket failed to stop the problem - and which fix finally held.
+
+[source, cypher, role=noheader]
+----
+// Did the first fix hold, or did the root cause recur?
+MATCH (rc:RootCause)<-[:CAUSED_BY]-(d:Deviation)-[:RESOLVED_BY]->(c:CAPA)
+WITH rc, d, c 
+ORDER BY d.date
+RETURN 
+    rc.description AS RootCause,
+    collect(d.id) AS DeviationsOverTime,
+    collect(c.id + ' (effective=' + c.effective + ')') AS CAPAs;
+----
+
+=== Trace a failure to its full context
+
+From a single deviation, pull the complete picture - batch, equipment, root cause, and the CAPA that resolved it - in one query.
+
+[source, cypher, role=noheader]
+----
+// Full context of an end-of-line failure
+WITH 'DEV-02' AS deviationId
+MATCH (d:Deviation {id: deviationId})
+OPTIONAL MATCH (d)-[:AFFECTS]->(b:Batch)
+OPTIONAL MATCH (d)-[:ON]->(e:Equipment)
+OPTIONAL MATCH (d)-[:CAUSED_BY]->(rc:RootCause)
+OPTIONAL MATCH (d)-[:RESOLVED_BY]->(c:CAPA)
+RETURN 
+    d.description AS Deviation, 
+    b.id AS Batch, 
+    e.name AS Equipment,
+    rc.description AS `Root Cause``, 
+    c.description AS CAPA, 
+    c.effective AS `CAPA Effective``;
+----
+
+== Real World Example
+
+=== Boston Scientific
+
+Working with https://graphaware.com/[GraphAware,window=_blank], Boston Scientific built a manufacturing-quality tool on Neo4j that traces an end-of-line failure back through its value stream to the source, driving striking gains in the speed, quality, and number of quality investigations.
+
+.How Boston Scientific Improves Manufacturing Quality Using Graph Analytics
+video::aW4nE2o9QzA[youtube]
+
+Read more on the https://neo4j.com/blog/graph-data-science/how-boston-scientific-improves-manufacturing-quality-using-graph-analytics/[Neo4j blog] and https://neo4j.com/customer-stories/boston-scientific/[Customer Story].
