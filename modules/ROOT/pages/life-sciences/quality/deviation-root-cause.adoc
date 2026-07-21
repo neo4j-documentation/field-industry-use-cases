@@ -167,4 +167,7 @@ RETURN
 
 Working with https://graphaware.com/[GraphAware,window=_blank], Boston Scientific built a manufacturing-quality tool on Neo4j that traces an end-of-line failure back through its value stream to the source, driving striking gains in the speed, quality, and number of quality investigations.
 
-Read more on the https://neo4j.com/blog/graph-data-science/how-boston-scientific-improves-manufacturing-quality-using-graph-analytics/[Neo4j blog].
+.How Boston Scientific Improves Manufacturing Quality Using Graph Analytics
+video::aW4nE2o9QzA[youtube]
+
+Read more on the https://neo4j.com/blog/graph-data-science/how-boston-scientific-improves-manufacturing-quality-using-graph-analytics/[Neo4j blog] and https://neo4j.com/customer-stories/boston-scientific/[Customer Story].

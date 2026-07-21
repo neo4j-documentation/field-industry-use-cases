@@ -274,6 +274,11 @@ Your quality data is already a graph - it is just stored as if it weren't. The t
 
 == Real World Examples
 
+=== Boehringer Ingelheim
+
+.Boehringer Ingelheim: Supply Chain Insights, Without the Training Manual: Agents on a Pharma Context Graph
+video::ame73YtRxJY[youtube]
+
 * xref:life-sciences/quality/chemicals-of-concern.adoc[Finding chemicals of concern]
 * xref:life-sciences/quality/deviation-root-cause.adoc[Deviation root cause & CAPA] 
 * xref:life-sciences/quality/recall-traceability.adoc[Recall scoping & traceability]

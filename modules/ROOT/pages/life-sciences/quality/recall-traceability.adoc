@@ -186,6 +186,13 @@ ORDER BY Batch;
 
 == Real World Example
 
+=== Amalgo LLC
+
+Amalgo LLC have quantified the financial impact of cutting biopharma QA investigation times from a 30-day industry standard down to 10 days, citing double-digit swings in gross profit, penalties, and inventory costs. He used knowledge graph simulations to model bullwhip effects across the supply chain and show where faster investigations create the most value.
+
+.Financial returns from Context Graph & AI that reduces QA investigation durations
+video::wvEFvWytIvw[youtube]
+
 === Transparency-One
 
 Transparency-One built a supply-chain platform on Neo4j that traces every ingredient, supplier, and facility, so a manufacturer can instantly see how one impacted component affects its entire product portfolio and act precisely.
@@ -196,3 +203,7 @@ Read the https://neo4j.com/case-studies/transparency-one/[Transparency-One case 
 
 * https://neo4j.com/developer/industry-use-cases/manufacturing/product-design-and-engineering/engineering-traceability/[Traceability in manufacturing]
 * https://neo4j.com/developer/demos/supply_chain-demo/[Pharma supply-chain demo]
+
+
+
+
